@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useAssistant } from "ai/react";
+import { Message } from "ai"; // Import Message type for type safety
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -21,8 +22,13 @@ import {
   Copy,
   Check,
   Lightbulb,
+  Trash2, // Added Trash icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// --- CONSTANTS FOR STORAGE ---
+const STORAGE_KEY_MESSAGES = "tax_assistant_messages";
+const STORAGE_KEY_THREAD = "tax_assistant_thread_id";
 
 // --- UTILITY: Clean the text before rendering ---
 const cleanText = (text: string) => {
@@ -45,6 +51,8 @@ export default function ChatInterface({
     submitMessage,
     handleInputChange,
     setInput,
+    setMessages, // Needed to restore history
+    threadId, // Needed to save new thread IDs
   } = useAssistant({
     api: "/api/assistant",
   });
@@ -53,6 +61,9 @@ export default function ChatInterface({
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Local state to store the thread ID for API calls
+  const [localThreadId, setLocalThreadId] = useState<string>("");
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -65,7 +76,53 @@ export default function ChatInterface({
     "Old vs New Regime calculator",
   ];
 
-  // --- PERFECTED TEXTAREA RESIZING LOGIC ---
+  // --- 1. LOAD FROM MEMORY ON MOUNT ---
+  useEffect(() => {
+    // We only run this on the client side
+    const savedMessages = localStorage.getItem(STORAGE_KEY_MESSAGES);
+    const savedThreadId = localStorage.getItem(STORAGE_KEY_THREAD);
+
+    if (savedThreadId) {
+      setLocalThreadId(savedThreadId);
+    }
+
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages);
+        // Only set if it's a valid array
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed as Message[]);
+        }
+      } catch (e) {
+        console.error("Failed to parse chat history:", e);
+      }
+    }
+  }, [setMessages]);
+
+  // --- 2. SAVE TO MEMORY ON CHANGE ---
+  useEffect(() => {
+    // Save messages
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages));
+    }
+
+    // Save Thread ID (The hook updates 'threadId' after the first message)
+    if (threadId) {
+      setLocalThreadId(threadId);
+      localStorage.setItem(STORAGE_KEY_THREAD, threadId);
+    }
+  }, [messages, threadId]);
+
+  // --- 3. CLEAR HISTORY FUNCTION ---
+  const handleClearChat = () => {
+    localStorage.removeItem(STORAGE_KEY_MESSAGES);
+    localStorage.removeItem(STORAGE_KEY_THREAD);
+    setMessages([]);
+    setLocalThreadId("");
+    setSuggestions([]);
+  };
+
+  // --- TEXTAREA RESIZING LOGIC ---
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -77,7 +134,7 @@ export default function ChatInterface({
     }
   }, [input]);
 
-  // --- Logic to show "Thinking" dots ---
+  // --- LOGIC TO SHOW "THINKING" DOTS ---
   const isThinking =
     status === "in_progress" &&
     (messages.length === 0 ||
@@ -85,14 +142,14 @@ export default function ChatInterface({
       (messages[messages.length - 1].role === "assistant" &&
         messages[messages.length - 1].content === ""));
 
-  // --- Auto-Scroll ---
+  // --- AUTO-SCROLL ---
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, status, isThinking, isOpen]);
 
-  // --- Extract Suggestions Logic ---
+  // --- EXTRACT SUGGESTIONS LOGIC ---
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.role === "assistant") {
@@ -121,8 +178,12 @@ export default function ChatInterface({
 
     setSuggestions([]);
 
+    // FIX: Pass threadId inside the 'data' object
     await submitMessage(undefined, {
-      data: { message: input },
+      data: {
+        message: input,
+        threadId: localThreadId || "", // Pass it here. TypeScript accepts Record<string, string>
+      },
     });
 
     setAttachedFile(null);
@@ -145,9 +206,6 @@ export default function ChatInterface({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      {/* FIX 1: [&>button]:hidden removes the default shadcn close button 
-         FIX 2: h-[100dvh] forces full viewport height on mobile
-      */}
       <DialogContent className="[&>button]:hidden w-full h-[100dvh] md:h-[100dvh] md:max-w-[100dvw] p-0 border-none bg-white shadow-2xl flex flex-col outline-none sm:rounded-[40px] rounded-none">
         {/* HEADER */}
         <div className="p-4 md:p-6 border-b border-slate-50 flex items-center justify-between bg-white z-20 shrink-0">
@@ -164,12 +222,26 @@ export default function ChatInterface({
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
-          >
-            <X size={18} />
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Clear Chat Button (Only shows if there are messages) */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleClearChat}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                title="Clear Chat History"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+
+            <button
+              onClick={() => setIsOpen(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* CHAT AREA */}
@@ -195,15 +267,15 @@ export default function ChatInterface({
                       Namaste! I'm your Indian Tax Assistant
                     </h2>
                     <p className="text-slate-500 text-sm max-w-xs md:max-w-md mx-auto leading-relaxed">
-                      I specialize in Indian taxation laws for FY 2025-26. Ask
-                      me about ITR filing, GST compliance, New Tax Regime vs
-                      Old, or any other tax-related queries.
+                      I specialize in Indian taxation laws. Ask me about ITR
+                      filing, GST compliance, New Tax Regime vs Old, or any
+                      other tax-related queries.
                     </p>
                   </div>
                 </div>
 
                 {/* SUGGESTIONS GRID */}
-                <div className="w-full pb-8">
+                <div className="w-full pb-8 pt-4">
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-4">
                     Suggested Questions
                   </p>
@@ -482,7 +554,7 @@ export default function ChatInterface({
                     status === "in_progress" || (!input.trim() && !attachedFile)
                   }
                   size="icon"
-                  className="absolute right-1.5 bottom-1.5 md:right-2 md:bottom-2 h-9 w-9 md:h-10 md:w-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 disabled:opacity-50 transition-all"
+                  className="absolute right-1.5 bottom-1.5 md:right-2 md:bottom-2 h-9 w-9 md:h-9 md:w-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 disabled:opacity-50 transition-all"
                 >
                   <Send size={16} />
                 </Button>
