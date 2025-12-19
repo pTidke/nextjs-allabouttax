@@ -85,7 +85,7 @@ export default function CTA() {
                 className="group relative rounded-full bg-slate-900 px-10 py-8 text-lg text-white hover:bg-slate-800 transition-all duration-300 shadow-xl shadow-slate-200"
               >
                 <span className="relative z-10 flex items-center">
-                  Start Calculating Now
+                  Start Calculating
                   <ArrowRight
                     className="ml-2 transition-transform duration-500 group-hover:translate-x-2"
                     size={22}
