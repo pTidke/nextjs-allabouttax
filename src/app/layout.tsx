@@ -68,6 +68,33 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased text-slate-900`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": "https://allabouttax.in/#website",
+                  url: "https://allabouttax.in",
+                  name: "All About Tax",
+                  description: "AI Tax Expert for Indian Tax Laws",
+                  publisher: {
+                    "@id": "https://allabouttax.in/#organization",
+                  },
+                },
+                {
+                  "@type": "Organization",
+                  "@id": "https://allabouttax.in/#organization",
+                  name: "All About Tax",
+                  url: "https://allabouttax.in",
+                  sameAs: ["https://twitter.com/allabouttax_in"],
+                },
+              ],
+            }),
+          }}
+        />
         {children}
         <Analytics />
         <SpeedInsights />

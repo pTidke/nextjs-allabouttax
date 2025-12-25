@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useId,
+} from "react";
 import { useAssistant } from "ai/react";
 import { Message } from "ai"; // Import Message type for type safety
 import ReactMarkdown from "react-markdown";
@@ -57,6 +63,7 @@ export default function ChatInterface({
     api: "/api/assistant",
   });
 
+  const dialogId = useId();
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -206,7 +213,10 @@ export default function ChatInterface({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="[&>button]:hidden w-full h-[100dvh] md:h-[100dvh] md:max-w-[100dvw] p-0 border-none bg-white shadow-2xl flex flex-col outline-none sm:rounded-[40px] rounded-none">
+      <DialogContent
+        id={dialogId}
+        className="[&>button]:hidden w-full h-[100dvh] md:h-[100dvh] md:max-w-[100dvw] p-0 border-none bg-white shadow-2xl flex flex-col outline-none sm:rounded-[40px] rounded-none"
+      >
         {/* HEADER */}
         <div className="p-4 md:p-6 border-b border-slate-50 flex items-center justify-between bg-white z-20 shrink-0">
           <div className="flex items-center gap-3">

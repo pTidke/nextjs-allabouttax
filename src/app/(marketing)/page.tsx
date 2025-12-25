@@ -72,9 +72,9 @@ export default function LandingPage() {
               variants={itemVariants}
               className="mt-8 text-md md:text-xl leading-relaxed text-slate-600"
             >
-              Your AI partner for the Indian tax regime. Ask complex questions,
-              get cited answers from official acts, and plan your finances in
-              plain English.
+              All About Tax is your AI partner for the Indian tax regime. Ask
+              complex questions, get cited answers from official acts, and plan
+              your finances in plain English.
             </motion.p>
 
             {/* BUTTONS: w-fit ensures they don't stretch; lg:justify-start aligns them left on desktop */}
@@ -84,7 +84,7 @@ export default function LandingPage() {
             >
               <ChatInterface
                 trigger={
-                  <Button className="bg-emerald-600 rounded-full px-8">
+                  <Button className="bg-emerald-600 rounded-full px-8 animate-glow transition-all duration-300 hover:scale-[1.02] border border-emerald-400/30">
                     Ask AI Assistant
                   </Button>
                 }
