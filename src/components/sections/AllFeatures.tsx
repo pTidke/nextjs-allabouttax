@@ -56,7 +56,7 @@ export default function Features() {
           className="text-center max-w-4xl mx-auto mb-18"
         >
           <h2 className="font-serif text-3xl font-medium text-slate-900 md:text-3xl tracking-tight">
-            Intelligent Solutions for Modern Taxation
+            AI-Powered Personal & Business Tax Solutions
           </h2>
           <p className="mt-4 text-base md:text-md text-slate-500 leading-relaxed max-w-xl mx-auto">
             Streamline your financial obligations with tools designed for

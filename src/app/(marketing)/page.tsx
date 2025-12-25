@@ -108,7 +108,7 @@ export default function LandingPage() {
             <div className="relative w-full max-w-[540px] aspect-square">
               <Image
                 src="/illustrations/tax-hero.svg"
-                alt="Tax Illustration"
+                alt="AI-Powered Indian Tax Expert Illustration - Simplifying GST and Income Tax"
                 fill
                 priority
                 className="object-contain"

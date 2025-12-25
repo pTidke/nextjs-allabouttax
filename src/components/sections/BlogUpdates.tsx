@@ -60,7 +60,7 @@ export default function BlogUpdates() {
           </motion.div>
 
           <h2 className="font-serif text-3xl font-medium text-slate-900 md:text-4xl tracking-tight">
-            Latest Economic & Tax Updates
+            Indian Income Tax & GST Compliance Updates
           </h2>
         </motion.div>
 

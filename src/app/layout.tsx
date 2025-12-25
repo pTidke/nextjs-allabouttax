@@ -45,6 +45,9 @@ export const metadata: Metadata = {
       "Simplify Indian Tax Laws with our AI Tax Expert. Get instant answers to your tax queries.",
     creator: "@allabouttax_in",
   },
+  alternates: {
+    canonical: "https://allabouttax.in",
+  },
   robots: {
     index: true,
     follow: true,
@@ -89,7 +92,19 @@ export default function RootLayout({
                   "@id": "https://allabouttax.in/#organization",
                   name: "All About Tax",
                   url: "https://allabouttax.in",
-                  sameAs: ["https://twitter.com/allabouttax_in"],
+                  logo: {
+                    "@type": "ImageObject",
+                    url: "https://allabouttax.in/logo.png",
+                  },
+                  sameAs: [
+                    "https://twitter.com/allabouttax_in",
+                    "https://www.linkedin.com/company/allabouttax",
+                  ],
+                  contactPoint: {
+                    "@type": "ContactPoint",
+                    contactType: "customer support",
+                    email: "hello@allabouttax.in",
+                  },
                 },
               ],
             }),
