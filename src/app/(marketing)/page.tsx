@@ -84,7 +84,7 @@ export default function LandingPage() {
             >
               <ChatInterface
                 trigger={
-                  <Button className="bg-emerald-600 rounded-full px-8">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-8 transition-all duration-300 animate-glow border-none scale-105 sm:scale-110">
                     Ask AI Assistant
                   </Button>
                 }
