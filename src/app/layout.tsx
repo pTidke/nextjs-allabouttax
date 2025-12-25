@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Inter, Playfair_Display } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const playfair = Playfair_Display({
@@ -67,6 +68,7 @@ export default function RootLayout({
         className={`${inter.variable} ${playfair.variable} font-sans antialiased text-slate-900`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
