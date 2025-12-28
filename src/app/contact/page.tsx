@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Send, AlertCircle, Clock } from "lucide-react";
+import { useState } from "react";
+import { Send, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +10,42 @@ import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Construct email body
+    const emailBody = `
+Name: ${formData.name}
+Email: ${formData.email}
+
+Message:
+${formData.message}
+    `.trim();
+
+    // Construct Gmail URL
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=ask.allabouttax@gmail.com&su=${encodeURIComponent(
+      `Contact Form: ${formData.name}`
+    )}&body=${encodeURIComponent(emailBody)}`;
+
+    // Open in new tab
+    window.open(gmailUrl, "_blank");
+
+    // Reset form (optional, depending on UX preference)
+    setFormData({ name: "", email: "", message: "" });
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
@@ -76,12 +113,16 @@ export default function ContactPage() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="w-full p-7 md:p-12 rounded-[40px] bg-white border border-slate-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)]"
             >
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2 text-left">
                   <label className="text-sm font-semibold text-slate-700 ml-1">
                     Full Name
                   </label>
                   <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
                     placeholder="John Doe"
                     className="rounded-2xl border-slate-200 bg-slate-50/30 px-5 py-6 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 transition-all"
                   />
@@ -92,7 +133,11 @@ export default function ContactPage() {
                     Email Address
                   </label>
                   <Input
+                    name="email"
                     type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
                     placeholder="john@example.com"
                     className="rounded-2xl border-slate-200 bg-slate-50/30 px-5 py-6 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 transition-all"
                   />
@@ -103,6 +148,10 @@ export default function ContactPage() {
                     How can we help?
                   </label>
                   <Textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    required
                     placeholder="Describe your issue or feedback..."
                     className="rounded-2xl border-slate-200 bg-slate-50/30 px-5 py-4 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 transition-all min-h-[150px] resize-none"
                   />
@@ -110,9 +159,9 @@ export default function ContactPage() {
 
                 <Button
                   size="lg"
-                  className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700 text-white py-8 text-lg font-semibold transition-all group shadow-xl shadow-emerald-600/20"
+                  className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700 text-white py-8 text-lg font-semibold transition-all group shadow-xl shadow-emerald-600/20 flex items-center justify-center"
                 >
-                  Send Message
+                  Send Message via Gmail
                   <Send
                     className="ml-2 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
                     size={18}
