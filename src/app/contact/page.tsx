@@ -6,7 +6,6 @@ import { Send, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import Navbar from "@/components/navigation/Navbar";
 import Footer from "@/components/navigation/Footer";
 
 export default function ContactPage() {
@@ -48,8 +47,6 @@ ${formData.message}
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar />
-
       {/* Adjusted padding: pt-32 for desktop, pt-24 for mobile to clear Navbar */}
       <section className="pt-24 md:pt-32 pb-16 md:pb-24">
         <div className="container mx-auto px-6 lg:max-w-[70%]">

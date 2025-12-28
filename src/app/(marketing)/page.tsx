@@ -1,6 +1,5 @@
 "use client";
 
-import Navbar from "@/components/navigation/Navbar";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { motion, Variants } from "framer-motion";
@@ -39,8 +38,6 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#fafafa]">
-      <Navbar />
-
       <main className="container mx-auto px-8 pb-16 pt-14 lg:pt-26 lg:pb-16">
         <motion.div
           className="max-w-full lg:max-w-[90%] mx-auto grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center"
