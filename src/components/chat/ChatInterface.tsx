@@ -47,8 +47,14 @@ const cleanText = (text: string) => {
 
 export default function ChatInterface({
   trigger,
+  user,
 }: {
   trigger: React.ReactNode;
+  user?: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
 }) {
   const {
     status,
@@ -234,6 +240,21 @@ export default function ChatInterface({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* User Profile Image */}
+            {user?.image ? (
+              <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200">
+                <img
+                  src={user.image}
+                  alt={user.name || "User"}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ) : user?.name ? (
+              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs border border-emerald-200">
+                {(user.name[0] || "U").toUpperCase()}
+              </div>
+            ) : null}
+
             {/* Clear Chat Button (Only shows if there are messages) */}
             {messages.length > 0 && (
               <button
@@ -327,14 +348,26 @@ export default function ChatInterface({
                       }`}
                     >
                       <div
-                        className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${
+                        className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden ${
                           msg.role === "user"
-                            ? "bg-slate-900 text-white hidden md:flex"
+                            ? "bg-slate-900 hidden md:flex"
                             : "bg-white border border-emerald-100"
                         }`}
                       >
                         {msg.role === "user" ? (
-                          <User size={14} />
+                          user?.image ? (
+                            <img
+                              src={user.image}
+                              alt="User"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : user?.name ? (
+                            <span className="text-white text-xs font-bold">
+                              {(user.name[0] || "U").toUpperCase()}
+                            </span>
+                          ) : (
+                            <User size={14} className="text-white" />
+                          )
                         ) : (
                           <Sparkles className="text-emerald-600" size={14} />
                         )}

@@ -37,6 +37,7 @@ export default async function Navbar() {
                 Ask AI Assistant
               </Button>
             }
+            user={session?.user}
           />
 
           {session?.user ? (
