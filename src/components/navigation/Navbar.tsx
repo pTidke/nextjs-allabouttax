@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import ChatInterface from "../chat/ChatInterface";
 import { auth, signOut } from "@/auth";
 import LoginModal from "@/components/auth/LoginModal";
 import SignOutMenuItem from "@/components/auth/SignOutMenuItem";
@@ -30,16 +29,7 @@ export default async function Navbar() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-4 md:gap-6">
-          <ChatInterface
-            trigger={
-              <Button className="hidden md:inline-flex bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-8 transition-all duration-300 animate-glow border-none">
-                Ask AI Assistant
-              </Button>
-            }
-            user={session?.user}
-          />
-
+        <div className="flex items-center gap-4">
           {session?.user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

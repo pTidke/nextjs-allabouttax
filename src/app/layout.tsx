@@ -4,6 +4,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import Navbar from "@/components/navigation/Navbar";
+import Providers from "@/components/providers/Providers";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const playfair = Playfair_Display({
@@ -112,8 +114,11 @@ export default function RootLayout({
             }),
           }}
         />
-        <Navbar />
-        {children}
+        <Providers>
+          <Navbar />
+          {children}
+          <ChatWidget />
+        </Providers>
         <Analytics />
         <SpeedInsights />
       </body>

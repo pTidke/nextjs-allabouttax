@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -14,12 +15,16 @@ import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
 
 export default function LoginModal() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     setIsLoading(true);
     try {
       await signIn("google");
+      // Note: signIn usually redirects, but if we return to the same page,
+      // a refresh ensures the server components (Navbar) pick up the new session.
+      router.refresh();
     } catch (error) {
       console.error("Login failed:", error);
     } finally {

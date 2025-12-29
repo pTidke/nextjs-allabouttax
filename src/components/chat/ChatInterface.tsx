@@ -7,8 +7,6 @@ import React, {
   useLayoutEffect,
   useId,
 } from "react";
-import { useAssistant } from "ai/react";
-import { Message } from "ai"; // Import Message type for type safety
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -18,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useChat } from "@/components/chat/ChatContext";
 import {
   Send,
   Paperclip,
@@ -47,7 +46,7 @@ const cleanText = (text: string) => {
 
 export default function ChatInterface({
   trigger,
-  user,
+  user: propUser,
 }: {
   trigger: React.ReactNode;
   user?: {
@@ -60,25 +59,28 @@ export default function ChatInterface({
     status,
     messages,
     input,
-    submitMessage,
     handleInputChange,
     setInput,
-    setMessages, // Needed to restore history
-    threadId, // Needed to save new thread IDs
-  } = useAssistant({
-    api: "/api/assistant",
-  });
+    isOpen,
+    setIsOpen,
+    attachedFile,
+    setAttachedFile,
+    suggestions,
+    setSuggestions, // Need to expose setSuggestions in Context if used here? Yes, mostly via side effect but clear logic is needed.
+    // Actually setSuggestions was used in clear function, which we might need to expose.
+    user: contextUser,
+    textareaRef,
+    clearChat,
+    handleSubmit,
+  } = useChat();
+
+  // Merge context user (from session) with propUser if needed, or primarily use contextUser.
+  // The logic in original file was: passed user prop could override or fallback.
+  // Let's use contextUser as primary since it's from session, but allow prop override if specifically passed (e.g. from server component).
+  const currentUser = propUser || contextUser;
 
   const dialogId = useId();
-  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-
-  // Local state to store the thread ID for API calls
-  const [localThreadId, setLocalThreadId] = useState<string>("");
-
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,51 +91,15 @@ export default function ChatInterface({
     "Old vs New Regime calculator",
   ];
 
-  // --- 1. LOAD FROM MEMORY ON MOUNT ---
-  useEffect(() => {
-    // We only run this on the client side
-    const savedMessages = localStorage.getItem(STORAGE_KEY_MESSAGES);
-    const savedThreadId = localStorage.getItem(STORAGE_KEY_THREAD);
-
-    if (savedThreadId) {
-      setLocalThreadId(savedThreadId);
-    }
-
-    if (savedMessages) {
-      try {
-        const parsed = JSON.parse(savedMessages);
-        // Only set if it's a valid array
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMessages(parsed as Message[]);
-        }
-      } catch (e) {
-        console.error("Failed to parse chat history:", e);
-      }
-    }
-  }, [setMessages]);
-
-  // --- 2. SAVE TO MEMORY ON CHANGE ---
-  useEffect(() => {
-    // Save messages
-    if (messages.length > 0) {
-      localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages));
-    }
-
-    // Save Thread ID (The hook updates 'threadId' after the first message)
-    if (threadId) {
-      setLocalThreadId(threadId);
-      localStorage.setItem(STORAGE_KEY_THREAD, threadId);
-    }
-  }, [messages, threadId]);
-
-  // --- 3. CLEAR HISTORY FUNCTION ---
-  const handleClearChat = () => {
-    localStorage.removeItem(STORAGE_KEY_MESSAGES);
-    localStorage.removeItem(STORAGE_KEY_THREAD);
-    setMessages([]);
-    setLocalThreadId("");
-    setSuggestions([]);
-  };
+  // --- CLEAR HISTORY FUNCTION ---
+  // If we want to clear history, we need access to setMessages or a clear function in Context.
+  // The original ChatInterface had handleClearChat.
+  // Since we moved state to Context, we should probably move handleClearChat to Context OR expose setMessages.
+  // Let's assume for now we don't clear from here, OR we need to add clear function to context.
+  // Wait, I missed adding clearChat to Context. I will add it via a separate tool call to Context or just hack it here if I verify I can't access setters.
+  // Actually, I should update Context to include clearChat.
+  // For now I will comment out clear chat button logic or leave it broken until next step?
+  // Better: I will use a separate update to Context to add clear logic.
 
   // --- TEXTAREA RESIZING LOGIC ---
   useLayoutEffect(() => {
@@ -145,7 +111,7 @@ export default function ChatInterface({
       textarea.style.overflowY =
         textarea.scrollHeight > 200 ? "auto" : "hidden";
     }
-  }, [input]);
+  }, [input, textareaRef]); // Added textareaRef dep
 
   // --- LOGIC TO SHOW "THINKING" DOTS ---
   const isThinking =
@@ -162,47 +128,10 @@ export default function ChatInterface({
     }
   }, [messages, status, isThinking, isOpen]);
 
-  // --- EXTRACT SUGGESTIONS LOGIC ---
-  useEffect(() => {
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role === "assistant") {
-      const regex = /<<<SUGGESTIONS=\[(.*?)\]>>>/;
-      const match = lastMessage.content.match(regex);
-      if (match && match[1]) {
-        try {
-          const parsed = JSON.parse(`[${match[1]}]`);
-          setSuggestions(parsed);
-        } catch (e) {
-          // ignore parsing errors while streaming
-        }
-      }
-    }
-  }, [messages]);
-
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(cleanText(text));
     setCopiedIndex(id);
     setTimeout(() => setCopiedIndex(null), 2000);
-  };
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!input.trim() && !attachedFile) return;
-
-    setSuggestions([]);
-
-    // FIX: Pass threadId inside the 'data' object
-    await submitMessage(undefined, {
-      data: {
-        message: input,
-        threadId: localThreadId || "", // Pass it here. TypeScript accepts Record<string, string>
-      },
-    });
-
-    setAttachedFile(null);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "56px";
-    }
   };
 
   // --- MOBILE KEYBOARD FIX ---
@@ -241,24 +170,24 @@ export default function ChatInterface({
 
           <div className="flex items-center gap-2">
             {/* User Profile Image */}
-            {user?.image ? (
+            {currentUser?.image ? (
               <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200">
                 <img
-                  src={user.image}
-                  alt={user.name || "User"}
+                  src={currentUser.image}
+                  alt={currentUser.name || "User"}
                   className="h-full w-full object-cover"
                 />
               </div>
-            ) : user?.name ? (
+            ) : currentUser?.name ? (
               <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs border border-emerald-200">
-                {(user.name[0] || "U").toUpperCase()}
+                {(currentUser.name[0] || "U").toUpperCase()}
               </div>
             ) : null}
 
             {/* Clear Chat Button (Only shows if there are messages) */}
             {messages.length > 0 && (
               <button
-                onClick={handleClearChat}
+                onClick={clearChat}
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                 title="Clear Chat History"
               >
@@ -355,15 +284,15 @@ export default function ChatInterface({
                         }`}
                       >
                         {msg.role === "user" ? (
-                          user?.image ? (
+                          currentUser?.image ? (
                             <img
-                              src={user.image}
+                              src={currentUser.image}
                               alt="User"
                               className="w-full h-full object-cover"
                             />
-                          ) : user?.name ? (
+                          ) : currentUser?.name ? (
                             <span className="text-white text-xs font-bold">
-                              {(user.name[0] || "U").toUpperCase()}
+                              {(currentUser.name[0] || "U").toUpperCase()}
                             </span>
                           ) : (
                             <User size={14} className="text-white" />
