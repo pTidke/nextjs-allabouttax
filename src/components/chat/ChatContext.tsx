@@ -44,7 +44,7 @@ interface ChatContextType {
   setSuggestions: React.Dispatch<React.SetStateAction<string[]>>;
   localThreadId: string;
   user: any; // Using any for session user object flexibility
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   handleSubmit: (e?: React.FormEvent) => Promise<void>;
   clearChat: () => void;
 }
