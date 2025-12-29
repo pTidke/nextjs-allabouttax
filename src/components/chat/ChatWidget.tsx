@@ -38,7 +38,7 @@ export default function ChatWidget() {
           <button
             className={`group relative h-14 w-14 md:h-16 md:w-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
               isOpen
-                ? "bg-slate-900"
+                ? "hidden"
                 : isThinking
                 ? "bg-slate-900"
                 : hasResponse
