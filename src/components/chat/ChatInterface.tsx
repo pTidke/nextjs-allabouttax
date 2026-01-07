@@ -42,6 +42,8 @@ const cleanText = (text: string) => {
   let cleaned = text.replace(/【.*?】/g, "");
   cleaned = cleaned.replace(/<<<SUGGESTIONS=\[.*?\]>>>/g, "");
   cleaned = cleaned.replace(/<<<SUG.*?$/, "");
+  // Remove "Citation:" footer if present
+  cleaned = cleaned.replace(/\n\n?Citation:[\s\S]*$/i, "");
   return cleaned.trim();
 };
 
@@ -396,6 +398,7 @@ export default function ChatInterface({
                                       {...props}
                                     />
                                   ),
+                                  hr: () => null,
                                 }}
                               >
                                 {cleanText(msg.content)}
