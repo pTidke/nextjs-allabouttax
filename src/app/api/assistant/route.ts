@@ -1,5 +1,7 @@
 import { AssistantResponse } from 'ai';
 import OpenAI from 'openai';
+import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
@@ -9,20 +11,63 @@ const openai = new OpenAI({
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  // 1. Parse the input
+  // 1. Authenticate user and check limits
+  const session = await auth();
+  if (!session?.user?.email) {
+    return new Response(JSON.stringify({ error: "Please log in to ask questions." }), { status: 401 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+
+  if (!user) {
+    return new Response(JSON.stringify({ error: "User not found." }), { status: 404 });
+  }
+
+  const now = new Date();
+  const lastQuestion = new Date(user.lastQuestionAt);
+  const isNewDay = now.toDateString() !== lastQuestion.toDateString();
+
+  let questionsToday = isNewDay ? 0 : user.questionsToday;
+
+  if (user.role !== 'ADMIN' && questionsToday >= 10) {
+    return new Response(JSON.stringify({ 
+      error: "You've reached your limit of 10 questions for today. Upgrade Account for unlimited access!" 
+    }), { status: 429 });
+  }
+
+  // 2. Parse the input
   const input = await req.json();
 
   // 2. Thread ID Handling
-  let threadId = input.threadId || (input.data && input.data.threadId);
+  // Prefer threadId from input, then from user DB record
+  let threadId = input.threadId || (input.data && input.data.threadId) || user.threadId;
+
   if (!threadId || typeof threadId !== 'string' || !threadId.startsWith('thread_')) {
     const thread = await openai.beta.threads.create({});
     threadId = thread.id;
+    
+    // Save the new threadId to the user record
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { threadId: threadId },
+    });
   }
 
-  // 3. Create Message
+  // 4. Create Message
   const createdMessage = await openai.beta.threads.messages.create(threadId, {
     role: 'user',
     content: input.message ?? input.data?.message,
+  });
+
+  // 5. Increment usage count
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      questionsToday: questionsToday + 1,
+      lastQuestionAt: now,
+    },
   });
 
   // 4. Run Assistant

@@ -13,8 +13,10 @@ import { Message } from "ai";
 import { useSession } from "next-auth/react";
 
 // --- CONSTANTS FOR STORAGE ---
-const STORAGE_KEY_MESSAGES = "tax_assistant_messages";
-const STORAGE_KEY_THREAD = "tax_assistant_thread_id";
+const getStorageKeyMessages = (email?: string) =>
+  email ? `tax_assistant_messages_${email}` : null;
+const getStorageKeyThread = (email?: string) =>
+  email ? `tax_assistant_thread_id_${email}` : null;
 
 // --- UTILITY: Clean the text before rendering ---
 // Keep this if needed elsewhere, or move to utility file. Left here for context.
@@ -47,6 +49,7 @@ interface ChatContextType {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   handleSubmit: (e?: React.FormEvent) => Promise<void>;
   clearChat: () => void;
+  error: Error | undefined;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -64,6 +67,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setInput,
     setMessages,
     threadId,
+    error,
   } = useAssistant({
     api: "/api/assistant",
   });
@@ -74,37 +78,62 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [localThreadId, setLocalThreadId] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // --- 1. LOAD FROM MEMORY ON MOUNT ---
+  // --- 1. LOAD FROM MEMORY ON MOUNT AND USER CHANGE ---
   useEffect(() => {
-    const savedMessages = localStorage.getItem(STORAGE_KEY_MESSAGES);
-    const savedThreadId = localStorage.getItem(STORAGE_KEY_THREAD);
+    const email = user?.email;
+    if (!email) {
+      setMessages([]);
+      setLocalThreadId("");
+      return;
+    }
+
+    const keyMessages = getStorageKeyMessages(email);
+    const keyThread = getStorageKeyThread(email);
+
+    const savedMessages = keyMessages
+      ? localStorage.getItem(keyMessages)
+      : null;
+    const savedThreadId = keyThread ? localStorage.getItem(keyThread) : null;
 
     if (savedThreadId) {
       setLocalThreadId(savedThreadId);
+    } else {
+      setLocalThreadId("");
     }
 
     if (savedMessages) {
       try {
         const parsed = JSON.parse(savedMessages);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           setMessages(parsed as Message[]);
+        } else {
+          setMessages([]);
         }
       } catch (e) {
         console.error("Failed to parse chat history:", e);
+        setMessages([]);
       }
+    } else {
+      setMessages([]);
     }
-  }, [setMessages]);
+  }, [user?.email, setMessages]);
 
   // --- 2. SAVE TO MEMORY ON CHANGE ---
   useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem(STORAGE_KEY_MESSAGES, JSON.stringify(messages));
+    const email = user?.email;
+    if (!email) return;
+
+    const keyMessages = getStorageKeyMessages(email);
+    const keyThread = getStorageKeyThread(email);
+
+    if (keyMessages && messages.length > 0) {
+      localStorage.setItem(keyMessages, JSON.stringify(messages));
     }
-    if (threadId) {
+    if (threadId && keyThread) {
       setLocalThreadId(threadId);
-      localStorage.setItem(STORAGE_KEY_THREAD, threadId);
+      localStorage.setItem(keyThread, threadId);
     }
-  }, [messages, threadId]);
+  }, [messages, threadId, user?.email]);
 
   // --- EXTRACT SUGGESTIONS LOGIC ---
   useEffect(() => {
@@ -165,9 +194,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           setMessages([]);
           setLocalThreadId("");
           setSuggestions([]);
-          localStorage.removeItem(STORAGE_KEY_MESSAGES);
-          localStorage.removeItem(STORAGE_KEY_THREAD);
+          const email = user?.email;
+          if (email) {
+            const keyMessages = getStorageKeyMessages(email);
+            const keyThread = getStorageKeyThread(email);
+            if (keyMessages) localStorage.removeItem(keyMessages);
+            if (keyThread) localStorage.removeItem(keyThread);
+          }
         },
+        error,
       }}
     >
       {children}

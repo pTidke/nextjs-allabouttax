@@ -53,9 +53,14 @@ export default async function Navbar() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none text-slate-900">
-                      {session.user.name}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium leading-none text-slate-900">
+                        {session.user.name}
+                      </p>
+                      <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                        {session.user.role}
+                      </span>
+                    </div>
                     <p className="text-xs leading-none text-slate-500">
                       {session.user.email}
                     </p>

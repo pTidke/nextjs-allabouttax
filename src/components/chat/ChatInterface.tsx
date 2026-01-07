@@ -27,7 +27,8 @@ import {
   Copy,
   Check,
   Lightbulb,
-  Trash2, // Added Trash icon
+  Trash2,
+  Shield,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -209,6 +210,28 @@ export default function ChatInterface({
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-4 md:p-10 relative bg-slate-50/20 scroll-smooth"
         >
+          {/* Error Banner */}
+          <AnimatePresence>
+            {useChat().error && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="sticky top-0 z-10 mb-4"
+              >
+                <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center gap-3 text-red-800 shadow-sm">
+                  <div className="bg-red-100 p-2 rounded-lg shrink-0">
+                    <Shield size={18} className="text-red-600" />
+                  </div>
+                  <p className="text-sm font-medium leading-tight">
+                    {useChat().error?.message ||
+                      "An error occurred while communicating with the AI. Please try again later."}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence mode="popLayout">
             {messages.length === 0 ? (
               // INTRO VIEW
@@ -526,9 +549,9 @@ export default function ChatInterface({
                     status === "in_progress" || (!input.trim() && !attachedFile)
                   }
                   size="icon"
-                  className="absolute right-1.5 bottom-1.5 md:right-2 md:bottom-2 h-9 w-9 md:h-9 md:w-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 disabled:opacity-50 transition-all"
+                  className="absolute right-1.5 bottom-1.5 md:right-2.5 md:bottom-2.5 h-9 w-9 md:h-9 md:w-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 disabled:opacity-50 transition-all"
                 >
-                  <Send size={16} />
+                  <Send size={18} />
                 </Button>
               </div>
             </div>
