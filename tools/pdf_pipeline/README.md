@@ -69,6 +69,24 @@ Use a fresh output directory for every probe. At most ten selected pages are per
 
 The tested RapidOCR configuration resolves English and rejects `hi` (Hindi). Do not apply it to the bilingual corpus and claim multilingual accuracy. Hindi OCR, seals, handwriting and table semantics require their own validated backend/configuration and labelled cohort.
 
+## Bilingual image-OCR comparison
+
+An optional Node worker runs Tesseract.js 7.0.0 locally on bounded PNGs, separately from the web app and the canonical artifact. Its own npm lockfile is under `ocr/`. English and Hindi integer language weights come from a pinned revision of the official tessdata_fast repository; both their bytes and manifest are checked. Documents are not sent to an OCR API. Model preparation downloads public weights; comparison uses local files only. The library configuration follows the [Tesseract.js API](https://github.com/naptha/tesseract.js/blob/master/docs/api.md) and [official language data documentation](https://tesseract-ocr.github.io/tessdoc/Data-Files).
+
+```sh
+npm ci --prefix tools/pdf_pipeline/ocr --ignore-scripts --no-audit --no-fund
+tools/pdf_pipeline/.venv/bin/python -m tax_pdf.ocr_compare prepare --models work/tesseract-fast-models
+tools/pdf_pipeline/.venv/bin/python -m tax_pdf.ocr_compare compare --models work/tesseract-fast-models --baseline work/pdf-lab/demo-v2/packages/BASELINE_RUN --feedback tools/pdf_pipeline/benchmark/review-feedback.json --out work/pdf-lab/demo-v2/comparisons/FRESH_RUN
+```
+
+Use `--cache /tmp/allabouttax-npm-cache` with npm if the normal cache is not writable. Replace baseline/output names with the actual local run directories. Serve the same review directory on localhost and open `comparisons/FRESH_RUN/index.html`. The CLI uses exit 0 for a completed comparison, which **always remains BLOCKED**; failure is exit 1. No accepted text, publication action or RAG mutation is produced.
+
+The source-bound feedback must match the original hash, run ID, artifact hash, fingerprint, region IDs, text and geometry. Reviewer notes and proposed corrections never enter the OCR job. Each page gets separate English and English+Hindi full-page candidates. Reported regions get focused crop attempts. Disconnected regions are split before cropping; tall narrow groups also get explicit 90/270-degree alternatives. No orientation is selected or reading order declared correct automatically. Reviewer-marked signatures appear as source images without running region OCR or inferring identity; raw full-page OCR may still contain signature garbage. This is human-assisted handling, not automatic signature detection.
+
+Comparison bounds: at most ten complete baseline pages, 100 MiB original, 300 DPI, 16 million pixels/render, 120 seconds/OCR job and 600 seconds total. Jobs receive a reduced environment without app credentials. There is no OS filesystem/egress sandbox. Noncanonical raw JSON, pixel/source geometry, crop transforms, file hashes, engine versions, weight/code/lock digests and reviewer notes remain separate. A failed job removes its incomplete comparison staging directory and leaves the baseline unchanged. Existing lab constraints on rendering still apply.
+
+The comparison is a tuning sample. It has no accuracy score, legal approval, accepted corrections, automatic signature detector or verified table/reading-order semantics. No confidence threshold clears a quality hold. A fresh source review is needed after every changed result.
+
 ## Contract and quality policy
 
 `schemas/artifact.schema.json` is generated from `tax_pdf.models`. Coordinates are displayed PDF-page points with a top-left origin. Original page index and printed page label are distinct. Line polygons and native glyph polygons are retained; exact character-span-to-glyph alignment across inserted spaces/ligatures is not yet implemented. Future LangExtract input must retain an explicit span map rather than use an untracked Markdown conversion.

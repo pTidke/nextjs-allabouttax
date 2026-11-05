@@ -12,3 +12,5 @@ coverage
 **/.venv
 .pdf-lab-venv
 **/__pycache__
+
+**/node_modules

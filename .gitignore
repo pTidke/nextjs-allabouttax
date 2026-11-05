@@ -53,3 +53,5 @@ next-env.d.ts
 **/.pytest_cache/
 /tools/pdf_pipeline/output/
 /.pdf-lab-venv/
+
+/tools/pdf_pipeline/ocr/node_modules/

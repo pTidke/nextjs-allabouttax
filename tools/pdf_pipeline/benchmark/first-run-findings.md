@@ -26,6 +26,14 @@ Docling 2.147.0 with RapidOCR/ONNX Runtime on CPU processed a synthetic image-on
 
 The experiment preserves raw JSON/Markdown plus versions and a weight-manifest digest. Its output is not mapped into the canonical contract and remains EXPERIMENTAL_NOT_ACCEPTED. It cannot clear native quality holds. The tested backend resolves English but rejects Hindi; multilingual accuracy is not established.
 
+## Revised bilingual comparison
+
+A separate image-only Tesseract.js 7.0.0 comparison renders both Circular No. 6 pages at 300 DPI, runs English and English+Hindi full-page variants, and reruns the reported regions with explicit geometry. The six issue groups cover 16 native regions; the disconnected page 2 signature/footer and left-margin groups are cropped separately. Original source and baseline hashes remain unchanged. All six groups remain open and the package remains BLOCKED.
+
+The bilingual candidate produces readable Devanagari headings, but also corrupts part of the adjacent English “Direct Taxes” heading. The handwritten number remains wrong (`Q€` in the tested candidate). The name is still wrong in the crop and full-page variants; the reviewer-proposed `Hardev Singh` remains separate and is not injected into OCR. Two explicitly reviewer-marked signatures are presented as image regions without region OCR; this does not demonstrate automated signature detection. The page 2 alternatives still contain garbage; rotations are retained as experiments rather than promoted into a repaired reading order.
+
+Pinned tessdata_fast English/Hindi integer models run successfully. An earlier optional floating-point tessdata_best attempt failed in the WASM core with a missing dot-product function. A separate 1.0.0 best_int language-package name-crop trial ran but still misread the name; it was not promoted as the chosen configuration. These trials do not establish an engine winner. The revised package is ready for comparison review, not acceptance or production use. No paid OCR service was invoked.
+
 ## Next gates
 
 1. Human-label the triage set, fill coverage gaps and reserve held-out document groups.

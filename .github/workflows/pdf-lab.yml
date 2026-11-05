@@ -28,6 +28,13 @@ jobs:
           uv venv .pdf-lab-venv
           uv pip install --python .pdf-lab-venv/bin/python --require-hashes -r tools/pdf_pipeline/requirements-test.lock
           uv pip install --python .pdf-lab-venv/bin/python --no-deps -e tools/pdf_pipeline
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Install isolated OCR runtime without model downloads
+        run: npm ci --prefix tools/pdf_pipeline/ocr --ignore-scripts --no-audit --no-fund
+      - name: Check local OCR worker syntax
+        run: node --check tools/pdf_pipeline/ocr/worker.mjs
       - name: Check Python and canonical schema
         run: |
           .pdf-lab-venv/bin/ruff check tools/pdf_pipeline
