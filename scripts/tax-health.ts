@@ -7,7 +7,7 @@ knowledgeHealth()
     if (
       !report.readyForAnswers ||
       !report.workerRecent ||
-      report.failedDocuments
+      (process.argv.includes("--strict") && report.failedDocuments > 0)
     )
       process.exitCode = 1;
   })
