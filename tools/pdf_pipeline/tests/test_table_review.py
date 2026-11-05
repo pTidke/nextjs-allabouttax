@@ -141,3 +141,56 @@ def test_workspace_keeps_raw_data_and_escapes_via_dom_text(example, tmp_path):
     assert "innerHTML" not in script
     assert "source_block_ids" in script and "localStorage.setItem" in script
     assert "form-action 'none'" in (tmp_path / "tables/index.html").read_text()
+
+
+def test_unfinished_progress_preserves_empty_transcription_without_passing_strict_check(example):
+    from tax_pdf.table_review import validate_progress
+
+    _, package, _, _, value = example
+    value = copy.deepcopy(value)
+    value["cells"][0].update(disposition="text", text="")
+    value["cells"][1].update(disposition="covered", covered_by=None)
+    snapshot = {
+        "schema_version": "0.1.0",
+        "state": "UNFINISHED_TABLE_REVIEW",
+        "publication_eligible": False,
+        "draft": value,
+    }
+    progress, strict_valid = validate_progress(package, snapshot)
+    assert not strict_valid
+    assert progress.draft.cells[0].text == ""
+    assert progress.draft.cells[1].covered_by is None
+    assert progress.publication_eligible is False
+    with pytest.raises(ValueError):
+        validate_draft(package, progress.draft.model_dump())
+    with pytest.raises(ValueError):
+        validate_draft(package, snapshot)  # Progress envelope cannot masquerade as a strict draft.
+
+
+def test_unfinished_progress_keeps_revision_and_source_integrity_gates(example, tmp_path):
+    from tax_pdf.table_review import validate_progress
+
+    _, package, _, _, value = example
+    snapshot = {
+        "schema_version": "0.1.0",
+        "state": "UNFINISHED_TABLE_REVIEW",
+        "publication_eligible": False,
+        "draft": copy.deepcopy(value),
+    }
+    wrong = copy.deepcopy(snapshot)
+    wrong["draft"]["binding"]["render_sha256"] = "a" * 64
+    with pytest.raises(ValueError):
+        validate_progress(package, wrong)
+    wrong = copy.deepcopy(snapshot)
+    wrong["draft"]["cells"][0]["id"] = "unknown-cell"
+    with pytest.raises(ValueError):
+        validate_progress(package, wrong)
+    wrong = copy.deepcopy(snapshot)
+    wrong["publication_eligible"] = True
+    with pytest.raises(ValueError):
+        validate_progress(package, wrong)
+    copied = tmp_path / "tampered"
+    shutil.copytree(package, copied)
+    (copied / "pages/0001.png").write_bytes(b"changed image")
+    with pytest.raises(ValueError, match="integrity"):
+        validate_progress(copied, snapshot)

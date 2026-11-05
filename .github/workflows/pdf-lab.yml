@@ -37,6 +37,7 @@ jobs:
         run: |
           node --check tools/pdf_pipeline/ocr/worker.mjs
           node --check tools/pdf_pipeline/src/tax_pdf/table_assets/workspace.js
+          node --test tools/pdf_pipeline/tests/workspace.test.mjs
       - name: Check Python and canonical schema
         run: |
           .pdf-lab-venv/bin/ruff check tools/pdf_pipeline

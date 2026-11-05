@@ -161,3 +161,15 @@ tools/pdf_pipeline/.venv/bin/tax-pdf check-table-draft work/pdf-lab/demo-v2/benc
 ```
 
 A valid draft is still `DRAFT_NOT_ACCEPTED`; validation checks provenance and structure, not whether the transcription or legal interpretation is correct. There is no server write, extraction acceptance, tax approval or RAG path. Review times, independently labelled accuracy, a broader real scan cohort and persisted multi-reviewer workflow remain required before production integration.
+
+## Saving an unfinished table review
+
+The review form now has explicit **Matches original**, **Confirmed blank** and **Needs another check** actions. “Matches original” copies the selected raw string exactly after a reviewer clicks; it does not infer a transcription for unresolved cells or alter numbers/word spacing. Transcription and optional layout fields remain editable.
+
+**Save progress** retains incomplete text/merged-cell choices in a separate `UNFINISHED_TABLE_REVIEW` envelope when strict draft validation fails. It can be downloaded/imported and restored on reload, including the last selected table. The form states what still needs attention. Such progress files are not accepted annotations and cannot pass `check-table-draft` merely because they were saved. Revision, source/render integrity, field shape and candidate-cell identity remain mandatory for progress; unfinished text/geometry and footnote relationships remain subject to the existing strict validator. Browser storage is local convenience; keep the exported file for a durable copy.
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf check-table-progress PACKAGE_DIR unfinished-review.json
+```
+
+This reports source binding and whether the nested draft passes the structural checks; it never grants extraction acceptance, legal approval, or publication. The initial Circular No. 3 page-3 table review contained 48 recorded choices but no completed text transcriptions or merged anchors. They were preserved exactly rather than converted into verified reference labels. The updated local workspace uses the same benchmark source packages; its UI revision does not change the measured native-extraction run.

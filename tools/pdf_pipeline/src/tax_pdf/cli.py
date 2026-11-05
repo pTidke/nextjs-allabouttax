@@ -38,12 +38,29 @@ def main():
     draft = sub.add_parser("check-table-draft")
     draft.add_argument("package", type=Path)
     draft.add_argument("draft", type=Path)
+    progress = sub.add_parser("check-table-progress")
+    progress.add_argument("package", type=Path)
+    progress.add_argument("progress", type=Path)
     args = parser.parse_args()
     try:
         if args.command == "benchmark":
             from .benchmark import benchmark
 
             benchmark(args.manifest, args.plan, args.out)
+        elif args.command == "check-table-progress":
+            from .table_review import validate_progress
+
+            _, strict_valid = validate_progress(args.package, args.progress)
+            print(
+                json.dumps(
+                    {
+                        "state": "UNFINISHED_TABLE_REVIEW",
+                        "source_binding_valid": True,
+                        "strict_draft_valid": strict_valid,
+                        "publication_eligible": False,
+                    }
+                )
+            )
         elif args.command == "check-table-draft":
             from .table_review import validate_draft
 

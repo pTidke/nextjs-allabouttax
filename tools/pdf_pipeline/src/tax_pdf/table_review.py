@@ -26,7 +26,7 @@ class Binding(Model):
     table_id: str
 
 
-class CellDraft(Model):
+class CellFields(Model):
     id: str
     disposition: Literal["unreviewed", "text", "blank", "covered", "unreadable"]
     text: str | None = Field(default=None, max_length=20000)
@@ -37,6 +37,8 @@ class CellDraft(Model):
     unit: str | None = Field(default=None, max_length=500)
     note: str = Field(default="", max_length=4000)
 
+
+class CellDraft(CellFields):
     @model_validator(mode="after")
     def preserve_meaning(self):
         if self.disposition == "text" and (self.text is None or not self.text.strip()):
@@ -54,7 +56,12 @@ class CellDraft(Model):
         return self
 
 
-class FootnoteDraft(Model):
+class FootnoteFields(Model):
+    text: str = Field(max_length=8000)
+    source_block_ids: list[str] = Field(max_length=100)
+
+
+class FootnoteDraft(FootnoteFields):
     text: str = Field(min_length=1, max_length=8000)
     source_block_ids: list[str] = Field(min_length=1, max_length=100)
 
@@ -90,13 +97,19 @@ def binding(artifact, artifact_sha, page, table):
     )
 
 
-def validate_draft(package: Path, value) -> TableDraft:
-    """Validate provenance/geometry, not transcription correctness or legal meaning."""
-    if isinstance(value, Path):
-        if value.stat().st_size > 5 * 1024**2:
-            raise ValueError("Draft exceeds byte budget")
-        value = json.loads(value.read_text())
-    draft = TableDraft.model_validate(value)
+class PendingTableDraft(TableDraft):
+    cells: list[CellFields] = Field(min_length=1, max_length=10000)
+    footnotes: list[FootnoteFields] = Field(default_factory=list, max_length=100)
+
+
+class ReviewProgress(Model):
+    schema_version: Literal["0.1.0"] = "0.1.0"
+    state: Literal["UNFINISHED_TABLE_REVIEW"] = "UNFINISHED_TABLE_REVIEW"
+    publication_eligible: Literal[False] = False
+    draft: PendingTableDraft
+
+
+def source_table(package, draft_binding, draft_cells):
     artifact_file = package / "artifact.json"
     artifact = Artifact.model_validate_json(artifact_file.read_text())
     checked = verify_package(artifact.model_copy(deep=True), package)
@@ -105,18 +118,48 @@ def validate_draft(package: Path, value) -> TableDraft:
         for i in checked.issues
     ):
         raise ValueError("Source package integrity failed")
-    page = next((p for p in artifact.pages if p.number == draft.binding.page), None)
-    table = next((t for t in page.tables if t.id == draft.binding.table_id), None) if page else None
+    page = next((p for p in artifact.pages if p.number == draft_binding.page), None)
+    table = next((t for t in page.tables if t.id == draft_binding.table_id), None) if page else None
     if (
         not table
         or not page.render
-        or draft.binding != binding(artifact, digest(artifact_file), page, table)
+        or draft_binding != binding(artifact, digest(artifact_file), page, table)
     ):
         raise ValueError("Draft does not match this exact source/table revision")
     originals = {c.id: c for c in table.cells}
-    cells = {c.id: c for c in draft.cells}
-    if set(cells) != set(originals) or len(cells) != len(draft.cells):
+    cells = {c.id: c for c in draft_cells}
+    if set(cells) != set(originals) or len(cells) != len(draft_cells):
         raise ValueError("Draft must contain every candidate cell exactly once")
+    return page, table
+
+
+def validate_progress(package: Path, value):
+    """Preserve unfinished input without treating missing relationships/text as valid labels."""
+    if isinstance(value, Path):
+        if value.stat().st_size > 5 * 1024**2:
+            raise ValueError("Review progress exceeds byte budget")
+        value = json.loads(value.read_text())
+    progress = ReviewProgress.model_validate(value)
+    source_table(package, progress.draft.binding, progress.draft.cells)
+    # Strict validation still blocks incomplete transcriptions or table relationships.
+    strict_valid = False
+    try:
+        validate_draft(package, progress.draft.model_dump())
+        strict_valid = True
+    except ValueError:
+        pass
+    return progress, strict_valid
+
+
+def validate_draft(package: Path, value) -> TableDraft:
+    """Validate provenance/geometry, not transcription correctness or legal meaning."""
+    if isinstance(value, Path):
+        if value.stat().st_size > 5 * 1024**2:
+            raise ValueError("Draft exceeds byte budget")
+        value = json.loads(value.read_text())
+    draft = TableDraft.model_validate(value)
+    page, table = source_table(package, draft.binding, draft.cells)
+    originals = {c.id: c for c in table.cells}
     if len(set(draft.header_rows)) != len(draft.header_rows) or any(
         type(r) is not int or not 0 <= r < table.rows for r in draft.header_rows
     ):

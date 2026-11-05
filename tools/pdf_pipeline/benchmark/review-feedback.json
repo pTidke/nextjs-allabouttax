@@ -52,7 +52,7 @@
                 "x1": 527.6835,
                 "bottom": 81.80700000000013
               },
-              "extracted_text": "CIRCULAR NO.[)§ /2026"
+              "extracted_text": "CIRCULAR NO.[)\u00a7 /2026"
             }
           ]
         },
@@ -97,7 +97,7 @@
                 "x1": 389.84111999999993,
                 "bottom": 152.3839999999999
               },
-              "extracted_text": "Department of Revenue / I[SI¥d fqum"
+              "extracted_text": "Department of Revenue / I[SI\u00a5d fqum"
             },
             {
               "id": "p1-b6",
@@ -202,7 +202,7 @@
                 "x1": 568.4245999999999,
                 "bottom": 486.34200000000004
               },
-              "extracted_text": "q/\\\"\\“’\\/b"
+              "extracted_text": "q/\\\"\\\u201c\u2019\\/b"
             },
             {
               "id": "p2-b24",
@@ -301,7 +301,7 @@
             "p1-b1"
           ],
           "outcome": "still_incorrect",
-          "user_report": "p1b1 still says Q€ instead of 06",
+          "user_report": "p1b1 still says Q\u20ac instead of 06",
           "proposed_value": "06",
           "scope": "Handwritten number token only."
         },
@@ -392,7 +392,7 @@
       "known_remaining_targets": [
         "Handwritten circular number 06",
         "Printed name Hardev Singh",
-        "Margin list sequence 1–7, especially 2/5/7",
+        "Margin list sequence 1\u20137, especially 2/5/7",
         "Mixed-script corruption of the adjacent English Direct Taxes heading"
       ]
     },
@@ -644,6 +644,32 @@
       "ground_truth_labels_accepted": false,
       "legal_review_completed": false,
       "publication_authorized": false
+    },
+    {
+      "feedback_type": "table_review_progress",
+      "reviewer_role": "product_owner",
+      "user_statement": "done",
+      "binding": {
+        "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+        "artifact_sha256": "ebe66d9614ec4bcac348e085fd5b335c715ff5df4e1b1fe4bcae74e3db42fd44",
+        "render_sha256": "b7e129ec756fd3436d87a461d26757903f5387dc49d4cc80f54e5dd820e9fb73",
+        "table_sha256": "ab71d87dbe2ef5170d45f0e58a0f8c36aba96c2d11e12d196df3b57bfe72c871",
+        "run_id": "3756112e45b5-1793917370538925000",
+        "fingerprint": "a9bf99dfde38ded0fb8b7425d3b94469af0293db48df410c7ccc11863f4b2221",
+        "page": 3,
+        "table_id": "p3-t1"
+      },
+      "region_id": "p3-t1",
+      "selections": {
+        "text_without_transcription": 28,
+        "covered_without_anchor": 14,
+        "blank": 6,
+        "total_cells": 48
+      },
+      "status": "UNFINISHED_TABLE_REVIEW",
+      "ground_truth_accepted": false,
+      "assistant_action": "Preserved original choices, restored them through the source-bound progress import and verified save/reload. No real-document text or merged relationships were filled automatically.",
+      "local_evidence_sha256": "ae1919e67e5ee78b3bfb771dffe9fc4d2b8bf84491106ff9b78196fbe3d87608"
     }
   ]
 }
