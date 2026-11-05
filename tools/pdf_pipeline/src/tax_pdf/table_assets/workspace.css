@@ -3,3 +3,5 @@
 #grid{max-height:430px;overflow:auto}#preview td,#preview th{padding:9px;border:1px solid #bfd0d9;white-space:pre-wrap;text-align:left}#preview th{background:#e8f3ef}
 
 .quick-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.layout-fields{margin-top:12px}.checked{border-bottom-color:#829d99!important}.confirmed{border-bottom-color:#00856a!important}
+
+.history-panel{padding:16px;margin:20px 0;background:#eaf3f2;border:1px solid #c2d7d1;border-radius:6px}.history-panel h2{font-size:17px}.history-panel ol{font-size:12px;padding-left:20px}.history-panel li{padding:6px;overflow-wrap:anywhere}

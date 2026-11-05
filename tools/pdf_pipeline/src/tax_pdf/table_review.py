@@ -247,5 +247,5 @@ def write_workspace(root, rows):
         json.dumps({"publication_eligible": False, "tables": tables}, indent=2)
     )
     assets = Path(__file__).parent / "table_assets"
-    for name in ("index.html", "workspace.js", "workspace.css"):
+    for name in ("index.html", "workspace.js", "workspace.css", "history.js"):
         shutil.copyfile(assets / name, output / name)

@@ -123,7 +123,7 @@ This is a reviewer-confirmed exclusion, not an automatic bleed-through classifie
 
 Raw text is preserved; NFC-normalised text is a separate display field. No tax rate, date, identifier or negation is automatically repaired. Table grids are candidates: null/covered cells, empty strings, zero and dash are distinct; merged spans, header paths, units and footnotes are unverified and block acceptance. Reading order is a geometric candidate, not verified legal structure.
 
-Local table correction drafts are available below. Server-side correction history, reviewer acceptance, tax applicability, source-authority decisions, cross-document dependencies, cloud storage/queues, OS sandboxing and production integration remain future milestones. LangExtract/Azure evaluation begins after a labelled acceptance rubric and the relevant service budget are agreed. No paid resources were provisioned for this increment.
+Local table correction drafts are available below. Authenticated shared correction history, reviewer acceptance, tax applicability, source-authority decisions, cross-document dependencies, cloud storage/queues, OS sandboxing and production integration remain future milestones. LangExtract/Azure evaluation begins after a labelled acceptance rubric and the relevant service budget are agreed. No paid resources were provisioned for this increment.
 
 ## Reproduce checks
 
@@ -173,3 +173,39 @@ tools/pdf_pipeline/.venv/bin/tax-pdf check-table-progress PACKAGE_DIR unfinished
 ```
 
 This reports source binding and whether the nested draft passes the structural checks; it never grants extraction acceptance, legal approval, or publication. The initial Circular No. 3 page-3 table review contained 48 recorded choices but no completed text transcriptions or merged anchors. They were preserved exactly rather than converted into verified reference labels. The updated local workspace uses the same benchmark source packages; its UI revision does not change the measured native-extraction run.
+
+## Local durable review history
+
+The disk-backed laboratory server is separate from Next.js and the production database:
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf serve-review --root work/pdf-lab/demo-v2 --store work/pdf-review-history/reviews.sqlite --port 8788
+```
+
+Open `http://127.0.0.1:8788/benchmarks/native-engineering-v2/tables/index.html`. **Load latest saved review** resumes an existing revision, and **Save to review history** writes a new one. A browser recovery copy is retained before loading history. Browser-only save/export remain available on the static server. Existing local reviews were imported with their original bindings and unfinished status; saving or importing never grants acceptance.
+
+The SQLite store is outside the served directory with owner-only file permissions. Every revision records its parent, original payload, creation timestamp, retry identity, checksum and strict-validation result. Revisions reject ordinary updates/deletes; the parent chain and record hashes are checked on read/save. Conditional writes reject stale edits with HTTP 409. Retrying an interrupted request reuses its identity, without creating another revision or moving the head backwards. A browser-storage failure does not negate a successful disk save. This detects accidental changed/broken history; it is not a signed audit log protected from an administrator who controls the database.
+
+The server binds only to `127.0.0.1`, validates literal Host/Origin and browser request-site headers, requires a same-origin custom header for JSON writes, disables framing, and rejects hidden/traversing/outside-symlink paths. Database/backup files cannot be put under the static root. Saves are limited to five MiB, history to 999 revisions per binding and the local database to a 100-MiB budget. Package registration is bounded to 500 extraction runs; restart the service after adding new editable packages. Source/render bytes and exact draft bindings are independently checked before writes. Other local processes running as the same user are trusted; this is not a remotely accessible or authenticated multi-user service. Reviewer labels are self-reported.
+
+Create a consistent, non-overwriting SQLite snapshot with:
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf review-backup --root work/pdf-lab/demo-v2 --store work/pdf-review-history/reviews.sqlite --out work/pdf-review-history/backups/NEW.sqlite
+```
+
+Keep the preserved source packages alongside the history backup when moving machines. The backup command uses SQLite's backup API, not a raw live-file copy. Restore was checked against every saved table/revision. The current backup is on the same machine; off-machine retention and restore procedures remain deployment work. Production requires authenticated reviewer identities/roles, managed storage and retention, operational isolation, and a separate acceptance workflow. No acceptance endpoint, RAG writer, cloud resource or production database access is added here.
+
+## Expanded scan comparison
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf compare-scans work/pdf-corpus/expanded-scan-sources-v1.json --models work/tesseract-fast-models --out work/pdf-lab/demo-v2/benchmarks/FRESH_SCAN_RUN
+```
+
+The manifest follows `tax-pdf batch`, adding explicit `pages` and `kind` (`official` or `synthetic`). It permits at most six originals and ten selected page/derivative cases. Originals and render checksums remain preserved. All pages are accounted for by the native runner; selected pages render at 300 DPI. The comparison has a 600-second deadline, with native processing bounded by remaining time (at most 120 seconds per source) and each local OCR job bounded to 120 seconds. Incomplete/failed OCR attempts remain represented; an exhausted document-run deadline aborts the incomplete experiment without replacing a previous report.
+
+The measured extension directly fetched Circulars 2, 4 and 7/2026 using the application's existing official-host/DNS/redirect/byte checks, before evaluating this experiment. Their four pages join both pages of the already-tuned Circular 6 and a synthetic image-only page with separate 90-degree and blur derivatives: nine cases total. Acquisition metadata still comes from the legacy inventory, so this is not a representative held-out dataset; a separate real image-only cohort remains a gap. Only the synthetic input is altered, and every derivative keeps its source/transform/hash. OCR boxes on rotated images are also mapped back to unchanged source-page coordinates.
+
+English and English/Hindi local Tesseract candidates remain separate. Empty default-layout results explicitly raise `OCR_RETURNED_NO_LINES` and trigger a separate PSM 6 layout experiment, marked `ALTERNATIVE_LAYOUT_UNVERIFIED`. The original empty result is retained. The wider run found one readable scanned page where both default attempts yielded no lines; alternate attempts yielded candidates, without proving complete or correct transcription. Provider confidence, nonempty text and completed jobs are never accuracy scores or approval. The HTML gallery links every candidate to its image region, with unchanged native text and raw provider output retained. Character/word/table accuracy stay null until accepted labels exist. CI mocks OCR and downloads no models; the actual local runs are recorded separately.
+
+The expanded scan comparison is a raw engine experiment. It does not apply the prior Circular 6 reviewer exclusions/corrections; the separately preserved refinement and scope-review packages remain the evidence for that work.

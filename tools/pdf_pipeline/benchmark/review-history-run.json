@@ -1,0 +1,28 @@
+{
+  "scope": "Durable local single-operator review history; no production integration",
+  "publication_eligible": false,
+  "store": "work/pdf-review-history/reviews.sqlite",
+  "backup": "work/pdf-review-history/backups/reviews-v1.sqlite",
+  "backup_sha256": "867ddd37318b6bcdccec82e9336afc69ec0c8a3303d4a46d19058db611f5a00b",
+  "saved_tables": 2,
+  "saved_revisions": 3,
+  "validation": {
+    "checks": [
+      "Original synthetic and unfinished Circular 3 drafts imported with exact bindings",
+      "Two-browser stale edit rejected with HTTP 409",
+      "Service restart retained all 48 Circular 3 choices",
+      "SQLite snapshot restored with identical tables/revision chains",
+      "Interrupted-save retry identity preserved",
+      "Changed row/head history and source renders rejected",
+      "Database outside static root; origin/Host/site/header and path guards tested"
+    ],
+    "accepted_reference_labels": 0,
+    "real_source_transcription_auto_filled": false
+  },
+  "ui_assets": {
+    "index.html": "bdd220106ab11823975f9b6801ce4450b5964fea3b95d2dad83e6fbf21e62be7",
+    "workspace.js": "8cca05e254c7f5b7156c6652b19cdf9f17ec29e9bd3afc096114cd60261f579c",
+    "history.js": "ac234ed46197111d3f4d30b3de7f1477dd05927d8e6d1a4f3d6667f11e1e2967",
+    "workspace.css": "b45f8673c0ebbbece85bcb9a614f7d3dfe8cdc7640bfa27819cfa2573fb2ac19"
+  }
+}

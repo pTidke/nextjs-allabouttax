@@ -177,6 +177,7 @@ function chooseSample(index) {
   $('selection').textContent = 'Choose a cell to highlight its original position.'; $('preview').replaceChildren(); $('prepared-json').value=''; $('prepared').open=false;
   const blocks = sample.blocks.map(b => { const button = document.createElement('button'); button.type = 'button'; button.textContent = b.id + ' · ' + b.raw_text; button.addEventListener('click', () => highlight(b.bbox,b.id)); return button; });
   $('blocks').replaceChildren(...blocks); showDraft();
+  document.dispatchEvent(new Event('lab-table-selected'));
   if (storageError) { message('A saved draft could not be loaded. The original candidate remains available.', true); return; }
   const issue=pendingIssue(draft);
   if (saved && issue) { message('Unfinished review loaded. Your selections are safe. Still needs attention: '+issue); return; }

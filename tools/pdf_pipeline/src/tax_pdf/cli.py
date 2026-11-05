@@ -41,9 +41,46 @@ def main():
     progress = sub.add_parser("check-table-progress")
     progress.add_argument("package", type=Path)
     progress.add_argument("progress", type=Path)
+    serve = sub.add_parser("serve-review")
+    serve.add_argument("--root", type=Path, required=True)
+    serve.add_argument("--store", type=Path, required=True)
+    serve.add_argument("--port", type=int, default=8788)
+    backup = sub.add_parser("review-backup")
+    backup.add_argument("--root", type=Path, required=True)
+    backup.add_argument("--store", type=Path, required=True)
+    backup.add_argument("--out", type=Path, required=True)
+    scans = sub.add_parser("compare-scans")
+    scans.add_argument("manifest", type=Path)
+    scans.add_argument("--models", type=Path, required=True)
+    scans.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "benchmark":
+        if args.command == "compare-scans":
+            from .scan_benchmark import scan_benchmark
+
+            scan_benchmark(args.manifest, args.models, args.out)
+        elif args.command == "serve-review":
+            from .review_server import make_server
+
+            server = make_server(args.root, args.store, args.port)
+            print(
+                json.dumps(
+                    {
+                        "url": f"http://127.0.0.1:{server.server_port}/",
+                        "publication_eligible": False,
+                    }
+                ),
+                flush=True,
+            )
+            try:
+                server.serve_forever()
+            finally:
+                server.server_close()
+        elif args.command == "review-backup":
+            from .review_store import ReviewStore
+
+            print(json.dumps(ReviewStore(args.store, args.root).backup(args.out)))
+        elif args.command == "benchmark":
             from .benchmark import benchmark
 
             benchmark(args.manifest, args.plan, args.out)
