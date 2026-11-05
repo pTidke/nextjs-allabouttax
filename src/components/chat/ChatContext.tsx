@@ -4,204 +4,187 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
   useRef,
-  ReactNode,
+  useEffect,
+  type ReactNode,
 } from "react";
-import { useAssistant } from "ai/react";
-import { Message } from "ai";
 import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
+import type { Citation } from "@/lib/chat/answer";
 
-// --- CONSTANTS FOR STORAGE ---
-const getStorageKeyMessages = (email?: string) =>
-  email ? `tax_assistant_messages_${email}` : null;
-const getStorageKeyThread = (email?: string) =>
-  email ? `tax_assistant_thread_id_${email}` : null;
-
-// --- UTILITY: Clean the text before rendering ---
-// Keep this if needed elsewhere, or move to utility file. Left here for context.
-// Ideally should be imported.
-
-interface ChatContextType {
-  status: "in_progress" | "awaiting_message" | null;
-  messages: Message[];
+export type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  citations?: Citation[];
+  releaseId?: string | null;
+};
+type ChatState = {
+  status: "in_progress" | "awaiting_message";
+  messages: ChatMessage[];
   input: string;
-  submitMessage: (
-    event?: React.FormEvent<HTMLFormElement>,
-    requestOptions?: {
-      data?: Record<string, string>;
-    }
-  ) => Promise<void>;
-  handleInputChange: (
-    event:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLTextAreaElement>
-  ) => void;
   setInput: React.Dispatch<React.SetStateAction<string>>;
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  attachedFile: File | null;
-  setAttachedFile: React.Dispatch<React.SetStateAction<File | null>>;
+  period: string;
+  changePeriod: (period: string) => void;
   suggestions: string[];
-  setSuggestions: React.Dispatch<React.SetStateAction<string[]>>;
-  localThreadId: string;
-  user: any; // Using any for session user object flexibility
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  handleSubmit: (e?: React.FormEvent) => Promise<void>;
+  user: Session["user"] | undefined;
+  handleSubmit: (event?: React.FormEvent) => Promise<void>;
   clearChat: () => void;
-  error: Error | undefined;
-}
+  openConversation: (id: string) => Promise<void>;
+  error: string | null;
+};
+const ChatContext = createContext<ChatState | undefined>(undefined);
 
-const ChatContext = createContext<ChatContextType | undefined>(undefined);
-
-export function ChatProvider({ children }: { children: ReactNode }) {
-  const { data: session } = useSession();
-  const user = session?.user;
-
-  const {
-    status,
-    messages,
-    input,
-    submitMessage,
-    handleInputChange,
-    setInput,
-    setMessages,
-    threadId,
-    error,
-  } = useAssistant({
-    api: "/api/assistant",
-  });
-
+function ChatStateProvider({
+  children,
+  user,
+}: {
+  children: ReactNode;
+  user: Session["user"] | undefined;
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [period, setPeriod] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [localThreadId, setLocalThreadId] = useState<string>("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<ChatState["status"]>("awaiting_message");
+  const conversationId = useRef<string | null>(null);
+  const controller = useRef<AbortController | null>(null);
+  const generation = useRef(0);
+  useEffect(
+    () => () => {
+      generation.current++;
+      controller.current?.abort();
+    },
+    [],
+  );
 
-  // --- 1. LOAD FROM MEMORY ON MOUNT AND USER CHANGE ---
-  useEffect(() => {
-    const email = user?.email;
-    if (!email) {
-      setMessages([]);
-      setLocalThreadId("");
+  function clearChat() {
+    generation.current++;
+    controller.current?.abort();
+    controller.current = null;
+    conversationId.current = null;
+    setMessages([]);
+    setSuggestions([]);
+    setError(null);
+    setStatus("awaiting_message");
+  }
+  async function openConversation(id: string) {
+    clearChat();
+    const current = generation.current;
+    const abort = new AbortController();
+    controller.current = abort;
+    setIsOpen(true);
+    setStatus("in_progress");
+    try {
+      const response = await fetch(
+        `/api/conversations/${encodeURIComponent(id)}`,
+        { cache: "no-store", signal: abort.signal },
+      );
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error);
+      if (current !== generation.current) return;
+      conversationId.current = body.id;
+      setPeriod(body.period);
+      setMessages(body.messages);
+      if (body.truncated)
+        setError(
+          "Showing the latest 100 messages. Download the conversation from Your conversations for the full history.",
+        );
+    } catch (e) {
+      if (!abort.signal.aborted && current === generation.current)
+        setError(
+          e instanceof Error ? e.message : "Could not load conversation.",
+        );
+    } finally {
+      if (current === generation.current) {
+        controller.current = null;
+        setStatus("awaiting_message");
+      }
+    }
+  }
+  async function handleSubmit(event?: React.FormEvent) {
+    event?.preventDefault();
+    if (controller.current || !input.trim()) return;
+    if (!user) {
+      setError("Please sign in to ask a question.");
       return;
     }
-
-    const keyMessages = getStorageKeyMessages(email);
-    const keyThread = getStorageKeyThread(email);
-
-    const savedMessages = keyMessages
-      ? localStorage.getItem(keyMessages)
-      : null;
-    const savedThreadId = keyThread ? localStorage.getItem(keyThread) : null;
-
-    if (savedThreadId) {
-      setLocalThreadId(savedThreadId);
-    } else {
-      setLocalThreadId("");
+    if (!period) {
+      setError("Choose the tax period before asking your question.");
+      return;
     }
-
-    if (savedMessages) {
-      try {
-        const parsed = JSON.parse(savedMessages);
-        if (Array.isArray(parsed)) {
-          setMessages(parsed as Message[]);
-        } else {
-          setMessages([]);
-        }
-      } catch (e) {
-        console.error("Failed to parse chat history:", e);
-        setMessages([]);
-      }
-    } else {
-      setMessages([]);
-    }
-  }, [user?.email, setMessages]);
-
-  // --- 2. SAVE TO MEMORY ON CHANGE ---
-  useEffect(() => {
-    const email = user?.email;
-    if (!email) return;
-
-    const keyMessages = getStorageKeyMessages(email);
-    const keyThread = getStorageKeyThread(email);
-
-    if (keyMessages && messages.length > 0) {
-      localStorage.setItem(keyMessages, JSON.stringify(messages));
-    }
-    if (threadId && keyThread) {
-      setLocalThreadId(threadId);
-      localStorage.setItem(keyThread, threadId);
-    }
-  }, [messages, threadId, user?.email]);
-
-  // --- EXTRACT SUGGESTIONS LOGIC ---
-  useEffect(() => {
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role === "assistant") {
-      const regex = /<<<SUGGESTIONS=\[(.*?)\]>>>/;
-      const match = lastMessage.content.match(regex);
-      if (match && match[1]) {
-        try {
-          const parsed = JSON.parse(`[${match[1]}]`);
-          setSuggestions(parsed);
-        } catch (e) {
-          // ignore parsing errors
-        }
-      }
-    }
-  }, [messages]);
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!input.trim() && !attachedFile) return;
-
+    const current = generation.current;
+    const message = input.trim();
+    const pendingId = crypto.randomUUID();
+    const abort = new AbortController();
+    controller.current = abort;
+    setError(null);
     setSuggestions([]);
-
-    await submitMessage(undefined, {
-      data: {
-        message: input,
-        threadId: localThreadId || "",
-      },
-    });
-
-    setAttachedFile(null);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "56px";
+    setStatus("in_progress");
+    setInput("");
+    setMessages((old) => [
+      ...old,
+      { id: pendingId, role: "user", content: message },
+    ]);
+    try {
+      const response = await fetch("/api/assistant", {
+        method: "POST",
+        signal: abort.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          period,
+          ...(conversationId.current
+            ? { conversationId: conversationId.current }
+            : {}),
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok)
+        throw new Error(
+          payload.error || "The assistant is temporarily unavailable.",
+        );
+      if (current !== generation.current) return;
+      conversationId.current = payload.conversationId;
+      setMessages((old) => [...old, payload.message]);
+      setSuggestions(payload.suggestions || []);
+    } catch (err) {
+      if (current !== generation.current || abort.signal.aborted) return;
+      setError(
+        err instanceof Error ? err.message : "Unable to send the question.",
+      );
+      setMessages((old) => old.filter((m) => m.id !== pendingId));
+      setInput(message);
+    } finally {
+      if (current === generation.current) {
+        controller.current = null;
+        setStatus("awaiting_message");
+      }
     }
-  };
-
+  }
   return (
     <ChatContext.Provider
       value={{
         status,
         messages,
         input,
-        submitMessage,
-        handleInputChange,
         setInput,
         isOpen,
         setIsOpen,
-        attachedFile,
-        setAttachedFile,
-        suggestions,
-        setSuggestions,
-        localThreadId,
-        user,
-        textareaRef,
-        handleSubmit,
-        clearChat: () => {
-          setMessages([]);
-          setLocalThreadId("");
-          setSuggestions([]);
-          const email = user?.email;
-          if (email) {
-            const keyMessages = getStorageKeyMessages(email);
-            const keyThread = getStorageKeyThread(email);
-            if (keyMessages) localStorage.removeItem(keyMessages);
-            if (keyThread) localStorage.removeItem(keyThread);
-          }
+        period,
+        changePeriod: (next) => {
+          clearChat();
+          setPeriod(next);
         },
+        suggestions,
+        user,
+        handleSubmit,
+        clearChat,
+        openConversation,
         error,
       }}
     >
@@ -209,11 +192,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     </ChatContext.Provider>
   );
 }
-
+export function ChatProvider({ children }: { children: ReactNode }) {
+  const { data: session } = useSession();
+  // Remount on identity changes. Private chat text is not persisted in localStorage.
+  return (
+    <ChatStateProvider
+      key={session?.user?.id ?? "signed-out"}
+      user={session?.user}
+    >
+      {children}
+    </ChatStateProvider>
+  );
+}
 export function useChat() {
   const context = useContext(ChatContext);
-  if (context === undefined) {
-    throw new Error("useChat must be used within a ChatProvider");
-  }
+  if (!context) throw new Error("useChat must be used within ChatProvider.");
   return context;
 }

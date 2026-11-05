@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
 import BlogUpdates from "@/components/sections/BlogUpdates";
@@ -52,7 +52,7 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800"
             >
               <Sparkles size={12} />
-              <span>New: Income Tax Act 2025 Support</span>
+              <span>Early access · Reviewed income-tax sources</span>
             </motion.div>
 
             <motion.h1
@@ -69,9 +69,7 @@ export default function LandingPage() {
               variants={itemVariants}
               className="mt-8 text-md md:text-xl leading-relaxed text-slate-600"
             >
-              All About Tax is your AI partner for the Indian tax regime. Ask
-              complex questions, get cited answers from official acts, and plan
-              your finances in plain English.
+              Explore selected Indian income-tax material in plain English, with citations to reviewed official sources and an explicit tax period.
             </motion.p>
 
             {/* BUTTONS: w-fit ensures they don't stretch; lg:justify-start aligns them left on desktop */}
@@ -105,7 +103,7 @@ export default function LandingPage() {
             <div className="relative w-full max-w-[540px] aspect-square">
               <Image
                 src="/illustrations/tax-hero.svg"
-                alt="AI-Powered Indian Tax Expert Illustration - Simplifying GST and Income Tax"
+                alt="Illustration of researching Indian income tax"
                 fill
                 priority
                 className="object-contain"
@@ -152,13 +150,7 @@ export default function LandingPage() {
               </h3>
               {/* text-justify applied here */}
               <p className="text-slate-500 text-sm md:text-base leading-relaxed text-justify">
-                Please note that all tax calculations and guidance provided by
-                this AI assistant are indicative in nature and based on the
-                programmed logic of FY 2025-26 rules. Tax laws can be subject to
-                interpretation and individual circumstances may vary. Users are
-                strongly advised to consult with a qualified Chartered
-                Accountant or tax professional for official filing, legal
-                advice, and final verification.
+                Answers depend on the reviewed passages available for your selected period. Check the cited official sources and seek qualified advice for your circumstances. Calculations, document uploads, draft returns and filing are planned features.
               </p>
             </div>
           </motion.div>

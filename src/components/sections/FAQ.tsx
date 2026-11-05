@@ -8,125 +8,64 @@ import { cn } from "@/lib/utils";
 const faqData = [
   {
     id: "basics",
-    label: "Basics & Forms",
+    label: "Using the assistant",
     questions: [
       {
-        question: "How do I know which ITR I need to file?",
+        question: "What can I ask?",
         answer:
-          "Different tax returns are prescribed for filing by individual taxpayers depending on their source of income and residential status. To determine the correct ITR to file, you can use the 'Help me decide which ITR Form to file' option on the portal.",
+          "Ask about central income-tax material in the reviewed source library. Choose the relevant FY, AY or Tax Year first. Coverage depends on the specific passages that have been reviewed and published.",
       },
       {
-        question: "What documents do I need to file ITR-1?",
+        question: "Why might the assistant be unable to answer?",
         answer:
-          "You need AIS, Form 16, house rent receipts, investment proofs, and premium receipts. However, ITRs are annexure-less forms, so you don't need to attach these documents, just keep them for your records.",
+          "The assistant needs fresh approved evidence matching your question and tax period. A document may still need review, a refresh may be overdue, or the available passage may not answer your question.",
       },
       {
-        question: "What income does NOT form part of ITR-1?",
+        question: "Where can I check an answer?",
         answer:
-          "ITR-1 excludes: (a) Profits from business/profession, (b) Short/Long term capital gains (u/s 112A > 1.25L), (c) Income from >1 house property, (d) Lottery winnings/race horses, (e) Section 115BBDA/115BBE income.",
-      },
-      {
-        question: "Is it mandatory to define employment nature?",
-        answer:
-          "Yes, you must select from: Central/State Govt, PSU, Pensioners, Private Sector, or Not Applicable (family pension).",
+          "Each supported answer includes official source citations. Open them to compare the passage, effective dates and tax period with your circumstances.",
       },
     ],
   },
   {
-    id: "filing",
-    label: "Filing Process",
+    id: "coverage",
+    label: "Sources and coverage",
     questions: [
       {
-        question: "What precautions should I take while filing?",
+        question: "Does this cover every Indian tax?",
         answer:
-          "Carefully select the tax regime, reconcile AIS/Form 26AS data, verify pre-filled details (PAN, Bank), identify the correct ITR form, and ensure you e-Verify after filing.",
+          "The early-access library focuses on selected central income-tax documents. GST, state taxes, complete historical coverage and every filing scenario are outside the current release.",
       },
       {
-        question: "Is e-Filing and e-Payment the same thing?",
+        question: "How do new rules become available?",
         answer:
-          "No. e-Filing is electronically submitting your Return on the portal, while e-Payment is the process of electronically paying the tax liability.",
+          "The background worker discovers and checks official sources. New or changed documents enter a review queue and become available after approval. The library page shows current source availability.",
       },
       {
-        question: "Can I correct a mistake in my filed ITR?",
+        question: "What about a notification naming a specific entity?",
         answer:
-          "Yes, you can file a Revised Return u/s 139(5) three months before the end of the relevant Assessment Year (e.g., by 31st Dec 2025 for AY 2025-26).",
-      },
-      {
-        question: "What happens if I file after the due date?",
-        answer:
-          "You may have to pay a late fee up to ₹5,000, and interest on tax liability. Also, losses cannot be carried forward, and certain deductions/exemptions become unavailable.",
-      },
-      {
-        question: "Can I file ITR for the last 4 years now?",
-        answer:
-          "Yes, you can file ITR-U (Updated Return) if you missed filing for the previous four years, subject to certain conditions and additional tax.",
+          "Include the entity’s full legal name in the question. An entity-specific designation cannot be assumed to apply to another taxpayer.",
       },
     ],
   },
   {
-    id: "regimes",
-    label: "Tax & Regimes",
+    id: "account",
+    label: "Account and data",
     questions: [
       {
-        question: "Is the new tax regime the default?",
+        question: "Can I revisit or remove my chats?",
         answer:
-          "Yes. From AY 2024-25, the new tax regime is the default option. You can manually opt for the old regime every year if beneficial.",
+          "Open Your conversations from your account menu. You can reopen a conversation, download its messages and citations, or permanently delete it from the application database. Starting a new chat only clears the chat window.",
       },
       {
-        question: "How do I opt out of the New Tax Regime?",
+        question: "Should I paste financial documents into chat?",
         answer:
-          "For ITR-1/2, you can simply select 'Opting out of new regime' in the form. No separate form is needed. Business income filers (ITR-3/4/5) must file Form 10-IEA.",
+          "Keep questions general and avoid PAN, Aadhaar, bank details and credentials. Document uploads and personal filing preparation are not available in this release.",
       },
       {
-        question: "What is the Rebate u/s 87A?",
+        question: "Can the assistant calculate or file my return?",
         answer:
-          "Section 87A allows a rebate of up to ₹12,500 under the old tax regime (income ≤ ₹5L) and up to ₹25,000 under the new tax regime (income ≤ ₹7L).",
-      },
-      {
-        question: "What is Advance Tax?",
-        answer:
-          "If your tax liability exceeds ₹10,000/year (beyond TDS), you must pay Advance Tax in quarterly installments (June, Sept, Dec, March) to avoid interest.",
-      },
-      {
-        question: "How is Advance Tax calculated?",
-        answer:
-          "Pay 15% by 15th June, 45% by 15th Sept, 75% by 15th Dec, and 100% by 15th March. For Self-Assessment Tax, pay any remaining dues before filing the return.",
-      },
-    ],
-  },
-  {
-    id: "income",
-    label: "Income & Deductions",
-    questions: [
-      {
-        question: "Are allowances and perquisites similar?",
-        answer:
-          "No. Allowances are fixed periodic amounts (e.g., HRA, LTA) that may be exempt. Perquisites are non-monetary benefits (e.g., car, housing) provided by the employer, which may be taxable.",
-      },
-      {
-        question: "Are all donations 100% exempted?",
-        answer:
-          "No. Donations qualify for either 50% or 100% deduction, with or without a qualifying limit, depending on the institution (e.g., PM Relief Fund vs. private NGO). Check your receipt details.",
-      },
-      {
-        question: "Can I file ITR-1 for rental income?",
-        answer:
-          "Yes, if you own a SINGLE property (single/joint owner). If you have income from more than one house property, you cannot use ITR-1.",
-      },
-      {
-        question: "Is there a change in House Property schedule?",
-        answer:
-          "From AY 2025-26, a new Section 24(b) schedule requires details of the lender, loan account number, sanction date, and outstanding loan amount for interest claims.",
-      },
-      {
-        question: "Do I need to give details for 80C deductions?",
-        answer:
-          "Yes. From AY 2025-26, checking '80C' isn't enough. You must provide the specific amount eligible and the Policy/Document Identification Number.",
-      },
-      {
-        question: "Will I get a refund if I try to verify?",
-        answer:
-          "Excess tax paid can be claimed as a refund by filing checks. The department processes the return and credits the amount to your bank account after verification.",
+          "Tax calculations, return drafting and filing are planned features. Current answers explain reviewed source material and should be checked before you act.",
       },
     ],
   },
@@ -149,7 +88,7 @@ export default function FAQ() {
           "@type": "Answer",
           text: faq.answer,
         },
-      }))
+      })),
     ),
   };
 
@@ -175,7 +114,8 @@ export default function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="mt-4 text-slate-500 max-w-lg mx-auto">
-            Everything you need to know about Indian Taxes and our platform.
+            How the reviewed-source assistant works and what this release
+            covers.
           </p>
         </motion.div>
 
@@ -192,7 +132,7 @@ export default function FAQ() {
                 "relative px-6 py-2.5 text-sm font-medium rounded-full transition-all duration-300",
                 activeTab === tab.id
                   ? "text-white bg-emerald-700 shadow-md shadow-emerald-200/50"
-                  : "text-slate-600 bg-slate-100 hover:bg-slate-200"
+                  : "text-slate-600 bg-slate-100 hover:bg-slate-200",
               )}
             >
               {tab.label}
@@ -236,7 +176,7 @@ export default function FAQ() {
                           "text-md font-medium transition-colors duration-300 pr-8",
                           isOpen
                             ? "text-emerald-700"
-                            : "text-slate-900 group-hover:text-emerald-600"
+                            : "text-slate-900 group-hover:text-emerald-600",
                         )}
                       >
                         {faq.question}
@@ -246,7 +186,7 @@ export default function FAQ() {
                           "shrink-0 transition-transform duration-500",
                           isOpen
                             ? "rotate-180 text-emerald-600"
-                            : "text-slate-400 group-hover:text-slate-600"
+                            : "text-slate-400 group-hover:text-slate-600",
                         )}
                       >
                         {isOpen ? <Minus size={20} /> : <Plus size={20} />}

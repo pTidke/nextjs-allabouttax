@@ -5,31 +5,31 @@ import { Info } from "lucide-react";
 
 const articles = [
   {
-    category: "TAX POLICY",
-    title: "New Tax Regime Default for FY 2025-26",
+    category: "PERIOD",
+    title: "Start with the relevant period",
     description:
-      "The New Tax Regime continues to be the default setting for all individual taxpayers. Taxpayers must explicitly opt-out if they wish to file under the Old Regime to claim Section 80C deductions.",
+      "Choose FY, AY or Tax Year before asking. The assistant checks the reviewed scope against that selection.",
     color: "bg-blue-50 text-blue-600",
   },
   {
-    category: "BUDGET HIGHLIGHTS",
-    title: "Revised Tax Slabs & Rebates",
+    category: "EVIDENCE",
+    title: "Read the official passage",
     description:
-      "For FY 2025-26, the basic exemption limit remains attractive under the New Regime. The rebate under Section 87A ensures zero tax for income up to ₹7 Lakhs.",
+      "Citations lead to official documents. Check their conditions and effective dates before applying an explanation.",
     color: "bg-blue-50 text-blue-600",
   },
   {
-    category: "RBI DEVELOPMENTS",
-    title: "Repo Rate Stability & FD Rates",
+    category: "COVERAGE",
+    title: "See what is available",
     description:
-      "The RBI has maintained a watchful stance on inflation. While repo rates are stable, banks are offering competitive interest rates on Fixed Deposits.",
+      "The reviewed source library shows fresh published documents for your period. A missing answer can mean the material is outside current coverage.",
     color: "bg-blue-50 text-blue-600",
   },
   {
-    category: "COMPLIANCE",
-    title: "Enhanced AIS/TIS Reporting",
+    category: "UPDATES",
+    title: "New material goes through review",
     description:
-      "The Income Tax Department has upgraded the Annual Information Statement (AIS). It now captures more financial transactions, requiring taxpayers to be more precise.",
+      "Source checking and legal review are separate steps. Changed text becomes pending so older approvals do not silently carry over.",
     color: "bg-blue-50 text-blue-600",
   },
 ];
@@ -56,11 +56,11 @@ export default function BlogUpdates() {
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-blue-600 text-xs font-bold tracking-widest uppercase mb-4 shadow-sm"
           >
             <Info size={14} />
-            <span>FY 2025-26 Briefing</span>
+            <span>How it works</span>
           </motion.div>
 
           <h2 className="font-serif text-3xl font-medium text-slate-900 md:text-4xl tracking-tight">
-            Indian Income Tax & GST Compliance Updates
+            Ask, inspect, and verify
           </h2>
         </motion.div>
 

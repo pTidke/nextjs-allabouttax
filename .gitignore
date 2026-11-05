@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Local development scratch and dependency cache
+/work/
+!.env.example

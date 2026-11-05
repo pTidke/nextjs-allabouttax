@@ -11,33 +11,33 @@ import {
 
 const features = [
   {
-    title: "Ask Tax Questions",
+    title: "Ask Income-tax Questions",
     description:
-      "Submit complex queries and receive instant, AI-driven clarifications cited directly from official Indian tax acts.",
+      "Ask a focused question and get an explanation when our reviewed official library contains matching evidence.",
     icon: <MessageSquare className="text-emerald-600" size={22} />,
   },
   {
-    title: "Precision Calculations",
+    title: "Choose the Tax Period",
     description:
-      "Input financial data to generate high-accuracy tax liability estimates under the 2025-26 regulatory framework.",
+      "Keep financial years, assessment years and Tax Years explicit. Reviewed dates help put each passage in context.",
     icon: <Calculator className="text-emerald-600" size={22} />,
   },
   {
-    title: "Step-by-Step Logic",
+    title: "Follow the Evidence",
     description:
-      "Move beyond final numbers with transparent breakdowns that explain exactly how your tax liability was computed.",
+      "Open citations to the official document and check the passage supporting the answer.",
     icon: <ListChecks className="text-emerald-600" size={22} />,
   },
   {
-    title: "Jargon-Free Clarity",
+    title: "Manage Your Conversations",
     description:
-      "Our intelligence engine translates complex legal tax terminology into plain, actionable English for every user.",
+      "Reopen your saved questions, export messages with citations, and delete conversations from your account.",
     icon: <UserCircle className="text-emerald-600" size={22} />,
   },
   {
-    title: "Real-Time Compliance",
+    title: "Reviewed Source Updates",
     description:
-      "Stay aligned with the latest budget amendments, surcharge rates, and slab updates integrated directly into our core.",
+      "Official documents are checked by a background worker. New and changed material requires review before publication.",
     icon: <RefreshCw className="text-emerald-600" size={22} />,
   },
 ];
@@ -56,11 +56,11 @@ export default function Features() {
           className="text-center max-w-4xl mx-auto mb-18"
         >
           <h2 className="font-serif text-3xl font-medium text-slate-900 md:text-3xl tracking-tight">
-            AI-Powered Personal & Business Tax Solutions
+            Income-tax research with visible sources
           </h2>
           <p className="mt-4 text-base md:text-md text-slate-500 leading-relaxed max-w-xl mx-auto">
-            Streamline your financial obligations with tools designed for
-            accuracy, transparency, and effortless navigation.
+            Explore a growing reviewed library, see what is covered, and check
+            the evidence behind each answer.
           </p>
         </motion.div>
 

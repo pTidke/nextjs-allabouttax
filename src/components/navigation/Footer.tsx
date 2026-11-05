@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import LegalModals from "../modals/LegalModals";
 
 export default function Footer() {
@@ -52,7 +51,8 @@ export default function Footer() {
 
               <div className="flex flex-col md:flex-row items-center gap-3 text-xs tracking-tight">
                 <span className="text-slate-400">
-                  © 2025 All About Tax. All rights reserved.
+                  © {new Date().getFullYear()} All About Tax. All rights
+                  reserved.
                 </span>
                 <span className="hidden md:block text-slate-200">|</span>
                 <a

@@ -18,14 +18,13 @@ import { type Metadata } from "next";
 export const metadata: Metadata = {
   metadataBase: new URL("https://allabouttax.in"),
   title: {
-    default: "All About Tax | AI Tax Expert for India",
+    default: "All About Tax | Indian Income-tax Research",
     template: "%s | All About Tax",
   },
   description:
-    "Simplify Indian Tax Laws with our AI Tax Expert. Get instant answers to your GST, Income Tax, and corporate tax queries.",
+    "Explore reviewed official Indian income-tax sources with period-aware explanations and citations.",
   keywords: [
     "India Tax",
-    "GST",
     "Income Tax",
     "AI Tax Assistant",
     "Tax Consultant",
@@ -37,16 +36,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: "https://allabouttax.in",
-    title: "All About Tax | AI Tax Expert for India",
+    title: "All About Tax | Indian Income-tax Research",
     description:
-      "Simplify Indian Tax Laws with our AI Tax Expert. Get instant answers to your tax queries.",
+      "Explore reviewed official Indian income-tax sources with explanations and citations.",
     siteName: "All About Tax",
   },
   twitter: {
     card: "summary_large_image",
-    title: "All About Tax | AI Tax Expert for India",
+    title: "All About Tax | Indian Income-tax Research",
     description:
-      "Simplify Indian Tax Laws with our AI Tax Expert. Get instant answers to your tax queries.",
+      "Explore reviewed official Indian income-tax sources with explanations and citations.",
     creator: "@allabouttax_in",
   },
   alternates: {
@@ -86,7 +85,7 @@ export default function RootLayout({
                   "@id": "https://allabouttax.in/#website",
                   url: "https://allabouttax.in",
                   name: "All About Tax",
-                  description: "AI Tax Expert for Indian Tax Laws",
+                  description: "Indian Income-tax Researchn Tax Laws",
                   publisher: {
                     "@id": "https://allabouttax.in/#organization",
                   },

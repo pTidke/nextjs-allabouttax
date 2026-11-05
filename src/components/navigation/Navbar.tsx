@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
 import LoginModal from "@/components/auth/LoginModal";
 import SignOutMenuItem from "@/components/auth/SignOutMenuItem";
 import {
@@ -38,7 +39,10 @@ export default async function Navbar() {
                   className="relative h-10 w-10 rounded-full p-0 overflow-hidden border border-slate-200"
                 >
                   {session.user.image ? (
-                    <img
+                    <Image
+                      width={40}
+                      height={40}
+                      unoptimized
                       src={session.user.image}
                       alt={session.user.name || "User"}
                       className="h-full w-full object-cover"
@@ -76,6 +80,19 @@ export default async function Navbar() {
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/chats">Your conversations</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/library">Reviewed source library</Link>
+                </DropdownMenuItem>
+                {session.user.role === "ADMIN" && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/knowledge">
+                      Knowledge administration
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <SignOutMenuItem />
               </DropdownMenuContent>
