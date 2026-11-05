@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "feedback": [
+    {
+      "recorded_date": "2026-11-05",
+      "reviewer_role": "product_owner",
+      "source_title": "Notification No.1/2026 [No. 500/PF6/S10(23FE)/FT&TR-II (2)]/SO 44(E)",
+      "source_sha256": "4859b7812f854f48cfb0458a67294027661ca0908bd8773ac0b1f5dc4c1db099",
+      "run_id": "4859b7812f85-1793867951113571000",
+      "artifact_sha256": "95530f0e0c3ee5e0b3e52e1aeba47aa159541221944df9e3e5a8f5f269c020a6",
+      "processing_fingerprint": "fda7d44a95395c220c87e6e355092cbb289e2955a8cf363e1c428c25fe7a5191",
+      "source_page_count": 1,
+      "feedback_type": "qualitative_visual_sample_feedback",
+      "outcome": "no_issues_reported",
+      "user_statement": "Looks good to me - the Notification No.1/2026 [No. 500/PF6/S10(23FE)/FT&TR-II (2)]/SO 44(E)",
+      "coverage": "Specific regions, scripts and token-by-token coverage were not enumerated.",
+      "ground_truth_labels_accepted": false,
+      "legal_review_completed": false,
+      "publication_authorized": false,
+      "limitations": [
+        "Not an OCR accuracy score or a completed benchmark.",
+        "Does not resolve unverified reading order or establish legal applicability."
+      ]
+    }
+  ]
+}

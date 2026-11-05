@@ -10,7 +10,7 @@ The official Rules PDF was separately fetched with a bounded, allowlisted lab do
 
 ## Native review packages
 
-Four public official documents were processed into local packages: 22 pages total. All page entries and renders completed. One native document awaits extraction review; three remain blocked for image, character, table or geometry issues. Table detection produced 28 candidate grids, not 28 validated tables. No document was accepted or published.
+Four public official documents were processed into local packages: 22 pages total. All page entries and renders completed. One native document awaits extraction review; three remain blocked for image, character, table or geometry issues. Table detection produced 28 candidate grids, not 28 validated tables. No document was accepted or published. The product owner subsequently reported that Notification No. 1/2026 looks good visually; [the feedback record](review-feedback.json) binds that qualitative observation to the exact reviewed artifact. It does not establish token-level accuracy, complete script coverage or legal approval.
 
 An early path-based run detected a changed working-copy checksum. The root cause was not established. The run was held. Parser backends now receive in-memory byte snapshots, preserved originals are read-only, and both original/render hashes are verified. Subsequent four-document runs preserved original checksums. A regression test checks that the native backend receives a byte snapshot rather than a source path. This is a defensive fix, not a claim to have proved a third-party defect.
 
