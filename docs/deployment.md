@@ -19,7 +19,7 @@ npm run tax:evaluate -- --live
 
 The normal test suite uses embedded PostgreSQL and creates no live user records. The retrieval preflight reads the live library. `--live` sends only checked-in public test questions/evidence to the configured Azure deployment and may incur model charges; it creates no conversations. The small case set must be expanded and reviewed before public launch.
 
-`tax:health` reports library freshness, source failures, queue size and worker heartbeat. A nonzero status means the report requires attention. The public `/api/health` endpoint is liveness only and does not prove the corpus is fresh or the model is reachable.
+`tax:health` reports library freshness, source failures, queue size and worker heartbeat. By default, a nonzero status means approved evidence or a recent worker heartbeat is missing. Failed documents remain visible in the report; use `npm run tax:health -- --strict` to also fail on individual document errors. One failed document does not disable unrelated healthy evidence. The public `/api/health` endpoint is liveness only and does not prove the corpus is fresh or the model is reachable.
 
 ## Database changes
 
