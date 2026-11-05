@@ -265,3 +265,120 @@ def test_probe_rejects_approval_and_removes_job(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="protocol"):
         refine.run_probe([{"id": "page-1", "image": str(image)}], tmp_path, out)
     assert not out.with_suffix(".job.json").exists()
+
+
+def scope_snapshot(tmp_path):
+    root, review_path, report, review = snapshot(tmp_path)
+    lines = [
+        {
+            "id": "p1-easyocr-eng-1",
+            "text": "ghost punctuation .",
+            "confidence": 38,
+            "bbox": {"x0": 1, "top": 1, "x1": 3, "bottom": 3},
+        },
+        {
+            "id": "p1-easyocr-eng-2",
+            "text": "faint foreground text",
+            "confidence": 0,
+            "bbox": {"x0": 4, "top": 4, "x1": 8, "bottom": 8},
+        },
+    ]
+    report["pages"][0]["variants"] = [
+        {"engine": "EasyOCR", "languages": "eng", "lines": lines, "raw": "raw/provider.json"}
+    ]
+    report["pages"][0]["native_blocks"][0]["text_scope"] = "EXCLUDED_BY_REVIEWER"
+    (root / "raw/provider.json").write_text(json.dumps({"rows": lines}))
+    report["files"]["raw/provider.json"] = digest(root / "raw/provider.json")
+    (root / "comparison.json").write_text(json.dumps(report))
+    review["comparison_sha256"] = digest(root / "comparison.json")
+    review["scoped_exclusion_policy"] = {
+        "requested_region_ids": ["p1-easyocr-eng-1"],
+        "reason": "reverse_side_bleed_through",
+    }
+    review["observations"] = [
+        {
+            "region_ids": ["p1-easyocr-eng-1"],
+            "outcome": "exclusion_requested",
+            "regions": [
+                {"id": lines[0]["id"], "bbox": lines[0]["bbox"], "extracted_text": lines[0]["text"]}
+            ],
+        }
+    ]
+    review_path.write_text(json.dumps({"feedback": [review]}))
+    return root, review_path, report, review
+
+
+def test_bleed_through_review_does_not_filter_other_low_confidence_text(tmp_path, monkeypatch):
+    root, p, original, _ = scope_snapshot(tmp_path)
+    original_hash = digest(root / "comparison.json")
+    monkeypatch.setattr(
+        refine,
+        "write_comparison",
+        lambda report, path: (path / "index.html").write_text("test view"),
+    )
+
+    def no_inference(*args):
+        raise AssertionError("Scope review must not run OCR")
+
+    monkeypatch.setattr(refine, "run_probe", no_inference)
+    out = tmp_path / "scope"
+    result = refine.scope_only(root, p, out)
+    new = json.loads((out / "comparison.json").read_text())
+    lines = new["pages"][0]["variants"][0]["lines"]
+    assert (
+        lines[0]["text_scope"] == "EXCLUDED_BLEED_THROUGH"
+        and lines[0]["text"] == "ghost punctuation ."
+    )
+    assert lines[1].get("text_scope") is None and lines[1]["confidence"] == 0
+    assert lines[1]["text"] == "faint foreground text"
+    assert new["pages"][0]["native_blocks"][0]["text_scope"] == "EXCLUDED_BY_REVIEWER"
+    assert (
+        result["ocr_rerun"] is False and new["scope_review"]["count_excluded_as_correct"] is False
+    )
+    assert new["publication_eligible"] is False and new["state"] == "BLOCKED"
+    assert (out / "raw/provider.json").read_bytes() == (root / "raw/provider.json").read_bytes()
+    assert digest(root / "comparison.json") == original_hash
+    assert (out / new["scope_review"]["parent_comparison_file"]).read_bytes() == (
+        root / "comparison.json"
+    ).read_bytes()
+    assert digest(out / "original.pdf") == original["source_sha256"]
+
+
+def test_bleed_review_rejects_wrong_region_geometry_and_ocr_refine_requires_native_scope(tmp_path):
+    root, p, _, review = scope_snapshot(tmp_path)
+    with pytest.raises(ValueError, match="Exclusion"):
+        refine.bind_review(root, p)
+    review["observations"][0]["regions"][0]["bbox"] = {"x0": 0, "top": 0, "x1": 9, "bottom": 9}
+    p.write_text(json.dumps({"feedback": [review]}))
+    with pytest.raises(ValueError, match="geometry/text"):
+        refine.scope_only(root, p, tmp_path / "bad")
+    assert not (tmp_path / "bad").exists()
+
+
+def test_bleed_through_is_collapsed_and_source_highlights_are_retained():
+    from tax_pdf.compare_review import render_variant_lines
+
+    variant = {
+        "engine": "EasyOCR",
+        "lines": [
+            {
+                "id": "ghost",
+                "text": "<script>untrusted</script>",
+                "confidence": 38,
+                "text_scope": "EXCLUDED_BLEED_THROUGH",
+                "bbox": {"x0": 1, "top": 1, "x1": 2, "bottom": 2},
+            },
+            {
+                "id": "foreground",
+                "text": "faint foreground",
+                "confidence": 0,
+                "bbox": {"x0": 3, "top": 3, "x1": 4, "bottom": 4},
+            },
+        ],
+    }
+    html = render_variant_lines(variant)
+    boundary = html.index('<details class="excluded-evidence">')
+    assert "faint foreground" in html[:boundary] and "ghost" not in html[:boundary]
+    assert 'data-region="ghost"' in html[boundary:]
+    assert "&lt;script&gt;" in html and "<script>untrusted" not in html
+    assert "not counted as correct" in html

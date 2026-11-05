@@ -2,6 +2,7 @@
 
 import argparse
 import copy
+import hashlib
 import json
 import os
 import re
@@ -32,7 +33,7 @@ def safe_file(root, name):
     return result
 
 
-def bind_review(previous, review_file):
+def bind_review(previous, review_file, *, include_ocr=False):
     report_path = previous / "comparison.json"
     report = json.loads(report_path.read_text())
     if report.get("state") != "BLOCKED" or report.get("publication_eligible") is not False:
@@ -61,6 +62,10 @@ def bind_review(previous, review_file):
     if digest(safe_file(previous, "baseline-artifact.json")) != report["baseline_artifact_sha256"]:
         raise ValueError("Baseline checksum mismatch")
     regions = {b["id"] for p in report["pages"] for b in p["native_blocks"]}
+    if include_ocr:
+        regions.update(
+            line["id"] for p in report["pages"] for v in p["variants"] for line in v["lines"]
+        )
     excluded = review["scoped_exclusion_policy"]["requested_region_ids"]
     observations = {
         region
@@ -75,6 +80,94 @@ def bind_review(previous, review_file):
     ):
         raise ValueError("Exclusion policy has unknown, duplicate or inconsistent regions")
     return report, review
+
+
+def scope_only(previous, review_file, output):
+    """Apply reviewed bleed-through labels without rerunning or rewriting raw OCR."""
+    previous = previous.resolve()
+    if output.exists():
+        raise ValueError("Use a fresh scope-review output directory")
+    report, review = bind_review(previous, review_file, include_ocr=True)
+    selected = set(review["scoped_exclusion_policy"]["requested_region_ids"])
+    if (
+        not selected
+        or review["scoped_exclusion_policy"].get("reason") != "reverse_side_bleed_through"
+    ):
+        raise ValueError("Expected explicit reviewer-confirmed bleed-through regions")
+    inventory = {}
+    for page in report["pages"]:
+        for variant in page["variants"]:
+            for line in variant["lines"]:
+                if line["id"] in inventory:
+                    raise ValueError("Ambiguous OCR region ID")
+                inventory[line["id"]] = line
+    if not selected <= set(inventory):
+        raise ValueError("Unknown OCR region for bleed-through review")
+    observed = [region for note in review["observations"] for region in note.get("regions", [])]
+    if len(observed) != len(selected) or {r["id"] for r in observed} != selected:
+        raise ValueError("Incomplete reviewed bleed-through geometry")
+    for region in observed:
+        line = inventory[region["id"]]
+        if region["bbox"] != line["bbox"] or region["extracted_text"] != line["text"]:
+            raise ValueError("Reviewed bleed-through geometry/text changed")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=".scope-review-", dir=output.parent))
+    try:
+        for name in report["files"]:
+            dest = staging / name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(safe_file(previous, name), dest)
+        # Keep the immediate parent snapshot, in addition to earlier lineage files.
+        parent_name = f"lineage/{digest(previous / 'comparison.json')}.json"
+        (staging / "lineage").mkdir(exist_ok=True)
+        shutil.copyfile(previous / "comparison.json", staging / parent_name)
+        review_bytes = (json.dumps(review, ensure_ascii=False, indent=2) + "\n").encode("utf8")
+        review_name = f"reviews/{hashlib.sha256(review_bytes).hexdigest()}.json"
+        (staging / "reviews").mkdir(exist_ok=True)
+        (staging / review_name).write_bytes(review_bytes)
+        (staging / "original.pdf").chmod(0o444)
+        for region_id in selected:
+            line = inventory[region_id]
+            line["text_scope"] = "EXCLUDED_BLEED_THROUGH"
+            line["scope_reason"] = "reverse_side_bleed_through_confirmed_by_reviewer"
+        report["scope_review"] = {
+            "parent_comparison_sha256": digest(previous / "comparison.json"),
+            "review_sha256": digest(staging / review_name),
+            "review_file": review_name,
+            "parent_comparison_file": parent_name,
+            "excluded_region_ids": sorted(selected),
+            "reason": "reverse_side_bleed_through",
+            "count_excluded_as_correct": False,
+            "ocr_rerun": False,
+            "code_sha256": digest(Path(__file__)),
+            "review_code_sha256": digest(Path(__file__).with_name("compare_review.py")),
+        }
+        report["created_at"] = datetime.now(UTC).isoformat()
+        report["state"], report["publication_eligible"], report["acceptance"] = (
+            "BLOCKED",
+            False,
+            None,
+        )
+        report["files"] = {
+            str(p.relative_to(staging)): digest(p)
+            for p in sorted(staging.rglob("*"))
+            if p.is_file()
+        }
+        (staging / "comparison.json").write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + "\n"
+        )
+        write_comparison(report, staging)
+        staging.rename(output)
+        return {
+            "state": "BLOCKED",
+            "publication_eligible": False,
+            "excluded_bleed_through_regions": len(selected),
+            "ocr_rerun": False,
+            "output": str(output),
+        }
+    except BaseException:
+        shutil.rmtree(staging)
+        raise
 
 
 def annotate_scope(line, excluded):
@@ -329,11 +422,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--previous", type=Path, required=True)
     parser.add_argument("--review", type=Path, required=True)
-    parser.add_argument("--models", type=Path, required=True)
+    parser.add_argument("--models", type=Path)
+    parser.add_argument("--scope-only", action="store_true")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        print(json.dumps(refine(args.previous, args.review, args.models, args.out)))
+        if args.scope_only:
+            print(json.dumps(scope_only(args.previous, args.review, args.out)))
+        else:
+            if not args.models:
+                raise ValueError("OCR refinement requires model weights")
+            print(json.dumps(refine(args.previous, args.review, args.models, args.out)))
     except Exception as error:
         print(
             json.dumps(

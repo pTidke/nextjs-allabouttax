@@ -105,6 +105,18 @@ Only explicit source-revision region exclusions are applied. Wholly contained OC
 
 Digit-only tokens are displayed separately from other detected text, without filling gaps or substituting the expected sequence. English model errors on Hindi are visible and the prior bilingual result remains available; these candidates are not merged into accepted text. Every non-excluded issue still requires review. The CLI exits 0 for a completed but BLOCKED comparison, or 1 for failure. There is no publication/embedding/RAG write path.
 
+## Reviewer-confirmed reverse-side show-through
+
+A source-bound scope review can exclude explicitly identified OCR regions without rerunning a model. For example:
+
+```sh
+tools/pdf_pipeline/.venv/bin/python -m tax_pdf.refine_compare --scope-only --previous work/pdf-lab/demo-v2/comparisons/circular-6-easyocr-v3 --review tools/pdf_pipeline/benchmark/review-feedback.json --out work/pdf-lab/demo-v2/comparisons/FRESH_SCOPE_REVIEW
+```
+
+The user identified page 2 EasyOCR regions 45–62 as text showing through from the reverse side of thin paper. The main text view collapses those 18 exact regions under excluded evidence. Their text, boxes, raw provider output and original page images remain unchanged and inspectable. Parent comparison snapshots and review notes have hash-named lineage files. Excluded regions are not scored as correct; publication remains disabled.
+
+This is a reviewer-confirmed exclusion, not an automatic bleed-through classifier or a confidence threshold. Other faint/low-confidence foreground text remains available for review. Scope labels cannot be transferred blindly to rerun region IDs or other documents. Automatic foreground/show-through separation needs its own labelled validation before it can remove content.
+
 ## Contract and quality policy
 
 `schemas/artifact.schema.json` is generated from `tax_pdf.models`. Coordinates are displayed PDF-page points with a top-left origin. Original page index and printed page label are distinct. Line polygons and native glyph polygons are retained; exact character-span-to-glyph alignment across inserted spaces/ligatures is not yet implemented. Future LangExtract input must retain an explicit span map rather than use an untracked Markdown conversion.

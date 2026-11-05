@@ -48,6 +48,12 @@ The owner-requested exclusions for four source regions are applied in the new te
 
 This run tests English only. It retains the prior bilingual candidate rather than treating EasyOCR's English-only output on Hindi as a replacement. A preliminary optional Devanagari-model download exceeded the exploratory download cap and was stopped; no EasyOCR Hindi inference result is claimed. Tests cover scoped exclusion, missing/changed artifacts, partial-overlap retention, numeric tokens, provider geometry, worker approval rejection and failure cleanup. A benchmark on independent, labelled originals is still needed before engine choice or production integration.
 
+## Reverse-side show-through review
+
+The owner identified `p2-easyocr-eng-45` through `p2-easyocr-eng-62` in the English refinement as reverse-side text visible through thin paper. A new scope-only revision excludes those 18 exact OCR regions from the main text view and collapses them under inspectable excluded evidence. The two punctuation-like recognised strings remain in raw evidence alongside the blank recognitions. No OCR rerun, confidence-based removal or automatic bleed-through detection occurred. Other low-confidence regions remain available.
+
+The source, raw OCR and parent comparison bytes are preserved. The earlier four signature/footer exclusions remain in place. This does not change the open review status of number/name/heading/list candidates, create ground-truth accuracy labels or approve publication. The comparison remains BLOCKED. Regression tests verify that explicit exclusions do not remove other faint foreground text and that changed review geometry is rejected.
+
 ## Next gates
 
 1. Human-label the triage set, fill coverage gaps and reserve held-out document groups.

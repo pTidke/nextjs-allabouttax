@@ -395,6 +395,255 @@
         "Margin list sequence 1–7, especially 2/5/7",
         "Mixed-script corruption of the adjacent English Direct Taxes heading"
       ]
+    },
+    {
+      "recorded_date": "2026-11-05",
+      "reviewer_role": "product_owner",
+      "feedback_type": "comparison_review",
+      "comparison_revision": "circular-6-easyocr-v3",
+      "comparison_sha256": "9f7e89db2fda3341160260ba699242c820d0902b2abd6eae5644820d4e30fa7f",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "baseline_artifact_sha256": "264ecda9ae77bdec1abef2de0ea8aba9248314d6ce5684df6639673413b294b5",
+      "observations": [
+        {
+          "region_ids": [
+            "p2-easyocr-eng-45",
+            "p2-easyocr-eng-46",
+            "p2-easyocr-eng-47",
+            "p2-easyocr-eng-48",
+            "p2-easyocr-eng-49",
+            "p2-easyocr-eng-50",
+            "p2-easyocr-eng-51",
+            "p2-easyocr-eng-52",
+            "p2-easyocr-eng-53",
+            "p2-easyocr-eng-54",
+            "p2-easyocr-eng-55",
+            "p2-easyocr-eng-56",
+            "p2-easyocr-eng-57",
+            "p2-easyocr-eng-58",
+            "p2-easyocr-eng-59",
+            "p2-easyocr-eng-60",
+            "p2-easyocr-eng-61",
+            "p2-easyocr-eng-62"
+          ],
+          "outcome": "exclusion_requested",
+          "reason": "reverse_side_bleed_through",
+          "user_report": "these ones which are artifacts seen from the back of the page need not be extracted as this is a scanned doc on thin sheet text from the back side of the text are visible.",
+          "identification_basis": "User screenshot lists p2-easyocr-eng-45 through p2-easyocr-eng-62.",
+          "regions": [
+            {
+              "id": "p2-easyocr-eng-45",
+              "bbox": {
+                "x0": 229.1376835236542,
+                "top": 497.73605080831413,
+                "x1": 295.5996084828712,
+                "bottom": 510.21545034642037
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-46",
+              "bbox": {
+                "x0": 298.9586949429038,
+                "top": 497.01608545034645,
+                "x1": 316.95380097879286,
+                "bottom": 509.2554965357968
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-47",
+              "bbox": {
+                "x0": 361.8215986949429,
+                "top": 496.05613163972293,
+                "x1": 410.04848287112566,
+                "bottom": 509.7354734411086
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-48",
+              "bbox": {
+                "x0": 204.18446982055468,
+                "top": 511.41539260969984,
+                "x1": 301.1181076672105,
+                "bottom": 526.0546882217091
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-49",
+              "bbox": {
+                "x0": 318.63334420880915,
+                "top": 514.7752309468823,
+                "x1": 361.10179445350735,
+                "bottom": 524.8547459584296
+              },
+              "extracted_text": " ."
+            },
+            {
+              "id": "p2-easyocr-eng-50",
+              "bbox": {
+                "x0": 220.50003262642744,
+                "top": 530.374480369515,
+                "x1": 244.01363784665583,
+                "bottom": 539.7340300230948
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-51",
+              "bbox": {
+                "x0": 252.41135399673738,
+                "top": 529.8945034642032,
+                "x1": 323.43203915171296,
+                "bottom": 540.2140069284064
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-52",
+              "bbox": {
+                "x0": 257.9298531810767,
+                "top": 547.6536489607391,
+                "x1": 265.8476998368679,
+                "bottom": 555.0932909930716
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-53",
+              "bbox": {
+                "x0": 280.00384991843396,
+                "top": 548.1336258660508,
+                "x1": 292.48045676998373,
+                "bottom": 555.0932909930716
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-54",
+              "bbox": {
+                "x0": 294.8798042414356,
+                "top": 544.0538221709007,
+                "x1": 337.82812398042415,
+                "bottom": 558.9331062355658
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-55",
+              "bbox": {
+                "x0": 224.5789233278956,
+                "top": 566.1327598152425,
+                "x1": 377.6572920065253,
+                "bottom": 581.4920207852194
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-56",
+              "bbox": {
+                "x0": 184.74975530179447,
+                "top": 584.6118706697459,
+                "x1": 211.6224469820555,
+                "bottom": 596.6112933025404
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-57",
+              "bbox": {
+                "x0": 330.3901468189233,
+                "top": 585.5718244803695,
+                "x1": 345.98590538336055,
+                "bottom": 595.411351039261
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-58",
+              "bbox": {
+                "x0": 283.1230016313214,
+                "top": 598.7711893764434,
+                "x1": 439.56045676998366,
+                "bottom": 614.6104272517321
+              },
+              "extracted_text": " '"
+            },
+            {
+              "id": "p2-easyocr-eng-59",
+              "bbox": {
+                "x0": 295.5996084828712,
+                "top": 618.4502424942264,
+                "x1": 351.7443393148451,
+                "bottom": 626.3698614318707
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-60",
+              "bbox": {
+                "x0": 391.5735073409462,
+                "top": 618.4502424942264,
+                "x1": 415.0871125611746,
+                "bottom": 628.2897690531179
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-61",
+              "bbox": {
+                "x0": 382.93585644371944,
+                "top": 633.0895381062356,
+                "x1": 451.31725938009794,
+                "bottom": 643.6490300230947
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-62",
+              "bbox": {
+                "x0": 380.29657422512236,
+                "top": 647.9688221709007,
+                "x1": 435.7215008156607,
+                "bottom": 657.8083487297922
+              },
+              "extracted_text": ""
+            }
+          ]
+        }
+      ],
+      "scoped_exclusion_policy": {
+        "requested_region_ids": [
+          "p2-easyocr-eng-45",
+          "p2-easyocr-eng-46",
+          "p2-easyocr-eng-47",
+          "p2-easyocr-eng-48",
+          "p2-easyocr-eng-49",
+          "p2-easyocr-eng-50",
+          "p2-easyocr-eng-51",
+          "p2-easyocr-eng-52",
+          "p2-easyocr-eng-53",
+          "p2-easyocr-eng-54",
+          "p2-easyocr-eng-55",
+          "p2-easyocr-eng-56",
+          "p2-easyocr-eng-57",
+          "p2-easyocr-eng-58",
+          "p2-easyocr-eng-59",
+          "p2-easyocr-eng-60",
+          "p2-easyocr-eng-61",
+          "p2-easyocr-eng-62"
+        ],
+        "reason": "reverse_side_bleed_through",
+        "scope": "Exact EasyOCR regions on this source/comparison revision only. Do not infer exclusions from low confidence, blank recognition or faint appearance alone.",
+        "source_preserved": true,
+        "raw_ocr_preserved": true,
+        "count_excluded_regions_as_correct": false
+      },
+      "ground_truth_labels_accepted": false,
+      "legal_review_completed": false,
+      "publication_authorized": false
     }
   ]
 }

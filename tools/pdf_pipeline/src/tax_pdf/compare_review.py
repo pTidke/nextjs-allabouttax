@@ -17,14 +17,39 @@ summary{cursor:pointer;font-weight:600;padding:12px 0}details{border-top:1px sol
 """
 
 
-def render_line(item, label):
+def render_line(item, label, *, raw_excluded=False):
     scope = item.get("text_scope", "INCLUDED_CANDIDATE")
     text = item["text"] if "text" in item else item["raw_text"]
-    if scope == "EXCLUDED_BY_REVIEWER":
+    if scope == "EXCLUDED_BLEED_THROUGH" and not raw_excluded:
+        text = "[Reviewer-confirmed bleed-through · excluded from text]"
+    elif scope == "EXCLUDED_BY_REVIEWER" and not raw_excluded:
         text = "[Excluded signature/footer region · raw text preserved in evidence]"
     elif scope == "MIXED_EXCLUSION_NEEDS_REVIEW":
         text = "[Overlaps an excluded region · separation needs review]\n" + text
+    if raw_excluded and not text.strip():
+        text = "[no recognised text]"
     return f'<button class="block" {attrs(Box(**item["bbox"]), item["id"])}><span class="id">{escape(item["id"])} · {escape(label)}</span>{escape(text)}</button>'
+
+
+def render_variant_lines(variant):
+    bleed = [
+        line for line in variant["lines"] if line.get("text_scope") == "EXCLUDED_BLEED_THROUGH"
+    ]
+    lines = "".join(
+        render_line(
+            line,
+            f"{variant.get('engine', 'Tesseract')} · confidence {line['confidence']:.0f}",
+        )
+        for line in variant["lines"]
+        if line.get("text_scope") != "EXCLUDED_BLEED_THROUGH"
+    )
+    if bleed:
+        evidence = "".join(
+            render_line(line, "Excluded bleed-through · raw OCR", raw_excluded=True)
+            for line in bleed
+        )
+        lines += f'<details class="excluded-evidence"><summary>{len(bleed)} bleed-through regions excluded · inspect evidence</summary><p class="muted">Confirmed by your review of this source version. Raw OCR and source highlights remain available. These regions are not counted as correct extraction.</p>{evidence}</details>'
+    return lines
 
 
 def write_comparison(report: dict, root: Path):
@@ -100,13 +125,7 @@ def write_comparison(report: dict, root: Path):
     for page in report["pages"]:
         variants = []
         for variant in page["variants"]:
-            lines = "".join(
-                render_line(
-                    line,
-                    f"{variant.get('engine', 'Tesseract')} · confidence {line['confidence']:.0f}",
-                )
-                for line in variant["lines"]
-            )
+            lines = render_variant_lines(variant)
             variants.append(
                 f'<details data-variant="{escape(variant["languages"])}" data-engine="{escape(variant.get("engine", "Tesseract"))}"><summary>{escape(variant.get("engine", "Tesseract"))} full-page OCR · {escape(variant["languages"])} · unverified reading order</summary><p><a href="{escape(variant["raw"])}">Raw OCR JSON</a></p>{lines or "<p>No text detected. Remains unresolved.</p>"}</details>'
             )
@@ -127,8 +146,21 @@ def write_comparison(report: dict, root: Path):
         if report.get("refinement")
         else ""
     )
+    if report.get("scope_review"):
+        bleed_count = sum(
+            line.get("text_scope") == "EXCLUDED_BLEED_THROUGH"
+            for page in report["pages"]
+            for variant in page["variants"]
+            for line in variant["lines"]
+        )
+        scope_notice += f"{bleed_count} additional OCR regions are reviewer-confirmed bleed-through and are collapsed under excluded evidence. "
+        scope_link = (
+            f'<a href="{escape(report["scope_review"]["review_file"])}">Bleed-through review</a>'
+        )
+    else:
+        scope_link = ""
     title = escape(report["source_title"])
-    document = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>OCR comparison · {title}</title><link rel="stylesheet" href="comparison.css"></head><body><header><span class="badge">BLOCKED · EXPERIMENTAL COMPARISON</span><h1>{title}</h1><p>Original scan, previous extraction, local OCR candidates and your notes are preserved separately.</p></header><main><div class="summary"><p><strong>{len(report["pages"])} source pages · {len(report["findings"])} issue groups · {status}</strong></p><p class="notice">{scope_notice}English OCR candidates and the prior bilingual candidate are available. Improved-looking output is not accepted automatically. Signatures are marked from your review, not detected by this engine. No publication or RAG update occurs.</p><p><a href="original.pdf">Preserved original PDF</a><a href="comparison.json">Comparison evidence</a><a href="baseline-artifact.json">Previous artifact</a><a href="reviewer-feedback.json">Your feedback</a></p><p class="muted">Source SHA-256: {escape(report["source_sha256"])}</p><nav aria-label="Reported issues">{"".join(links)}</nav><p><a href="#page-1">Compare full pages and source highlights ↓</a></p></div>{"".join(cases)}{"".join(pages)}</main><footer>Read-only tuning experiment. Confidence is not accuracy. Table semantics, reading order and legal applicability remain unverified. Human notes never overwrite raw OCR.</footer><script src="comparison.js"></script></body></html>"""
+    document = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>OCR comparison · {title}</title><link rel="stylesheet" href="comparison.css"></head><body><header><span class="badge">BLOCKED · EXPERIMENTAL COMPARISON</span><h1>{title}</h1><p>Original scan, previous extraction, local OCR candidates and your notes are preserved separately.</p></header><main><div class="summary"><p><strong>{len(report["pages"])} source pages · {len(report["findings"])} issue groups · {status}</strong></p><p class="notice">{scope_notice}English OCR candidates and the prior bilingual candidate are available. Improved-looking output is not accepted automatically. Signatures are marked from your review, not detected by this engine. No publication or RAG update occurs.</p><p><a href="original.pdf">Preserved original PDF</a><a href="comparison.json">Comparison evidence</a><a href="baseline-artifact.json">Previous artifact</a><a href="reviewer-feedback.json">Your feedback</a>{scope_link}</p><p class="muted">Source SHA-256: {escape(report["source_sha256"])}</p><nav aria-label="Reported issues">{"".join(links)}</nav><p><a href="#page-1">Compare full pages and source highlights ↓</a></p></div>{"".join(cases)}{"".join(pages)}</main><footer>Read-only tuning experiment. Confidence is not accuracy. Table semantics, reading order and legal applicability remain unverified. Human notes never overwrite raw OCR.</footer><script src="comparison.js"></script></body></html>"""
     (root / "index.html").write_text(document, encoding="utf8")
     (root / "comparison.css").write_text(CSS + EXTRA_CSS, encoding="utf8")
     (root / "comparison.js").write_text(JS, encoding="utf8")
