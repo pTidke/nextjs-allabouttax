@@ -24,7 +24,7 @@ Start with a source-backed central income-tax assistant for individuals. The aud
 1. **Content:** review a useful starter set covering the supported individual-tax questions and periods. The database check at the start of this session found one approved version and 133 pending. An imported notification is not automatically usable law. Establish Gazette dates, current status, transition provisions and section scope before publication.
 2. **Quality:** run the small live evaluation, record failures, then expand to at least 50 representative tax-reviewer-labelled cases with source passages and expected refusals. Require review of answer correctness and citation support, beyond ID validity.
 3. **Operations:** run CI on Linux, activate the chosen cloud worker, configure failure notifications, and confirm a successful scheduled run after local machines are stopped. A prepared workflow is not a deployed scheduler.
-4. **Deployment:** choose the web host, configure runtime-only credentials, database backup/recovery and Google callback URL. Test sign-in, admin access, chat, export and deletion in staging. Review the service's privacy/terms copy before public launch.
+4. **Deployment:** the existing host is Vercel (`allabouttax`, www.allabouttax.in). Azure credentials are configured for production/preview. Preserve the eight existing authentication accounts before changing its database to Neon; the tested import plan adds seven accounts and matches the existing admin. Confirm database backup/recovery and the Google callback URL. Test sign-in, admin access, chat, export and deletion in staging. Review the service's privacy/terms copy before public launch.
 5. **Coverage gaps:** implement bounded large-document processing and OCR with suitable original-file storage; build historical and amendment relationships rather than expanding the discovery window blindly.
 6. **Draft filing:** confirm the first form and assessment/tax year. Add eligibility checks, its versioned official schema, deterministic calculations, field validation and a human-review/export step. Sensitive personal filing data needs its own storage/retention design. No current feature produces an ITR or submits a return.
 
@@ -38,5 +38,12 @@ Start with a source-backed central income-tax assistant for individuals. The aud
 - Usage/cost dashboards, account-level export/deletion and configurable retention.
 
 ## What is not complete
+
+## Verification recorded
+
+- Linux CI passed lint, isolated tests, the production Next build and type checks for the release branch before the account migration utility was added.
+- Local tests including account preservation/conflict rollback now pass (33 tests); six bounded live Azure answer evaluations passed.
+- GitHub's protected `tax-worker` environment, encrypted database secret and opt-in variable are configured with owner approval. The workflow still needs to reach the default branch and complete its first cloud run.
+- The owner approved account migration and Neon cutover. Seven users and seven provider accounts were imported, one existing admin matched, and all eight users are present in Neon. The old database was unchanged. Vercel production/preview database settings now point to Neon; a new deployment and runtime checks are still required.
 
 The entire original product is not complete. The code foundation and a bounded assistant are implemented; tax coverage, cloud deployment, operational sign-off, large/scanned-file handling, semantic retrieval and statutory draft forms remain release work. Do not market the current corpus as answering every tax question.

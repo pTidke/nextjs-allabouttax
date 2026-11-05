@@ -32,6 +32,16 @@ npx prisma generate
 
 `202611040001_review_drafts` is additive and stores incomplete reviewer fields separately from approved knowledge. Never use reset or accept-data-loss commands against Neon.
 
+## Existing-account migration to Neon
+
+The existing Vercel project is `allabouttax`, serving https://www.allabouttax.in. Its legacy production database contains authentication records and must not be replaced without preserving accounts.
+
+`VERCEL_CLI_CONFIG_DIR=/path/to/authorized/config node --import tsx scripts/tax-import-auth.ts` produces an aggregate read-only plan. It reads only the approved production database environment value into memory; it does not export other Vercel secrets or print account records. The initial plan found eight source users, one matching Neon user and seven users to add.
+
+After the owner approves migration, add `--apply`. The source transaction is read-only. The target import is atomic, preserves existing target identities and administrator roles, remaps provider accounts and active sessions, and aborts on identity conflicts. Repeating the import is safe. The old database is retained. Legacy provider-hosted thread content is not imported into the new conversation store.
+
+Switch Vercel's encrypted production/preview `DATABASE_URL` to Neon only after import succeeds and schema checks pass; retain the existing authentication configuration. Environment changes apply to a new deployment. Check sign-in and account continuity after deployment. If verification fails, restore the prior deployment and its database configuration while investigating; do not delete the source database.
+
 ## Web image
 
 ```sh

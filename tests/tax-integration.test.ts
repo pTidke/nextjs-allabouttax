@@ -1139,3 +1139,81 @@ test("public coverage exposes only fresh approved released scope and tracks unav
     "obsolete approvals do not describe current coverage",
   );
 });
+
+test("legacy account import preserves canonical users, administrator roles and session ownership", async () => {
+  const { importLegacyAuth } =
+    await import("../src/lib/operations/auth-import");
+  const target = await db.user.create({
+    data: { email: "canonical-import@example.test", role: "ADMIN" },
+  });
+  const sourceUser = {
+    ...target,
+    id: "legacy-import-user",
+    role: "USER" as const,
+    createdAt: new Date("2020-01-01"),
+  };
+  const other = {
+    ...sourceUser,
+    id: "legacy-import-other",
+    email: "other-import@example.test",
+  };
+  const source = {
+    users: [sourceUser, other],
+    accounts: [
+      {
+        userId: sourceUser.id,
+        provider: "google",
+        providerAccountId: "synthetic-import-provider",
+        type: "oauth",
+        refresh_token: null,
+        access_token: null,
+        expires_at: null,
+        token_type: null,
+        scope: null,
+        id_token: null,
+        session_state: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+    sessions: [
+      {
+        sessionToken: "synthetic-import-session",
+        userId: sourceUser.id,
+        expires: new Date("2090-01-01"),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+    verificationTokens: [],
+  };
+  const result = await db.$transaction((tx) => importLegacyAuth(tx, source));
+  assert.equal(result.createdUsers, 1);
+  assert.equal(result.matchedUsers, 1);
+  assert.equal(
+    (await db.user.findUniqueOrThrow({ where: { id: target.id } })).role,
+    "ADMIN",
+  );
+  assert.equal(
+    (
+      await db.session.findUniqueOrThrow({
+        where: { sessionToken: "synthetic-import-session" },
+      })
+    ).userId,
+    target.id,
+  );
+  const again = await db.$transaction((tx) => importLegacyAuth(tx, source));
+  assert.equal(again.createdUsers, 0);
+  assert.equal(again.createdAccounts, 0);
+  assert.equal(again.createdSessions, 0);
+  const conflict = {
+    ...source,
+    users: [other],
+    accounts: [{ ...source.accounts[0], userId: other.id }],
+    sessions: [],
+  };
+  await assert.rejects(
+    db.$transaction((tx) => importLegacyAuth(tx, conflict)),
+    /identity conflict/,
+  );
+});
