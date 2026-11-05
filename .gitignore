@@ -45,3 +45,11 @@ next-env.d.ts
 # Local development scratch and dependency cache
 /work/
 !.env.example
+
+# Isolated document-processing lab and generated public corpus artifacts
+**/.venv/
+**/__pycache__/
+**/*.egg-info/
+**/.pytest_cache/
+/tools/pdf_pipeline/output/
+/.pdf-lab-venv/

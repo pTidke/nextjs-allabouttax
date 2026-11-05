@@ -1,0 +1,38 @@
+name: PDF processing laboratory checks
+on:
+  pull_request:
+    paths:
+      - "tools/pdf_pipeline/**"
+      - ".github/workflows/pdf-lab.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/pdf_pipeline/**"
+      - ".github/workflows/pdf-lab.yml"
+permissions:
+  contents: read
+jobs:
+  pdf-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: false
+      - name: Install locked local-test dependencies
+        run: |
+          uv venv .pdf-lab-venv
+          uv pip install --python .pdf-lab-venv/bin/python --require-hashes -r tools/pdf_pipeline/requirements-test.lock
+          uv pip install --python .pdf-lab-venv/bin/python --no-deps -e tools/pdf_pipeline
+      - name: Check Python and canonical schema
+        run: |
+          .pdf-lab-venv/bin/ruff check tools/pdf_pipeline
+          .pdf-lab-venv/bin/ruff format --check tools/pdf_pipeline
+          .pdf-lab-venv/bin/tax-pdf schema --out /tmp/pdf-artifact.schema.json
+          diff tools/pdf_pipeline/schemas/artifact.schema.json /tmp/pdf-artifact.schema.json
+      - name: Test with synthetic local PDFs only
+        run: .pdf-lab-venv/bin/python -m pytest tools/pdf_pipeline/tests -q

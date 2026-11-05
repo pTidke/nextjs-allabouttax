@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=80,<83"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "allabouttax-pdf-lab"
+version = "0.1.0"
+description = "Isolated, non-publishing PDF extraction and review lab"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "pdfplumber==0.11.9",
+  "pypdf==6.21.4",
+  "pypdfium2==5.14.0",
+  "pydantic==2.14.1",
+  "Pillow==13.0.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest==9.2.0", "reportlab==4.4.9", "ruff==0.17.3"]
+docling = ["docling==2.147.0", "onnxruntime==1.31.1"]
+
+[project.scripts]
+tax-pdf = "tax_pdf.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
