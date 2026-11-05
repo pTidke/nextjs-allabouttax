@@ -87,6 +87,24 @@ Comparison bounds: at most ten complete baseline pages, 100 MiB original, 300 DP
 
 The comparison is a tuning sample. It has no accuracy score, legal approval, accepted corrections, automatic signature detector or verified table/reading-order semantics. No confidence threshold clears a quality hold. A fresh source review is needed after every changed result.
 
+## Independent English OCR refinement and scoped exclusions
+
+EasyOCR is an optional second engine for the remaining English/name/number regions. It does not replace the previously reviewed Hindi candidate. Install its optional dependencies separately; no EasyOCR models or inference run in web CI:
+
+```sh
+UV_CACHE_DIR=/tmp/allabouttax-uv-cache uv pip install --python tools/pdf_pipeline/.venv/bin/python -e 'tools/pdf_pipeline[easyocr]'
+tools/pdf_pipeline/.venv/bin/python -m tax_pdf.easyocr_probe prepare --models work/easyocr-models
+tools/pdf_pipeline/.venv/bin/python -m tax_pdf.refine_compare --previous work/pdf-lab/demo-v2/comparisons/circular-6-bilingual-v4 --review tools/pdf_pipeline/benchmark/review-feedback.json --models work/easyocr-models --out work/pdf-lab/demo-v2/comparisons/FRESH_REFINEMENT
+```
+
+The worker uses EasyOCR 1.7.2 on CPU with two threads, CRAFT detection and English generation-2 recognition. [Official usage/configuration](https://github.com/JaidedAI/EasyOCR) supports local model paths and disabling downloads. Two public release weights are pinned by SHA-256; preparation downloads only those specific archive members within byte/decompression budgets. Inference disables downloads and rejects custom network files. Transitive Python runtime versions are recorded, not supplied as a complete platform-specific production environment lock.
+
+Refinement requires a review bound to the previous comparison hash, original hash and baseline hash. It verifies the previous file inventory before copying it to a new directory. The current bounded runner accepts at most two source pages / ten PNG requests, with 16-million-pixel / 40-MiB image limits, a 20-MiB result budget and a 180-second worker wall timeout. The child receives a reduced environment; this is not an OS memory/network/filesystem sandbox. Original source bytes, provider polygons/confidences, previous outputs and reviewer notes remain preserved.
+
+Only explicit source-revision region exclusions are applied. Wholly contained OCR regions are omitted from the main text view while remaining in raw evidence. Partially overlapping regions stay visible and flagged for separation. Excluded content is never scored as correctly recognised. Signature detection and legal relevance are not inferred automatically. The four exclusions currently come directly from the owner's review of this Circular.
+
+Digit-only tokens are displayed separately from other detected text, without filling gaps or substituting the expected sequence. English model errors on Hindi are visible and the prior bilingual result remains available; these candidates are not merged into accepted text. Every non-excluded issue still requires review. The CLI exits 0 for a completed but BLOCKED comparison, or 1 for failure. There is no publication/embedding/RAG write path.
+
 ## Contract and quality policy
 
 `schemas/artifact.schema.json` is generated from `tax_pdf.models`. Coordinates are displayed PDF-page points with a top-left origin. Original page index and printed page label are distinct. Line polygons and native glyph polygons are retained; exact character-span-to-glyph alignment across inserted spaces/ligatures is not yet implemented. Future LangExtract input must retain an explicit span map rather than use an untracked Markdown conversion.

@@ -18,6 +18,7 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest==9.2.0", "reportlab==4.4.9", "ruff==0.17.3"]
 docling = ["docling==2.147.0", "onnxruntime==1.31.1"]
+easyocr = ["easyocr==1.7.2"]
 
 [project.scripts]
 tax-pdf = "tax_pdf.cli:main"

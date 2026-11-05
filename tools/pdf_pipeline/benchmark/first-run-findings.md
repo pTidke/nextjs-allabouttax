@@ -40,6 +40,14 @@ The owner reports that the displayed page 1 Hindi heading group looks good. The 
 
 The owner permits excluding `p1-b34`, `p2-b5`, `p2-b23` and `p2-b24` from the extracted-text scope of this reviewed revision. Preserve their original source images, raw output and exclusion provenance; do not count excluded regions as correct or generalize this waiver to other footer/handwritten/legal content. This is a recorded scoped policy request, not yet a pipeline mutation or publication approval. The original comparison remains immutable. The separately observed English “Direct Taxes” mixed-script regression remains open despite positive qualitative feedback on the Hindi group.
 
+## Independent English EasyOCR refinement
+
+EasyOCR 1.7.2 with local CRAFT/English generation-2 weights processed six image requests: both full pages and four active source crops. It produced `CIRCULAR NO.06_/2026` for the handwritten-number line and `(Hardev Singh)` for the printed name. The numbering crop returned all seven digit tokens `1 2 3 4 5 6 7`, plus a stray `aEl` token. The extra underscore/stray token remain visible and unresolved. The English “Central Board of Direct Taxes” string is also present in the heading crop. This is agreement on selected observed strings, not a document-level accuracy score.
+
+The owner-requested exclusions for four source regions are applied in the new text view. Two whole issue groups are excluded and four remain open; partial overlaps in full-page candidates stay held for separation. Raw provider results, the previous comparison, original scan and exact exclusion provenance are preserved. Original/source checksums remain unchanged. No OCR candidate or legal scope has been approved.
+
+This run tests English only. It retains the prior bilingual candidate rather than treating EasyOCR's English-only output on Hindi as a replacement. A preliminary optional Devanagari-model download exceeded the exploratory download cap and was stopped; no EasyOCR Hindi inference result is claimed. Tests cover scoped exclusion, missing/changed artifacts, partial-overlap retention, numeric tokens, provider geometry, worker approval rejection and failure cleanup. A benchmark on independent, labelled originals is still needed before engine choice or production integration.
+
 ## Next gates
 
 1. Human-label the triage set, fill coverage gaps and reserve held-out document groups.
