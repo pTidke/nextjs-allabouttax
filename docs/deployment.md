@@ -79,3 +79,9 @@ The current worker image keeps its development tool dependencies because the CLI
 No GitHub secret or repository variable is configured simply by adding these files. A cloud scheduler is active only after a real scheduled run is confirmed. Automated source checks never approve new tax material.
 
 References: [GitHub scheduled workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule), [Docker multi-stage builds](https://docs.docker.com/build/building/multi-stage/), [OpenAI evaluation practices](https://developers.openai.com/api/docs/guides/evaluation-best-practices).
+
+## Activation record — 4 November 2026
+
+The owner approved and completed Vercel authorization, Azure configuration, account-preserving Neon cutover and GitHub worker activation. PR #3 is merged and production is live at https://www.allabouttax.in. All eight users are present in Neon and the admin role is preserved. Google sign-in and a cited answer were confirmed by the owner.
+
+The protected `tax-worker` environment and encrypted database secret are configured, the main-branch policy is applied and `TAX_WORKER_ENABLED=true`. Cloud dispatches [41984213294](https://github.com/pTidke/nextjs-allabouttax/actions/runs/41984213294) and [41984830436](https://github.com/pTidke/nextjs-allabouttax/actions/runs/41984830436) succeeded. This confirms cloud execution, not yet an automatic schedule invocation. Independent missed-run alerts and a dedicated worker database role remain launch work.

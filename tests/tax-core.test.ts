@@ -148,6 +148,29 @@ test("citations resolve only to retrieved evidence and must appear in the answer
   assert.doesNotMatch(unsupported.answer.answer, /99%/);
 });
 
+test("source status labels only cited guidance even when the model omits the distinction", () => {
+  const mixed = [
+    { ...evidence[0], documentType: "ACT", legalStatus: "EFFECTIVE" },
+    evidence[0],
+  ];
+  const answer = (sourceIds: string[]) => ({
+    answer: `Supported claim ${sourceIds.map((id) => `[${id}]`).join(" ")}`,
+    supported: true,
+    sourceIds,
+    suggestions: [],
+  });
+  const legislation = validateAnswer(answer(["S1"]), mixed);
+  assert.doesNotMatch(legislation.answer.answer, /Source status/);
+  const guidance = validateAnswer(answer(["S2"]), mixed);
+  assert.match(guidance.answer.answer, /Source status: Official guidance \[S2\]\.$/);
+  assert.equal(guidance.citations.length, 1);
+  const combined = validateAnswer(answer(["S1", "S2"]), mixed);
+  assert.match(combined.answer.answer, /Source status: Official guidance \[S2\]\.$/);
+  assert.doesNotMatch(combined.answer.answer, /Official guidance \[S1\]/);
+  const unsupported = validateAnswer({ ...answer([]), supported: false }, mixed);
+  assert.doesNotMatch(unsupported.answer.answer, /Source status/);
+});
+
 test("request protection rejects foreign origins, malformed JSON and oversized bodies", async () => {
   const request = (body: string, origin = "https://tax.example") =>
     new Request("https://tax.example/api/assistant", {
