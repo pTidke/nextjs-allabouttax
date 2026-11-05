@@ -10,7 +10,7 @@ The owner also reported defects in 16 regions of Circular No. 6/2026: handwritte
 
 Start with a language you read comfortably. Open the first document in the local gallery, select a text line and compare it with the green-highlighted original region. Use the full-size image link if the preview is too small. Check that words are neither missing nor added; rates, decimal points, dates, names, section numbers and negations match; and table values remain under the correct visible headings. Report the page/region ID and the observed difference. Flag unreadable or unfamiliar text rather than guessing.
 
-Matching transcription does not approve a document's legal status or applicability. Leave those fields and scope/dependency decisions to a qualified tax reviewer. The gallery is read-only and has no publish action; actual annotation/correction persistence remains a later milestone.
+Matching transcription does not approve a document's legal status or applicability. Leave those fields and scope/dependency decisions to a qualified tax reviewer. The original text/OCR gallery is read-only. The table workspace now supports revision-bound local drafts, browser save and JSON export/import; no shared annotation history, acceptance or publish action exists.
 
 ## Establishing ground truth
 
@@ -37,3 +37,10 @@ The exported stored-original sample is biased: the old ingestion path stores ori
 - Successful provider status, JSON validity and character alignment alone do not establish source fidelity or legal correctness.
 
 An extraction reviewer and finance/tax reviewer must agree and sign off the rubric before treating any experiment as a completed benchmark. No sign-off has been recorded in this increment.
+
+
+## Engineering report and table prototype
+
+[engineering-plan.json](engineering-plan.json) fixes the bounded native sample and keeps all related forms in an engineering group. It is not a held-out evaluation split. [engineering-run.json](engineering-run.json) records the measured run and its provenance. The local report links to immutable originals/renders and 62 official table candidates plus one synthetic table; candidate detection is not table accuracy. Accuracy remains unmeasured, even for visually plausible output.
+
+Use local table drafts to record transcription and proposed header/span/unit/footnote relationships. They bind to the exact source, artifact, table and render hashes. Validation prevents transferring them silently to changed extraction output, and rejects overlapping spans/foreign footnote references. A browser save or exported `DRAFT_NOT_ACCEPTED` file does not become a benchmark label. Formal annotation acceptance, a signed rubric and independent real scan/handwriting/table references remain separate milestones.

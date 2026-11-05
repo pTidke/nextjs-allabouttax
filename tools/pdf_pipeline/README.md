@@ -123,7 +123,7 @@ This is a reviewer-confirmed exclusion, not an automatic bleed-through classifie
 
 Raw text is preserved; NFC-normalised text is a separate display field. No tax rate, date, identifier or negation is automatically repaired. Table grids are candidates: null/covered cells, empty strings, zero and dash are distinct; merged spans, header paths, units and footnotes are unverified and block acceptance. Reading order is a geometric candidate, not verified legal structure.
 
-Corrections, reviewer acceptance, tax applicability, source-authority decisions, cross-document dependencies, cloud storage/queues, OS sandboxing and production integration are future milestones. LangExtract/Azure evaluation begins after a labelled acceptance rubric and the relevant service budget are agreed. No paid resources were provisioned for this increment.
+Local table correction drafts are available below. Server-side correction history, reviewer acceptance, tax applicability, source-authority decisions, cross-document dependencies, cloud storage/queues, OS sandboxing and production integration remain future milestones. LangExtract/Azure evaluation begins after a labelled acceptance rubric and the relevant service budget are agreed. No paid resources were provisioned for this increment.
 
 ## Reproduce checks
 
@@ -138,3 +138,26 @@ diff tools/pdf_pipeline/schemas/artifact.schema.json /tmp/pdf-artifact.schema.js
 Synthetic fixtures can be generated once into a new directory with `python -m tax_pdf.fixtures --out work/pdf-fixtures`. They are marked as synthetic and are never tax-law evidence. CI uses only synthetic PDFs and has no production database credentials or external OCR calls.
 
 See [benchmark rubric](benchmark/README.md), [recorded triage](benchmark/triage-manifest.json) and [first-run findings](benchmark/first-run-findings.md).
+
+
+## Bounded engineering benchmark and table draft workspace
+
+`tax-pdf benchmark` generates a fresh native extraction run, JSON/HTML coverage report, preserved source packages and a local table workspace. It does not apply previous OCR corrections, rerun optional OCR engines, infer accepted ground truth or publish knowledge.
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf benchmark work/pdf-corpus/benchmark-sources-v1.json --plan tools/pdf_pipeline/benchmark/engineering-plan.json --out work/pdf-lab/demo-v2/benchmarks/FRESH_RUN
+```
+
+The source manifest uses the existing `documents` array (`path`, `sha256`, `title`, optional `url`); paths must resolve below its directory. Add the separately preserved large-source metadata to that array and the four deterministic fixture entries generated with `tax_pdf.fixtures` before using this committed plan. Source bytes must match every plan hash. The plan records original page counts, explicit selected pages, official/synthetic cohorts and engineering groups. It refuses duplicate selections, unknown hashes, invalid pages, over twenty originals/eighty selected pages or a held-out evaluation claim. Each document run is additionally capped at twenty processed pages and 180 seconds; unsampled/budget-held/failed pages remain explicit. Check the resulting report rather than interpreting exit 0 as a quality pass. A failed per-document run remains in the denominator; manifest/checksum validation failure aborts without a completed report. The earlier twelve-source sample is biased towards documents the legacy pipeline could extract.
+
+The first report covers 48 selected official pages from thirteen originals with 1,302 source pages, plus all five pages of four synthetic fixtures. Only pages 1–2 of the 976-page Rules original were processed. Official and synthetic results stay separate; accuracy metrics are null because no accepted labels exist. Runtime measures the bounded native package operation on this machine, excluding optional OCR comparisons, reviewer time and the report/workspace generation. No cost per accepted page is claimed.
+
+Open `benchmarks/FRESH_RUN/tables/index.html` in the localhost gallery. Start with the clearly marked synthetic table, then choose a public-source table. Select a raw cell to highlight its source and enter a separate draft transcription/state. Blank (`""`), zero (`"0"`), dash (`"-"`), covered and unreadable stay distinct; raw candidates are never rewritten. Propose header rows/paths, units, spans and a source-block-bound footnote. The draft preview renders proposed spans and keeps unchecked cells explicit. Missing/split grids or continuation problems go in table notes; adding/resegmenting source cells and cross-page table linking are later work. This prototype edits one footnote per draft and rejects imports containing more, avoiding silent loss.
+
+Save explicitly in browser storage or download/copy draft JSON. Browser storage is revision-keyed local convenience, not durable shared storage. A changed source, artifact, render, table, run or fingerprint rejects old imports. Proposed merged anchors require explicit covered-cell relationships; out-of-bounds/overlapping spans and foreign footnote blocks are rejected. The independent validator rechecks original/render bytes and draft binding:
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf check-table-draft work/pdf-lab/demo-v2/benchmarks/FRESH_RUN/packages/RUN_ID table-draft.json
+```
+
+A valid draft is still `DRAFT_NOT_ACCEPTED`; validation checks provenance and structure, not whether the transcription or legal interpretation is correct. There is no server write, extraction acceptance, tax approval or RAG path. Review times, independently labelled accuracy, a broader real scan cohort and persisted multi-reviewer workflow remain required before production integration.

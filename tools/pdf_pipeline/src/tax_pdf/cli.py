@@ -31,9 +31,33 @@ def main():
     batch.add_argument("manifest", type=Path)
     batch.add_argument("--out", type=Path, default=Path("work/pdf-lab/demo"))
     batch.add_argument("--ids", required=True, help="Comma-separated original SHA-256 prefixes")
+    bench = sub.add_parser("benchmark")
+    bench.add_argument("manifest", type=Path)
+    bench.add_argument("--plan", type=Path, required=True)
+    bench.add_argument("--out", type=Path, required=True)
+    draft = sub.add_parser("check-table-draft")
+    draft.add_argument("package", type=Path)
+    draft.add_argument("draft", type=Path)
     args = parser.parse_args()
     try:
-        if args.command == "triage":
+        if args.command == "benchmark":
+            from .benchmark import benchmark
+
+            benchmark(args.manifest, args.plan, args.out)
+        elif args.command == "check-table-draft":
+            from .table_review import validate_draft
+
+            validate_draft(args.package, args.draft)
+            print(
+                json.dumps(
+                    {
+                        "state": "DRAFT_NOT_ACCEPTED",
+                        "provenance_valid": True,
+                        "publication_eligible": False,
+                    }
+                )
+            )
+        elif args.command == "triage":
             from .corpus import triage
 
             triage(args.manifest, args.out)

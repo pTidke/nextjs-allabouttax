@@ -34,7 +34,9 @@ jobs:
       - name: Install isolated OCR runtime without model downloads
         run: npm ci --prefix tools/pdf_pipeline/ocr --ignore-scripts --no-audit --no-fund
       - name: Check local OCR worker syntax
-        run: node --check tools/pdf_pipeline/ocr/worker.mjs
+        run: |
+          node --check tools/pdf_pipeline/ocr/worker.mjs
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/workspace.js
       - name: Check Python and canonical schema
         run: |
           .pdf-lab-venv/bin/ruff check tools/pdf_pipeline
