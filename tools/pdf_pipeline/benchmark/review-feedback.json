@@ -285,6 +285,116 @@
         "Unspecified Hindi text and garbled regions have no guessed replacement.",
         "The entire sample remains blocked; no automated acceptance or publication is performed."
       ]
+    },
+    {
+      "recorded_date": "2026-11-05",
+      "reviewer_role": "product_owner",
+      "feedback_type": "comparison_review",
+      "source_title": "Circular No. 6/2026 : Condonation of delay in filing Form No. 10AB electronically for approval under clause(ii) of the first proviso to section 80G(5) of the Income-tax Act, 1961",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "comparison_revision": "circular-6-bilingual-v4",
+      "comparison_sha256": "2011327e7a3ac6b4da5e556331ae2ddc239de7e50f997b926e5afcc8b108efec",
+      "baseline_artifact_sha256": "264ecda9ae77bdec1abef2de0ea8aba9248314d6ce5684df6639673413b294b5",
+      "observations": [
+        {
+          "region_ids": [
+            "p1-b1"
+          ],
+          "outcome": "still_incorrect",
+          "user_report": "p1b1 still says Q€ instead of 06",
+          "proposed_value": "06",
+          "scope": "Handwritten number token only."
+        },
+        {
+          "region_ids": [
+            "p1-b3",
+            "p1-b4",
+            "p1-b5",
+            "p1-b6"
+          ],
+          "outcome": "looks_good_to_reviewer",
+          "user_report": "p1-b3, p1-b4, p1-b5, p1-b6 - look good",
+          "scope": "Qualitative feedback on the displayed group; not a token-by-token accuracy label.",
+          "known_unresolved_regression": "The bilingual candidate still corrupts the adjacent English Direct Taxes heading. Positive feedback does not automatically close that known defect."
+        },
+        {
+          "region_ids": [
+            "p1-b34",
+            "p2-b5"
+          ],
+          "outcome": "exclusion_requested",
+          "user_report": "p1-b34, p2-b5 we can actually ignore the signatures, they are irrelevant",
+          "exclusion_reason": "Reviewer-marked signature imagery is outside the requested extracted text."
+        },
+        {
+          "region_ids": [
+            "p2-b6"
+          ],
+          "outcome": "still_incorrect",
+          "user_report": "p2-b6 wrong extraction",
+          "proposed_value": "Hardev Singh",
+          "value_provenance": "Previously supplied by this reviewer; not an OCR result."
+        },
+        {
+          "region_ids": [
+            "p2-b23",
+            "p2-b24"
+          ],
+          "outcome": "exclusion_requested",
+          "user_report": "p2-b23, p2-b24 - can ignore signature and the thing below that would be anyway hard for any OCR to read so its okay",
+          "exclusion_reason": "Reviewer permits omission of these particular signature/overlapping footer regions; difficulty alone is not a general exclusion rule."
+        },
+        {
+          "region_ids": [
+            "p2-b25",
+            "p2-b26",
+            "p2-b27",
+            "p2-b28",
+            "p2-b29",
+            "p2-b30"
+          ],
+          "outcome": "still_incorrect",
+          "user_report": "p2-b25, p2-b26, p2-b27, p2-b28, p2-b29, p2-b30 - it should be 1 2 3 4 5 6 7 but 2 5 7 are wrong",
+          "proposed_sequence": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+          ],
+          "reported_incorrect_items": [
+            "2",
+            "5",
+            "7"
+          ],
+          "scope": "One ordered sequence spans six existing native blocks; no one-to-one block-to-number alignment has been established."
+        }
+      ],
+      "scoped_exclusion_policy": {
+        "requested_region_ids": [
+          "p1-b34",
+          "p2-b5",
+          "p2-b23",
+          "p2-b24"
+        ],
+        "source_preserved": true,
+        "raw_ocr_preserved": true,
+        "count_excluded_regions_as_correct": false,
+        "scope": "This source hash and comparison revision only; preserve traceability and show excluded coverage separately. Do not generalize to other footers, stamps, handwriting or legal text.",
+        "pipeline_applied": false
+      },
+      "ground_truth_labels_accepted": false,
+      "legal_review_completed": false,
+      "publication_authorized": false,
+      "document_state": "BLOCKED",
+      "known_remaining_targets": [
+        "Handwritten circular number 06",
+        "Printed name Hardev Singh",
+        "Margin list sequence 1–7, especially 2/5/7",
+        "Mixed-script corruption of the adjacent English Direct Taxes heading"
+      ]
     }
   ]
 }

@@ -34,6 +34,12 @@ The bilingual candidate produces readable Devanagari headings, but also corrupts
 
 Pinned tessdata_fast English/Hindi integer models run successfully. An earlier optional floating-point tessdata_best attempt failed in the WASM core with a missing dot-product function. A separate 1.0.0 best_int language-package name-crop trial ran but still misread the name; it was not promoted as the chosen configuration. These trials do not establish an engine winner. The revised package is ready for comparison review, not acceptance or production use. No paid OCR service was invoked.
 
+## Follow-up comparison feedback
+
+The owner reports that the displayed page 1 Hindi heading group looks good. The handwritten number and printed name remain incorrect. For the page 2 left-margin group, the expected sequence is `1 2 3 4 5 6 7`, with `2`, `5` and `7` reported wrong. Seven list values span six native blocks, so there is no accepted one-to-one block/value mapping.
+
+The owner permits excluding `p1-b34`, `p2-b5`, `p2-b23` and `p2-b24` from the extracted-text scope of this reviewed revision. Preserve their original source images, raw output and exclusion provenance; do not count excluded regions as correct or generalize this waiver to other footer/handwritten/legal content. This is a recorded scoped policy request, not yet a pipeline mutation or publication approval. The original comparison remains immutable. The separately observed English “Direct Taxes” mixed-script regression remains open despite positive qualitative feedback on the Hindi group.
+
 ## Next gates
 
 1. Human-label the triage set, fill coverage gaps and reserve held-out document groups.
