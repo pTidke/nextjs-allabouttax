@@ -1,0 +1,36 @@
+name: Refresh official tax sources
+on:
+  # Opt-in via repository variable TAX_WORKER_ENABLED=true after configuring
+  # the protected tax-worker environment and its DATABASE_URL secret.
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: knowledge-worker
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: vars.TAX_WORKER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: tax-worker
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci --legacy-peer-deps
+      - name: Process bounded refresh batch
+        run: npm run tax:worker -- tick
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TAX_DISCOVERY_START_YEAR: ${{ vars.TAX_DISCOVERY_START_YEAR }}
+          TAX_MAX_ORIGINAL_BYTES: ${{ vars.TAX_MAX_ORIGINAL_BYTES }}
+      - name: Check freshness and source failures
+        if: always()
+        run: npm run tax:health
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

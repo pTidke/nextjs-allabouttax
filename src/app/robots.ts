@@ -5,6 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: ["/api/", "/admin/", "/profile", "/chats"],
     },
     sitemap: "https://allabouttax.in/sitemap.xml",
   };

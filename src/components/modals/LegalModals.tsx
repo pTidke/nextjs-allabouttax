@@ -48,7 +48,7 @@ export default function LegalModals({ type, trigger }: LegalModalProps) {
             <div className="flex items-center gap-2 mt-1">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.15em]">
-                Last Updated • Dec 2025
+                Last Updated • November 2026
               </p>
             </div>
           </DialogHeader>
@@ -65,7 +65,7 @@ export default function LegalModals({ type, trigger }: LegalModalProps) {
               className="relative p-7 rounded-[32px] bg-emerald-50/30 border border-emerald-100/50 italic text-slate-600 text-sm md:text-base leading-relaxed"
             >
               <div className="absolute -top-3.5 left-7 px-4 py-1 bg-white border border-emerald-100 rounded-full text-[10px] font-extrabold text-emerald-700 uppercase tracking-widest shadow-sm z-30">
-                Official Statement
+                Service information
               </div>
               {isPrivacy
                 ? "At All About Tax, we value your privacy. This policy explains what information we collect, how we use it, and your rights. We believe in transparency and keeping your data safe."
@@ -79,17 +79,17 @@ export default function LegalModals({ type, trigger }: LegalModalProps) {
                   <LegalSection
                     icon={<Globe size={18} />}
                     title="Information We Collect"
-                    content="We collect basic information to provide our services effectively. This includes text you input into our chat interface and standard technical usage data. We do not collect personally identifiable information (PII) like your Aadhar or PAN unless you explicitly type it, which we strongly advise against."
+                    content="Google sign-in provides your name, email and profile image. We store your account, chat messages, citations and usage counters in our PostgreSQL database. Avoid including PAN, Aadhaar, bank details or other sensitive identifiers in questions."
                   />
                   <LegalSection
                     icon={<CheckCircle2 size={18} />}
                     title="How We Use Information"
-                    content="Data is used solely to operate, maintain, and improve All About Tax. Your chat inputs are processed by AI algorithms to provide relevant tax answers. We analyze aggregated, non-personal usage trends to fix technical issues."
+                    content="Your current question, a limited recent chat history and relevant official passages are sent to our Azure-hosted model to generate answers. The application requests responses with storage disabled at the API level; provider logging and retention follow the provider’s policies. Google supplies authentication, Neon hosts the database, and Vercel analytics components collect service usage information when enabled."
                   />
                   <LegalSection
                     icon={<ShieldCheck size={18} />}
                     title="Data Security & Third Parties"
-                    content="We take reasonable measures to protect your data. We do not sell data to advertisers. We may use trusted third-party providers for hosting or analytics, but they are bound by confidentiality obligations."
+                    content="Your conversations are restricted to your signed-in account. Open Your conversations to download or permanently delete a conversation from the application database. Closing a chat does not delete it. Backup and service-provider retention are separate from deletion in the app."
                   />
                   <LegalSection
                     icon={<AlertTriangle size={18} />}
@@ -102,7 +102,7 @@ export default function LegalModals({ type, trigger }: LegalModalProps) {
                   <LegalSection
                     icon={<AlertTriangle size={18} />}
                     title="Informational Purpose Only"
-                    content="All About Tax is an AI-powered educational tool. Responses, calculations, and guidance provided are indicative and for reference only. They do NOT constitute official legal, financial, or tax advice."
+                    content="All About Tax is an AI-powered educational tool. Explanations are for reference and depend on the reviewed source coverage. This release does not calculate tax or file returns. They do NOT constitute official legal, financial, or tax advice."
                   />
                   <LegalSection
                     icon={<CheckCircle2 size={18} />}

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Send, AlertCircle, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Send, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +28,7 @@ ${formData.message}
 
     // Construct Gmail URL
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=ask.allabouttax@gmail.com&su=${encodeURIComponent(
-      `Contact Form: ${formData.name}`
+      `Contact Form: ${formData.name}`,
     )}&body=${encodeURIComponent(emailBody)}`;
 
     // Open in new tab
@@ -39,7 +39,7 @@ ${formData.message}
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -68,9 +68,9 @@ ${formData.message}
                   </span>
                 </h1>
                 <p className="text-slate-500 text-base md:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0">
-                  Whether you're facing a technical issue with the website or
-                  have a suggestion to improve our AI, we'd love to hear from
-                  you.
+                  Whether you are facing a technical issue with the website or
+                  have a suggestion to improve our AI, we would love to hear
+                  from you.
                 </p>
               </div>
 

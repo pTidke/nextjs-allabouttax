@@ -1,30 +1,22 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { withAccelerate } from "@prisma/extension-accelerate";
 
-const globalForPrisma = globalThis as unknown as { 
-  prisma: ReturnType<typeof createPrismaClient>
-}
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
-
-function createPrismaClient() {
+function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL;
-  const isAccelerate = url?.startsWith('prisma://') || url?.startsWith('prisma+postgres://');
-
-  if (isAccelerate) {
-    return new PrismaClient({
-      accelerateUrl: url
-    } as any);
+  if (url?.startsWith("prisma://") || url?.startsWith("prisma+postgres://")) {
+    // The extension supplies the remote transport. Application code uses only
+    // the standard Prisma methods, never the extension-specific cache helpers.
+    return new PrismaClient({ accelerateUrl: url }).$extends(
+      withAccelerate(),
+    ) as unknown as PrismaClient;
   }
-
-  const pool = new Pool({ connectionString: url });
-  const adapter = new PrismaPg(pool);
-  
-  return new PrismaClient({ adapter });
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
 }
 
-export const prisma = globalForPrisma.prisma || createPrismaClient()
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma
-}
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

@@ -1,3 +1,5 @@
+import Image from "next/image";
+import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { User, Mail, Shield } from "lucide-react";
@@ -9,6 +11,10 @@ export default async function ProfilePage() {
     redirect("/");
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { createdAt: true },
+  });
   return (
     <div className="min-h-screen bg-slate-50">
       <main className="container mx-auto px-6 py-12">
@@ -24,7 +30,10 @@ export default async function ProfilePage() {
               <div className="relative flex justify-between items-end -mt-12 mb-6">
                 <div className="h-24 w-24 rounded-2xl border-4 border-white overflow-hidden bg-emerald-100 shadow-sm">
                   {session.user.image ? (
-                    <img
+                    <Image
+                      width={96}
+                      height={96}
+                      unoptimized
                       src={session.user.image}
                       alt={session.user.name || ""}
                       className="w-full h-full object-cover"
@@ -48,7 +57,7 @@ export default async function ProfilePage() {
                     {session.user.name}
                   </h2>
                   <p className="text-slate-500">
-                    Member since {new Date().toLocaleDateString()}
+                    Member since {user?.createdAt.toLocaleDateString()}
                   </p>
                 </div>
 

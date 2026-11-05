@@ -2,7 +2,7 @@
 
 import { useChat } from "@/components/chat/ChatContext";
 import ChatInterface from "@/components/chat/ChatInterface";
-import { Bot, MessageCircle, Sparkles, X } from "lucide-react";
+import { Bot, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ChatWidget() {
@@ -36,14 +36,15 @@ export default function ChatWidget() {
       <ChatInterface
         trigger={
           <button
+            aria-label="Open tax assistant"
             className={`group relative h-14 w-14 md:h-16 md:w-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
               isOpen
                 ? "hidden"
                 : isThinking
-                ? "bg-slate-900"
-                : hasResponse
-                ? "bg-emerald-600 hover:bg-emerald-700"
-                : "bg-slate-900 hover:bg-emerald-600"
+                  ? "bg-slate-900"
+                  : hasResponse
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-slate-900 hover:bg-emerald-600"
             }`}
           >
             {/* Thinking Animation State */}
