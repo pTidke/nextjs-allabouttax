@@ -14,6 +14,12 @@ Four public official documents were processed into local packages: 22 pages tota
 
 An early path-based run detected a changed working-copy checksum. The root cause was not established. The run was held. Parser backends now receive in-memory byte snapshots, preserved originals are read-only, and both original/render hashes are verified. Subsequent four-document runs preserved original checksums. A regression test checks that the native backend receives a byte snapshot rather than a source path. This is a defensive fix, not a claim to have proved a third-party defect.
 
+## Reviewer defects — Circular No. 6/2026
+
+The product owner reported defects in 16 native text-line regions. Page 1 block 1 contains a handwritten `06`; blocks 3–6 have poor Hindi transcription; block 34 is a signature. Page 2 block 5 is a signature, block 6 should contain the printed name `Hardev Singh`, and blocks 23–30 are garbled/mixed up. Exact region IDs, original bounding boxes and extracted strings are preserved in [review feedback](review-feedback.json). Proposed values are reviewer observations pending source verification; unspecified Hindi/garbled text is not guessed.
+
+This exposes the need to test rendered-page OCR against unreliable existing text layers, validate Hindi explicitly, classify signature/handwriting regions separately, and check names as critical tokens. Signature imagery must remain traceable to the source rather than becoming invented prose or inferred identity. Region grouping/order in the page 2 cluster still needs inspection; its cause is not established. The tested English-only Docling trial does not resolve these Hindi or handwriting defects. Keep this document as a tuning/regression sample, with independent originals reserved for held-out evaluation.
+
 ## Optional Docling English trial
 
 Docling 2.147.0 with RapidOCR/ONNX Runtime on CPU processed a synthetic image-only page and both pages of an official scanned circular. Requested-page counts matched returned pages. On the synthetic example, the output retained the seeded `1.5%`, `15%`, `31 March 2030` and `not an exemption` strings. The official result has no human-labelled accuracy score.

@@ -6,6 +6,8 @@ The committed manifest contains public-source metadata and machine triage only. 
 
 The product owner has volunteered to perform the initial visual extraction checks, which do not require tax expertise. The owner reported that Notification No. 1/2026 looks good in the review gallery; the exact source and artifact revision are recorded in [review feedback](review-feedback.json). This is qualitative sample feedback, with no region-by-region labels or enumerated language coverage. No tax/legal reviewer has been designated and no ground-truth labels have been accepted yet.
 
+The owner also reported defects in 16 regions of Circular No. 6/2026: handwritten identifier, Hindi text, signatures, a printed name and garbled regions. These source-bound defect reports and proposed corrections are retained separately from the immutable extraction artifact; they are not yet accepted ground-truth labels. The sample remains blocked.
+
 Start with a language you read comfortably. Open the first document in the local gallery, select a text line and compare it with the green-highlighted original region. Use the full-size image link if the preview is too small. Check that words are neither missing nor added; rates, decimal points, dates, names, section numbers and negations match; and table values remain under the correct visible headings. Report the page/region ID and the observed difference. Flag unreadable or unfamiliar text rather than guessing.
 
 Matching transcription does not approve a document's legal status or applicability. Leave those fields and scope/dependency decisions to a qualified tax reviewer. The gallery is read-only and has no publish action; actual annotation/correction persistence remains a later milestone.

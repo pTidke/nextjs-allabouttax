@@ -21,6 +21,270 @@
         "Not an OCR accuracy score or a completed benchmark.",
         "Does not resolve unverified reading order or establish legal applicability."
       ]
+    },
+    {
+      "recorded_date": "2026-11-05",
+      "reviewer_role": "product_owner",
+      "source_title": "Circular No. 6/2026 : Condonation of delay in filing Form No. 10AB electronically for approval under clause(ii) of the first proviso to section 80G(5) of the Income-tax Act, 1961",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "run_id": "cc4238745db8-1793867951687263000",
+      "artifact_sha256": "264ecda9ae77bdec1abef2de0ea8aba9248314d6ce5684df6639673413b294b5",
+      "processing_fingerprint": "7b17aba360ed928cc127fa10e47f1024ea49b150c4873c8f51f01819e3150442",
+      "source_page_count": 2,
+      "feedback_type": "region_defect_report",
+      "outcome": "issues_reported",
+      "findings": [
+        {
+          "region_ids": [
+            "p1-b1"
+          ],
+          "category": "handwritten_identifier",
+          "user_report": "p1b1 handwritten 06",
+          "proposed_value": "06",
+          "value_scope": "Handwritten circular-number token only; not a replacement for the entire line.",
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p1-b1",
+              "bbox": {
+                "x0": 398.368,
+                "top": 68.80700000000013,
+                "x1": 527.6835,
+                "bottom": 81.80700000000013
+              },
+              "extracted_text": "CIRCULAR NO.[)§ /2026"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p1-b3",
+            "p1-b4",
+            "p1-b5",
+            "p1-b6"
+          ],
+          "category": "hindi_transcription",
+          "user_report": "p1b3, b4, b5, b6 - hindi texts are bad",
+          "proposed_value": null,
+          "value_scope": null,
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p1-b3",
+              "bbox": {
+                "x0": 213.158,
+                "top": 109.64699999999993,
+                "x1": 383.2112999999999,
+                "bottom": 120.64699999999993
+              },
+              "extracted_text": "Government of India / HRd DR"
+            },
+            {
+              "id": "p1-b4",
+              "bbox": {
+                "x0": 220.26399999999992,
+                "top": 125.27899999999988,
+                "x1": 375.1600199999999,
+                "bottom": 136.27899999999988
+              },
+              "extracted_text": "Ministry of Finance /v"
+            },
+            {
+              "id": "p1-b5",
+              "bbox": {
+                "x0": 205.57899999999987,
+                "top": 141.3839999999999,
+                "x1": 389.84111999999993,
+                "bottom": 152.3839999999999
+              },
+              "extracted_text": "Department of Revenue / I[SI¥d fqum"
+            },
+            {
+              "id": "p1-b6",
+              "bbox": {
+                "x0": 176.20999999999992,
+                "top": 155.543,
+                "x1": 419.68279999999993,
+                "bottom": 167.5429999999999
+              },
+              "extracted_text": "Central Board of Direct Taxes BaIT UTe] P &S"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p1-b34"
+          ],
+          "category": "signature_misclassified_as_text",
+          "user_report": "p1b34 - is a signature",
+          "proposed_value": "signature",
+          "value_scope": "Region classification only; no signatory identity inferred.",
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p1-b34",
+              "bbox": {
+                "x0": 36.474,
+                "top": 749.3720000000001,
+                "x1": 98.52663999999999,
+                "bottom": 801.3720000000001
+              },
+              "extracted_text": "Wi"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p2-b5"
+          ],
+          "category": "signature_misclassified_as_text",
+          "user_report": "p2b5 - signature again",
+          "proposed_value": "signature",
+          "value_scope": "Region classification only; no signatory identity inferred.",
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p2-b5",
+              "bbox": {
+                "x0": 514.895,
+                "top": 178.90800000000002,
+                "x1": 520.10555,
+                "bottom": 187.90800000000002
+              },
+              "extracted_text": "-"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p2-b6"
+          ],
+          "category": "person_name_transcription",
+          "user_report": "p2b6 - its Hardev Singh",
+          "proposed_value": "Hardev Singh",
+          "value_scope": "Printed name reported by reviewer; not an identity inferred from the signature.",
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p2-b6",
+              "bbox": {
+                "x0": 448.579,
+                "top": 191.75800000000015,
+                "x1": 521.05272,
+                "bottom": 208.75800000000015
+              },
+              "extracted_text": "(Hardev'S ingh)"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p2-b23",
+            "p2-b24",
+            "p2-b25",
+            "p2-b26",
+            "p2-b27",
+            "p2-b28",
+            "p2-b29",
+            "p2-b30"
+          ],
+          "category": "garbled_or_misordered_regions",
+          "user_report": "p2b23-b30 are all missed up",
+          "proposed_value": null,
+          "value_scope": null,
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p2-b23",
+              "bbox": {
+                "x0": 512.527,
+                "top": 464.34200000000004,
+                "x1": 568.4245999999999,
+                "bottom": 486.34200000000004
+              },
+              "extracted_text": "q/\\\"\\“’\\/b"
+            },
+            {
+              "id": "p2-b24",
+              "bbox": {
+                "x0": 370.422,
+                "top": 478.12100000000004,
+                "x1": 518.21132,
+                "bottom": 490.12100000000004
+              },
+              "extracted_text": "Under Secretary fi"
+            },
+            {
+              "id": "p2-b25",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 264.63534000000016,
+                "x1": 85.74799999999999,
+                "bottom": 272.6880000000001
+              },
+              "extracted_text": "K"
+            },
+            {
+              "id": "p2-b26",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 281.2139300000001,
+                "x1": 85.74799999999999,
+                "bottom": 284.05600000000015
+              },
+              "extracted_text": "v"
+            },
+            {
+              "id": "p2-b27",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 287.3723100000001,
+                "x1": 85.74799999999999,
+                "bottom": 308.6880000000001
+              },
+              "extracted_text": "too"
+            },
+            {
+              "id": "p2-b28",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 313.42484,
+                "x1": 85.74799999999999,
+                "bottom": 325.26700000000005
+              },
+              "extracted_text": "ik"
+            },
+            {
+              "id": "p2-b29",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 334.74109000000004,
+                "x1": 85.74799999999999,
+                "bottom": 340.89900000000006
+              },
+              "extracted_text": ")"
+            },
+            {
+              "id": "p2-b30",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 351.32018000000005,
+                "x1": 85.74799999999999,
+                "bottom": 356.0570000000001
+              },
+              "extracted_text": "b"
+            }
+          ]
+        }
+      ],
+      "ground_truth_labels_accepted": false,
+      "legal_review_completed": false,
+      "publication_authorized": false,
+      "limitations": [
+        "Review observations are stored separately from immutable extraction output.",
+        "Unspecified Hindi text and garbled regions have no guessed replacement.",
+        "The entire sample remains blocked; no automated acceptance or publication is performed."
+      ]
     }
   ]
 }
