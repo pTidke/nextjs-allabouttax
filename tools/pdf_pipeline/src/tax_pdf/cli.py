@@ -92,9 +92,23 @@ def main():
     content.add_argument("--out", type=Path, required=True)
     content_schema = sub.add_parser("content-schema")
     content_schema.add_argument("--out", type=Path, required=True)
+    transfer = sub.add_parser("evaluate-transfer")
+    transfer.add_argument("manifest", type=Path)
+    transfer.add_argument("--plan", type=Path, required=True)
+    transfer.add_argument("--prior", type=Path, required=True)
+    transfer.add_argument("--models", type=Path, required=True)
+    transfer.add_argument("--easyocr-models", type=Path, required=True)
+    transfer.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "prepare-content":
+        if args.command == "evaluate-transfer":
+            from .transfer_evaluation import run_transfer
+
+            report = run_transfer(
+                args.manifest, args.plan, args.prior, args.models, args.easyocr_models, args.out
+            )
+            print(json.dumps(report["summary"]))
+        elif args.command == "prepare-content":
             from .structured_content import prepare_content
 
             report = prepare_content(args.manifest, args.date_report, args.review, args.out)
