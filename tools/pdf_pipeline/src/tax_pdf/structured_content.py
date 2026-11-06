@@ -8,6 +8,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from .content_classification import apply_region_classification
 from .content_models import ContentPage, ContentPreview, ContentRegion, FieldEdit, SourceLine
 from .content_scope import (
     crop_pixels,
@@ -71,6 +72,20 @@ def validate_review(review, report, evidence_root):
             for k in ("raw_evidence", "header_evidence", "independent_header_evidence")
             if k in entry
         ]
+        classification = entry.get("structured_region_review")
+        if classification:
+            groups = classification["variants"]
+            if (
+                not 1 <= len(groups) <= 20
+                or len({g["input_id"] for g in groups}) != len(groups)
+                or any(not 1 <= len(g["decisions"]) <= 100 for g in groups)
+            ):
+                raise ValueError("Invalid region-classification inventory")
+            for group in groups:
+                cited = {r["line_number"] for r in group["regions"]}
+                if any(d["source_line"] not in cited for d in group["decisions"]):
+                    raise ValueError("Classified span lacks a complete raw-line snapshot")
+            snapshots += groups
         scope = entry.get("retrieval_scope_draft")
         if scope:
             snapshots += [scope["reference_ocr_regions"], scope["issuer_name_and_designation"]]
@@ -286,6 +301,7 @@ def build_page(row, artifact, raw, entry, review_sha, evidence_root, staging, in
                         crop_sha256=digest(staging / crop_name),
                     )
                 )
+    regions = apply_region_classification(entry, row, regions, review_sha)
     holds = [
         "FULL_PAGE_TEXT_UNVERIFIED",
         "READING_ORDER_UNVERIFIED",
@@ -392,6 +408,7 @@ def prepare_content(manifest_file, date_report, review_file, output):
                 for name in (
                     "structured_content.py",
                     "content_models.py",
+                    "content_classification.py",
                     "content_scope.py",
                     "content_view.py",
                     "review.py",
@@ -408,6 +425,7 @@ def prepare_content(manifest_file, date_report, review_file, output):
                 "Geometric row ordering is a proposal, not verified reading order; columns, tables, superscripts, footnotes and missing text still need evaluation.",
                 "Native table candidates retain the original grid, spans, null/blank/zero/dash distinctions and source boxes; no table semantics are approved.",
                 "All date warnings and pairwise disagreements remain evidence. A reviewed header does not resolve body dates or certify a whole page.",
+                "Explicit source-bound region feedback may classify mixed signature strokes as excluded non-text evidence and printed issuer text as metadata. No signature classifier or global deletion policy is inferred; raw characters, crops and all page-level holds remain preserved.",
                 "No chunks, embeddings, index writes, tax approvals or production ingestion changes are produced.",
             ],
         )

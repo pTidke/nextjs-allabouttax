@@ -37,7 +37,12 @@ class ContentRegion(Model):
     image_bbox: Box
     bbox: Box
     scope: Literal[
-        "content_candidate", "administrative_excluded", "metadata", "mixed_review", "table_review"
+        "content_candidate",
+        "administrative_excluded",
+        "signature_excluded",
+        "metadata",
+        "mixed_review",
+        "table_review",
     ]
     scope_evidence: list[str] = Field(default_factory=list)
     proposed_order: int = Field(ge=1)
@@ -129,8 +134,15 @@ class ContentPage(Model):
                     text = text[: edit.start - r.start] + edit.after + text[edit.end - r.start :]
                 if r.reviewed_text != (text if edits else None):
                     raise ValueError("Reviewed text differs from explicit edits")
-                if r.scope in ("administrative_excluded", "metadata") and not r.scope_evidence:
+                if (
+                    r.scope in ("administrative_excluded", "signature_excluded", "metadata")
+                    and not r.scope_evidence
+                ):
                     raise ValueError("Scope change requires review evidence")
+                if r.scope == "signature_excluded" and (r.table_ids or r.edits):
+                    raise ValueError(
+                        "Signature scope cannot exclude table or reviewed field content"
+                    )
                 if (
                     r.image_bbox.x1 > self.image_width
                     or r.image_bbox.bottom > self.image_height

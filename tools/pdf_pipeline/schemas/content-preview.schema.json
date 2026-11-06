@@ -348,6 +348,7 @@
           "enum": [
             "content_candidate",
             "administrative_excluded",
+            "signature_excluded",
             "metadata",
             "mixed_review",
             "table_review"

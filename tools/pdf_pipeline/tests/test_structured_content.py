@@ -440,3 +440,167 @@ def test_table_overlap_has_priority_over_administrative_exclusion(tmp_path):
     regions = [r for r in preview.pages[0].regions if r.source_line in (2, 3)]
     assert all(r.scope == "table_review" and r.table_ids == ["synthetic-table"] for r in regions)
     assert preview.pages[0].tables[0].cells[0].raw_text is None
+
+
+def classification_fixture():
+    from tax_pdf.content_classification import apply_region_classification
+
+    candidate = region("signature OCR noise", "signature", 1)
+    candidate.scope = "mixed_review"
+    candidate.holds = [
+        "SCOPE_BOUNDARY_REVIEW",
+        "TRANSCRIPTION_UNVERIFIED",
+        "READING_ORDER_UNVERIFIED",
+        "LOW_OCR_CONFIDENCE",
+    ]
+    decision = {
+        "region_id": candidate.id,
+        "source_line": 1,
+        "start": 0,
+        "end": candidate.end,
+        "raw_text": candidate.raw_text,
+        "image_bbox": candidate.image_bbox.model_dump(),
+        "crop_sha256": SHA,
+        "prior_scope": "mixed_review",
+        "scope": "signature_excluded",
+        "basis": "Explicit owner classification against the unchanged source crop.",
+    }
+    row = {"id": "reviewed-variant", "raw_sha256": SHA}
+    entry = {
+        "structured_region_review": {
+            "variants": [{"input_id": row["id"], "raw_sha256": SHA, "decisions": [decision]}]
+        }
+    }
+    return apply_region_classification, candidate, decision, row, entry
+
+
+def test_signature_feedback_changes_scope_without_changing_raw_or_clearing_page_review():
+    apply, candidate, _, row, entry = classification_fixture()
+    before = candidate.model_dump()
+    apply(entry, row, [candidate], SHA)
+    assert candidate.scope == "signature_excluded"
+    assert candidate.raw_text == before["raw_text"]
+    assert candidate.image_bbox.model_dump() == before["image_bbox"]
+    assert candidate.start == before["start"] and candidate.end == before["end"]
+    assert "TRANSCRIPTION_UNVERIFIED" not in candidate.holds
+    assert "SCOPE_BOUNDARY_REVIEW" not in candidate.holds
+    assert "READING_ORDER_UNVERIFIED" in candidate.holds
+    assert candidate.scope_evidence == [SHA + ":structured-region:signature"]
+
+
+@pytest.mark.parametrize(
+    "change", ["span", "text", "geometry", "crop", "raw", "duplicate", "table", "scope"]
+)
+def test_signature_feedback_rejects_drift_and_unsafe_classifications(change):
+    apply, candidate, decision, row, entry = classification_fixture()
+    if change == "span":
+        decision["start"] = 1
+    elif change == "text":
+        decision["raw_text"] = "altered"
+    elif change == "geometry":
+        decision["image_bbox"]["x1"] += 1
+    elif change == "crop":
+        decision["crop_sha256"] = "b" * 64
+    elif change == "raw":
+        row["raw_sha256"] = "b" * 64
+    elif change == "duplicate":
+        entry["structured_region_review"]["variants"][0]["decisions"].append(deepcopy(decision))
+    elif change == "table":
+        candidate.table_ids = ["t1"]
+    else:
+        decision["scope"] = "content_candidate"
+    with pytest.raises(ValueError):
+        apply(entry, row, [candidate], SHA)
+    assert candidate.scope == "mixed_review"
+
+
+def test_printed_issuer_metadata_keeps_its_text_and_transcription_hold():
+    apply, candidate, decision, row, entry = classification_fixture()
+    candidate.raw_text = "(Dr. Indu Bala)"
+    candidate.end = len(candidate.raw_text)
+    decision.update(
+        raw_text=candidate.raw_text,
+        end=candidate.end,
+        scope="metadata",
+        basis="Printed issuer name retained under source-bound metadata preservation.",
+    )
+    apply(entry, row, [candidate], SHA)
+    assert candidate.scope == "metadata" and candidate.raw_text == "(Dr. Indu Bala)"
+    assert "TRANSCRIPTION_UNVERIFIED" in candidate.holds
+    assert "SCOPE_BOUNDARY_REVIEW" not in candidate.holds
+    _, untouched, _, _, _ = classification_fixture()
+    apply(entry, {**row, "id": "other-variant"}, [untouched], SHA)
+    assert untouched.scope == "mixed_review"
+
+
+def test_region_feedback_is_checked_against_recreated_raw_and_source_spans(tmp_path):
+    manifest, date, scope_file, review, _ = fixture(tmp_path)
+    raw_file = tmp_path / "raw.json"
+    raw = json.loads(raw_file.read_text())
+    raw["blocks"][0]["paragraphs"][0]["lines"][1]["text"] = "~ signature strokes ~"
+    raw_file.write_text(json.dumps(raw))
+    supplied = json.loads(manifest.read_text())
+    supplied["inputs"][0]["raw_sha256"] = digest(raw_file)
+    manifest.write_text(json.dumps(supplied))
+    fresh = tmp_path / "new-date-report"
+    audit_dates(manifest, fresh)
+    date = fresh / "date-review.json"
+    review["report_sha256"] = digest(date)
+    entry = review["reviews"][0]
+    entry["raw_evidence"]["raw_sha256"] = digest(raw_file)
+    lines = raw["blocks"][0]["paragraphs"][0]["lines"]
+    snapshot = entry["raw_evidence"]
+    entry["retrieval_scope_draft"] = {
+        "image_dimensions": [raw["width"], raw["height"]],
+        "source_image_regions": [
+            {"id": "partial-boundary", "bbox": {"x0": 50, "y0": 95, "x1": 300, "y1": 125}}
+        ],
+        "reference_ocr_regions": {**snapshot, "regions": [{"line_number": 2, **lines[1]}]},
+        "issuer_name_and_designation": snapshot,
+        "mixed_region": {"line_number": 2, "text": lines[1]["text"], "bbox": lines[1]["bbox"]},
+    }
+    scope_file.write_text(json.dumps(review))
+    base = prepare_content(manifest, date, scope_file, tmp_path / "base")
+    target = next(r for r in base.pages[0].regions if r.source_line == 2)
+    assert target.scope == "mixed_review"
+    entry["structured_region_review"] = {
+        "variants": [
+            {
+                **snapshot,
+                "regions": [{"line_number": 2, **lines[1]}],
+                "decisions": [
+                    {
+                        "region_id": target.id,
+                        "source_line": 2,
+                        "start": target.start,
+                        "end": target.end,
+                        "raw_text": target.raw_text,
+                        "image_bbox": target.image_bbox.model_dump(),
+                        "crop_sha256": target.crop_sha256,
+                        "prior_scope": "mixed_review",
+                        "scope": "signature_excluded",
+                        "basis": "Synthetic source-bound non-text classification.",
+                    }
+                ],
+            }
+        ]
+    }
+    scope_file.write_text(json.dumps(review))
+    updated = prepare_content(manifest, date, scope_file, tmp_path / "updated")
+    assert (
+        next(r for r in updated.pages[0].regions if r.id == target.id).scope == "signature_excluded"
+    )
+    assert updated.pages[0].source_lines == base.pages[0].source_lines
+    assert updated.pages[0].holds == base.pages[0].holds
+    assert updated.publication_eligible is False
+    assert (
+        "Reviewed signature artifacts (excluded) (1)"
+        in (tmp_path / "updated/index.html").read_text()
+    )
+    # A classification with an accurate character span still needs its complete
+    # source-line snapshot; it cannot refer to a different provider line.
+    entry["structured_region_review"]["variants"][0]["regions"][0]["text"] = "changed"
+    scope_file.write_text(json.dumps(review))
+    with pytest.raises(ValueError):
+        prepare_content(manifest, date, scope_file, tmp_path / "rejected")
+    assert not (tmp_path / "rejected").exists()

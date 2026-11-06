@@ -1,0 +1,846 @@
+{
+  "schema_version": "0.1.0",
+  "reviewed_on": "2026-11-06",
+  "reviewer_role": "product_owner",
+  "user_statement": "Circular 4/2026 - looks good except 31* which is fine as long as LLM is able to understands it!\nCircular 15/2025 - again date is 29th but shown gq and numbers in copy to section are messed up, but if we look at the broader picture we wont need copy to section for RAG implementation i suppose. Independent EasyOCR version looks the cleanest wrt numbers in copy to section date issue is still there and copy is moved to extreme bottom!",
+  "report_sha256": "6ef1c4b01e0d08963c7f1ddc076721e7af4b1facb41366b94051018704632f49",
+  "local_report": "work/pdf-lab/demo-v2/comparisons/date-warnings-v5/date-review.json",
+  "status": "SCOPED_REVIEW_WITH_NON_TEXT_REGION_CLASSIFICATION",
+  "publication_eligible": false,
+  "reviews": [
+    {
+      "source_sha256": "ffa0e21cd3db036707a4850414aa2e7d673d4be28ee1991a1fd3f1c1222c5e78",
+      "page": 1,
+      "source_render_sha256": "e898e04666d151ca8dd005c4416a351f124fed7f8f8327526d66c57b6164c5e0",
+      "observation": "Positive page feedback except ordinal marker; the owner suggests the LLM may understand it.",
+      "scope": "Qualitative page feedback. Preserve the previously source-confirmed date correction in a separate reviewed layer; do not infer a general license for date guessing.",
+      "field_correction": {
+        "field": "printed_header_date",
+        "raw_token": "31*",
+        "reviewed_token": "31st",
+        "reviewed_value": "31st March, 2026",
+        "provenance": "Prior explicit owner correction and source comparison; repeated positive feedback in this review.",
+        "prior_review_sha256": "21d48d5248b466cedcd974155c226e422bc87e078751ac1da05c0137f312ad9e"
+      },
+      "raw_evidence": {
+        "input_id": "circular4-known-superscript-control",
+        "engine": "Tesseract.js",
+        "variant": "Flattened · English · layout 3",
+        "raw_sha256": "c2e403742017876a2f2104de4459296bcaf6c797e1577a9bfaed7e956f892008",
+        "regions": [
+          {
+            "line_number": 7,
+            "text": "New Delhi, dated the 31* March, 2026\n\n",
+            "bbox": {
+              "x0": 1401,
+              "y0": 616,
+              "x1": 2152,
+              "y1": 661
+            },
+            "confidence": 94
+          }
+        ]
+      },
+      "raw_modified": false
+    },
+    {
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "page": 1,
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "field_correction": {
+        "field": "printed_header_date",
+        "owner_confirmed_day": "29th",
+        "reviewed_value": "29th October, 2025",
+        "day_provenance": "Explicit owner confirmation in this message.",
+        "month_year_provenance": "Agent visual source comparison; source crop and earlier inspection agree. This is not a legal effective-date determination."
+      },
+      "header_evidence": {
+        "input_id": "f95677aefb37-p1-unchanged-eng-3",
+        "engine": "Tesseract.js",
+        "variant": "Unchanged · eng · layout 3",
+        "raw_sha256": "a4f0d566f32a90a98073d9c1844cf6ed37431d0a3fd059eaa70ea841dfd7e00b",
+        "regions": [
+          {
+            "line_number": 8,
+            "text": "New Delhi, datedgq Detober, 2025\n\n",
+            "bbox": {
+              "x0": 1553,
+              "y0": 693,
+              "x1": 2262,
+              "y1": 794
+            },
+            "confidence": 69
+          }
+        ]
+      },
+      "independent_header_evidence": {
+        "input_id": "c15-independent-easyocr",
+        "engine": "EasyOCR",
+        "variant": "Independent EasyOCR · English · unchanged",
+        "raw_sha256": "b615cb68663a09983851ade2383579239715325cfc035993fc9dcf5905db75f8",
+        "regions": [
+          {
+            "line_number": 8,
+            "text": "New Delhi, dated",
+            "bbox": {
+              "x0": 1547.0,
+              "y0": 728.0,
+              "x1": 1912.0,
+              "y1": 785.0
+            },
+            "confidence": 74.07196201860584
+          },
+          {
+            "line_number": 9,
+            "text": "124' October, 2025",
+            "bbox": {
+              "x0": 1893.0,
+              "y0": 720.0,
+              "x1": 2273.0,
+              "y1": 801.0
+            },
+            "confidence": 38.49359867909226
+          }
+        ]
+      },
+      "engine_preference": "Independent EasyOCR is comparatively cleaner for the distribution-list numbers. It still misreads the header date and misorders Copy.",
+      "retrieval_scope_draft": {
+        "classification": "ADMINISTRATIVE_DISTRIBUTION_LIST",
+        "decision": "EXCLUDE_SOURCE_REGIONS_FROM_TAX_QA_RETRIEVAL_AFTER_SCOPE_VALIDATION",
+        "basis": "Owner proposes leaving the copy list out of RAG; agent compared the original page and located the heading and recipients 1–12.",
+        "image_dimensions": [
+          2484,
+          3509
+        ],
+        "source_image_regions": [
+          {
+            "id": "copy-heading-and-items-1-10",
+            "bbox": {
+              "x0": 250,
+              "y0": 1915,
+              "x1": 2345,
+              "y1": 2625
+            },
+            "scope": "Distribution heading and first ten administrative recipients only."
+          },
+          {
+            "id": "copy-items-11-12",
+            "bbox": {
+              "x0": 250,
+              "y0": 2625,
+              "x1": 1100,
+              "y1": 2760
+            },
+            "scope": "Left-side final recipients; avoids the right-side signature."
+          }
+        ],
+        "reference_ocr_regions": {
+          "input_id": "f95677aefb37-p1-unchanged-eng-3",
+          "engine": "Tesseract.js",
+          "variant": "Unchanged · eng · layout 3",
+          "raw_sha256": "a4f0d566f32a90a98073d9c1844cf6ed37431d0a3fd059eaa70ea841dfd7e00b",
+          "regions": [
+            {
+              "line_number": 22,
+              "text": "Copy to:\n\n",
+              "bbox": {
+                "x0": 300,
+                "y0": 1952,
+                "x1": 476,
+                "y1": 1998
+              },
+              "confidence": 96
+            },
+            {
+              "line_number": 23,
+              "text": "PS to F.M./ PS to MoS (F).\n\n",
+              "bbox": {
+                "x0": 388,
+                "y0": 2013,
+                "x1": 928,
+                "y1": 2058
+              },
+              "confidence": 92
+            },
+            {
+              "line_number": 24,
+              "text": "PS to Revenue Secretary.\n\n",
+              "bbox": {
+                "x0": 388,
+                "y0": 2076,
+                "x1": 891,
+                "y1": 2121
+              },
+              "confidence": 96
+            },
+            {
+              "line_number": 25,
+              "text": "Chairman (CBDT)& All Members of CBDT.\n\n",
+              "bbox": {
+                "x0": 389,
+                "y0": 2137,
+                "x1": 1288,
+                "y1": 2182
+              },
+              "confidence": 93
+            },
+            {
+              "line_number": 26,
+              "text": "All Pr. CCsIT/CCsIT/Pr. DGsIT/DGsIT.\n\n",
+              "bbox": {
+                "x0": 388,
+                "y0": 2199,
+                "x1": 1197,
+                "y1": 2236
+              },
+              "confidence": 89
+            },
+            {
+              "line_number": 27,
+              "text": "All Joint Secretaries/Commissioners, CBDT.\n",
+              "bbox": {
+                "x0": 388,
+                "y0": 2261,
+                "x1": 1285,
+                "y1": 2304
+              },
+              "confidence": 92
+            },
+            {
+              "line_number": 28,
+              "text": "6. Directors/Deputy Secretaries/Under Secretaries of CBDT.\n\n",
+              "bbox": {
+                "x0": 316,
+                "y0": 2323,
+                "x1": 1547,
+                "y1": 2369
+              },
+              "confidence": 88
+            },
+            {
+              "line_number": 29,
+              "text": "- Web Manager, with a request to place the order on official Income-tax website.\n",
+              "bbox": {
+                "x0": 264,
+                "y0": 2360,
+                "x1": 1973,
+                "y1": 2436
+              },
+              "confidence": 90
+            },
+            {
+              "line_number": 30,
+              "text": "8. CIT (M&TP), Official Spokesperson of CBDT with a request to publicise widely.\n",
+              "bbox": {
+                "x0": 317,
+                "y0": 2447,
+                "x1": 2022,
+                "y1": 2494
+              },
+              "confidence": 93
+            },
+            {
+              "line_number": 31,
+              "text": "9. JCIT, Data Base Cell for placing it on irsofficersonline.gov.in.\n",
+              "bbox": {
+                "x0": 316,
+                "y0": 2509,
+                "x1": 1634,
+                "y1": 2556
+              },
+              "confidence": 94
+            },
+            {
+              "line_number": 32,
+              "text": "10. The Institute of Chartered Accountants of India, IP Estate, New Delhi.\n",
+              "bbox": {
+                "x0": 321,
+                "y0": 2571,
+                "x1": 1793,
+                "y1": 2615
+              },
+              "confidence": 96
+            },
+            {
+              "line_number": 33,
+              "text": "11. All Chambers of Commerce.\n\n",
+              "bbox": {
+                "x0": 320,
+                "y0": 2633,
+                "x1": 963,
+                "y1": 2671
+              },
+              "confidence": 95
+            },
+            {
+              "line_number": 34,
+              "text": "12. The Guard File. Ne J, 4 bak «8\n",
+              "bbox": {
+                "x0": 320,
+                "y0": 2654,
+                "x1": 2341,
+                "y1": 2795
+              },
+              "confidence": 66
+            }
+          ]
+        },
+        "mixed_region": {
+          "line_number": 34,
+          "text": "12. The Guard File. Ne J, 4 bak «8\n",
+          "bbox": {
+            "x0": 320,
+            "y0": 2654,
+            "x1": 2341,
+            "y1": 2795
+          },
+          "decision": "SPLIT_REQUIRED_BEFORE_ANY_FULL_REGION_EXCLUSION",
+          "reason": "The Guard File text is merged with signature strokes; the entire OCR line is not an administrative-text boundary."
+        },
+        "issuer_name_and_designation": {
+          "input_id": "f95677aefb37-p1-unchanged-eng-3",
+          "engine": "Tesseract.js",
+          "variant": "Unchanged · eng · layout 3",
+          "raw_sha256": "a4f0d566f32a90a98073d9c1844cf6ed37431d0a3fd059eaa70ea841dfd7e00b",
+          "regions": [
+            {
+              "line_number": 20,
+              "text": "(Dr. Indu Bala)\n",
+              "bbox": {
+                "x0": 1859,
+                "y0": 1742,
+                "x1": 2185,
+                "y1": 1787
+              },
+              "confidence": 96
+            },
+            {
+              "line_number": 21,
+              "text": "Deputy Secretary to the Government of India\n\n",
+              "bbox": {
+                "x0": 1302,
+                "y0": 1827,
+                "x1": 2270,
+                "y1": 1874
+              },
+              "confidence": 96
+            },
+            {
+              "line_number": 36,
+              "text": "(Dr. Indu Bala)\n",
+              "bbox": {
+                "x0": 1947,
+                "y0": 2822,
+                "x1": 2272,
+                "y1": 2866
+              },
+              "confidence": 96
+            },
+            {
+              "line_number": 37,
+              "text": "Deputy Secretary to the Government of India\n\n",
+              "bbox": {
+                "x0": 1305,
+                "y0": 2884,
+                "x1": 2273,
+                "y1": 2929
+              },
+              "confidence": 96
+            }
+          ]
+        },
+        "preservation": "Retain both printed issuer/name/designation occurrences as provenance metadata, and retain the entire original and raw OCR. Do not drop substantive clauses, conditions, exceptions, tables, annexures or footnotes.",
+        "ordering_defect": {
+          "copy": {
+            "line_number": 51,
+            "text": "Copy",
+            "bbox": {
+              "x0": 283.2614434189227,
+              "y0": 1935.074486052446,
+              "x1": 424.7385565810773,
+              "y1": 2016.925513947554
+            }
+          },
+          "body_ordinal_at_end_of_raw_order": {
+            "line_number": 50,
+            "text": "10th",
+            "bbox": {
+              "x0": 656.1579833204635,
+              "y0": 1350.5301770165124,
+              "x1": 750.8420166795365,
+              "y1": 1413.4698229834876
+            }
+          },
+          "decision": "Use verified source regions and layout; never discard the text tail after a Copy token or trust the raw provider order."
+        },
+        "actual_retrieval_filter_implemented": false,
+        "rag_index_modified": false
+      },
+      "remaining_body_date_holds": [
+        "The bilingual 1070 December and English 10-double-quote December readings remain unresolved machine outputs. No new body-date correction was supplied in this message."
+      ],
+      "raw_modified": false,
+      "structured_region_review": {
+        "base_preview_sha256": "7fd0591e605982b3aca32eb0ffa52889df89636d99abb52aead9222aac92f578",
+        "base_file_ledger_sha256": "661aea4ae5664c52fa465f974178e9f2df792c73dcc2f1e9de93ba32669d0c6f",
+        "reviewed_on": "2026-11-06",
+        "reviewer_role": "product_owner_with_agent_source_comparison",
+        "user_statement": "Circular 15/2025 · page 1\nthe review items are signature artifacts",
+        "viewed_input_id": "f95677aefb37-p1-unchanged-eng-3",
+        "scope": "The four mixed regions in the viewed English variant are owner-classified signature strokes. Other variants at the same signature positions were compared against the unchanged original/crops by the agent. Two EasyOCR regions contain printed issuer text and are retained as metadata under the prior preservation rule. No substantive text, date, table or whole page is accepted.",
+        "variants": [
+          {
+            "input_id": "f95677aefb37-p1-unchanged-eng-3",
+            "engine": "Tesseract.js",
+            "variant": "Unchanged · eng · layout 3",
+            "raw_sha256": "a4f0d566f32a90a98073d9c1844cf6ed37431d0a3fd059eaa70ea841dfd7e00b",
+            "regions": [
+              {
+                "line_number": 19,
+                "text": "7 ob\n\n",
+                "bbox": {
+                  "x0": 1919,
+                  "y0": 1651,
+                  "x1": 2063,
+                  "y1": 1728
+                },
+                "confidence": 54
+              },
+              {
+                "line_number": 34,
+                "text": "12. The Guard File. Ne J, 4 bak «8\n",
+                "bbox": {
+                  "x0": 320,
+                  "y0": 2654,
+                  "x1": 2341,
+                  "y1": 2795
+                },
+                "confidence": 66
+              },
+              {
+                "line_number": 35,
+                "text": "—\n\n",
+                "bbox": {
+                  "x0": 2004,
+                  "y0": 2738,
+                  "x1": 2126,
+                  "y1": 2824
+                },
+                "confidence": 0
+              }
+            ],
+            "decisions": [
+              {
+                "region_id": "v1-l19-s1",
+                "source_line": 19,
+                "start": 0,
+                "end": 1,
+                "raw_text": "7",
+                "image_bbox": {
+                  "x0": 1919.0,
+                  "top": 1695.0,
+                  "x1": 1956.0,
+                  "bottom": 1726.0
+                },
+                "crop_sha256": "fa6d938c57624aad4d8612639ed685ca01973fa27f12bf630cb76c84da8a217d",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Owner explicitly identifies the viewed review items as signature artifacts; unchanged source crop confirms non-text strokes."
+              },
+              {
+                "region_id": "v1-l19-s2",
+                "source_line": 19,
+                "start": 1,
+                "end": 6,
+                "raw_text": " ob\n\n",
+                "image_bbox": {
+                  "x0": 1970.0,
+                  "top": 1651.0,
+                  "x1": 2063.0,
+                  "bottom": 1728.0
+                },
+                "crop_sha256": "677995cde6a1a28d8e999261bec23bd8ccd3323548afc7cc2b6b515cdbc6bf06",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Owner explicitly identifies the viewed review items as signature artifacts; unchanged source crop confirms non-text strokes."
+              },
+              {
+                "region_id": "v1-l34-s2",
+                "source_line": 34,
+                "start": 19,
+                "end": 35,
+                "raw_text": " Ne J, 4 bak «8\n",
+                "image_bbox": {
+                  "x0": 1899.0,
+                  "top": 2654.0,
+                  "x1": 2341.0,
+                  "bottom": 2795.0
+                },
+                "crop_sha256": "e57065a6645b1d2c71de652ccacdf94fc05e607c1c97c951b261bc51079a50f5",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Owner explicitly identifies the viewed review items as signature artifacts; unchanged source crop confirms non-text strokes."
+              },
+              {
+                "region_id": "v1-l35-s1",
+                "source_line": 35,
+                "start": 0,
+                "end": 3,
+                "raw_text": "—\n\n",
+                "image_bbox": {
+                  "x0": 2004.0,
+                  "top": 2738.0,
+                  "x1": 2126.0,
+                  "bottom": 2824.0
+                },
+                "crop_sha256": "2af00c89c3b83f04ced7ac6ff1d0d3d896934607d27a6f7325541f824274c141",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Owner explicitly identifies the viewed review items as signature artifacts; unchanged source crop confirms non-text strokes."
+              }
+            ]
+          },
+          {
+            "input_id": "f95677aefb37-p1-unchanged-eng+hin-3",
+            "engine": "Tesseract.js",
+            "variant": "Unchanged · eng+hin · layout 3",
+            "raw_sha256": "5a4fa561e1a5cef9c69597f471c38193bf73d4172f9a67402a22a1b00e1773df",
+            "regions": [
+              {
+                "line_number": 19,
+                "text": "7 ob\n\n",
+                "bbox": {
+                  "x0": 1919,
+                  "y0": 1651,
+                  "x1": 2063,
+                  "y1": 1728
+                },
+                "confidence": 54
+              },
+              {
+                "line_number": 34,
+                "text": "12. The Guard File. Sab bot » i\n\n",
+                "bbox": {
+                  "x0": 320,
+                  "y0": 2650,
+                  "x1": 2341,
+                  "y1": 2816
+                },
+                "confidence": 72
+              }
+            ],
+            "decisions": [
+              {
+                "region_id": "v2-l19-s1",
+                "source_line": 19,
+                "start": 0,
+                "end": 1,
+                "raw_text": "7",
+                "image_bbox": {
+                  "x0": 1919.0,
+                  "top": 1695.0,
+                  "x1": 1956.0,
+                  "bottom": 1726.0
+                },
+                "crop_sha256": "fa6d938c57624aad4d8612639ed685ca01973fa27f12bf630cb76c84da8a217d",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              },
+              {
+                "region_id": "v2-l19-s2",
+                "source_line": 19,
+                "start": 1,
+                "end": 6,
+                "raw_text": " ob\n\n",
+                "image_bbox": {
+                  "x0": 1970.0,
+                  "top": 1651.0,
+                  "x1": 2063.0,
+                  "bottom": 1728.0
+                },
+                "crop_sha256": "677995cde6a1a28d8e999261bec23bd8ccd3323548afc7cc2b6b515cdbc6bf06",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              },
+              {
+                "region_id": "v2-l34-s2",
+                "source_line": 34,
+                "start": 19,
+                "end": 27,
+                "raw_text": " Sab bot",
+                "image_bbox": {
+                  "x0": 1899.0,
+                  "top": 2650.0,
+                  "x1": 2283.0,
+                  "bottom": 2816.0
+                },
+                "crop_sha256": "9f7f317de9c73d572c81683b2728c50165d453e0c8731fa52088be01568e678f",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              },
+              {
+                "region_id": "v2-l34-s3",
+                "source_line": 34,
+                "start": 27,
+                "end": 33,
+                "raw_text": " » i\n\n",
+                "image_bbox": {
+                  "x0": 2307.0,
+                  "top": 2727.0,
+                  "x1": 2341.0,
+                  "bottom": 2743.0
+                },
+                "crop_sha256": "91445b0df09f2ccf822f41f0c1886cf7d3194090f98ba3c3a6440e0dcdad45ef",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              }
+            ]
+          },
+          {
+            "input_id": "f95677aefb37-p1-unchanged-flattened",
+            "engine": "Tesseract.js",
+            "variant": "Flattened · English · layout 3",
+            "raw_sha256": "982580925bd7237fda2eeb18e06427f07ffd8b3ca9c7504f3426f36ade152c28",
+            "regions": [
+              {
+                "line_number": 19,
+                "text": "7 ob\n\n",
+                "bbox": {
+                  "x0": 1919,
+                  "y0": 1651,
+                  "x1": 2063,
+                  "y1": 1728
+                },
+                "confidence": 48
+              },
+              {
+                "line_number": 34,
+                "text": "12. The Guard File. Saber bok “i\n\n",
+                "bbox": {
+                  "x0": 320,
+                  "y0": 2650,
+                  "x1": 2341,
+                  "y1": 2816
+                },
+                "confidence": 70
+              }
+            ],
+            "decisions": [
+              {
+                "region_id": "v3-l19-s1",
+                "source_line": 19,
+                "start": 0,
+                "end": 1,
+                "raw_text": "7",
+                "image_bbox": {
+                  "x0": 1919.0,
+                  "top": 1696.0,
+                  "x1": 1956.0,
+                  "bottom": 1726.0
+                },
+                "crop_sha256": "7ea28eab107ea20fdc8dd88d1e74913ac9dc113f266d223fbf99188202d30cf8",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              },
+              {
+                "region_id": "v3-l19-s2",
+                "source_line": 19,
+                "start": 1,
+                "end": 6,
+                "raw_text": " ob\n\n",
+                "image_bbox": {
+                  "x0": 1970.0,
+                  "top": 1651.0,
+                  "x1": 2063.0,
+                  "bottom": 1728.0
+                },
+                "crop_sha256": "677995cde6a1a28d8e999261bec23bd8ccd3323548afc7cc2b6b515cdbc6bf06",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              },
+              {
+                "region_id": "v3-l34-s2",
+                "source_line": 34,
+                "start": 19,
+                "end": 29,
+                "raw_text": " Saber bok",
+                "image_bbox": {
+                  "x0": 1899.0,
+                  "top": 2650.0,
+                  "x1": 2283.0,
+                  "bottom": 2816.0
+                },
+                "crop_sha256": "9f7f317de9c73d572c81683b2728c50165d453e0c8731fa52088be01568e678f",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              },
+              {
+                "region_id": "v3-l34-s3",
+                "source_line": 34,
+                "start": 29,
+                "end": 34,
+                "raw_text": " “i\n\n",
+                "image_bbox": {
+                  "x0": 2307.0,
+                  "top": 2727.0,
+                  "x1": 2341.0,
+                  "bottom": 2742.0
+                },
+                "crop_sha256": "393e98e520c1048c0bb96d700c7151ee2228eaf31f445e9b25e896ea394f9780",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              }
+            ]
+          },
+          {
+            "input_id": "c15-independent-easyocr",
+            "engine": "EasyOCR",
+            "variant": "Independent EasyOCR · English · unchanged",
+            "raw_sha256": "b615cb68663a09983851ade2383579239715325cfc035993fc9dcf5905db75f8",
+            "regions": [
+              {
+                "line_number": 23,
+                "text": "Sa",
+                "bbox": {
+                  "x0": 1954.0,
+                  "y0": 1637.0,
+                  "x1": 2100.0,
+                  "y1": 1737.0
+                },
+                "confidence": 39.07813799947998
+              },
+              {
+                "line_number": 47,
+                "text": "(lkbz",
+                "bbox": {
+                  "x0": 1867.0,
+                  "y0": 2627.0,
+                  "x1": 2307.0,
+                  "y1": 2819.0
+                },
+                "confidence": 11.470972111259222
+              },
+              {
+                "line_number": 48,
+                "text": "(Dr. Indu Bala)",
+                "bbox": {
+                  "x0": 1937.0,
+                  "y0": 2809.0,
+                  "x1": 2284.0,
+                  "y1": 2873.0
+                },
+                "confidence": 66.33226815887338
+              },
+              {
+                "line_number": 49,
+                "text": "Deputy Secretary to the Government of India",
+                "bbox": {
+                  "x0": 1293.0,
+                  "y0": 2872.0,
+                  "x1": 2280.0,
+                  "y1": 2941.0
+                },
+                "confidence": 82.17588969265788
+              }
+            ],
+            "decisions": [
+              {
+                "region_id": "v4-l23-s1",
+                "source_line": 23,
+                "start": 0,
+                "end": 2,
+                "raw_text": "Sa",
+                "image_bbox": {
+                  "x0": 1954.0,
+                  "top": 1637.0,
+                  "x1": 2100.0,
+                  "bottom": 1737.0
+                },
+                "crop_sha256": "b195f56e70980b34e4d50218cbccc9b33cd0fd237988471866145b6b842784ea",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              },
+              {
+                "region_id": "v4-l47-s1",
+                "source_line": 47,
+                "start": 0,
+                "end": 5,
+                "raw_text": "(lkbz",
+                "image_bbox": {
+                  "x0": 1867.0,
+                  "top": 2627.0,
+                  "x1": 2307.0,
+                  "bottom": 2819.0
+                },
+                "crop_sha256": "e5643471e989c62000aa2d133537596d173e4954044db8358d88f60c6e312d4f",
+                "prior_scope": "mixed_review",
+                "scope": "signature_excluded",
+                "basis": "Agent compared this exact crop with the same original signature positions identified in the owner-reviewed English variant; signature strokes only."
+              },
+              {
+                "region_id": "v4-l48-s1",
+                "source_line": 48,
+                "start": 0,
+                "end": 15,
+                "raw_text": "(Dr. Indu Bala)",
+                "image_bbox": {
+                  "x0": 1937.0,
+                  "top": 2809.0,
+                  "x1": 2284.0,
+                  "bottom": 2873.0
+                },
+                "crop_sha256": "0aa954d8b1727816eafccbbc4b3dc91c3fcef6a187e85e69036fa4d61f83fb49",
+                "prior_scope": "mixed_review",
+                "scope": "metadata",
+                "basis": "Agent visual comparison confirms printed issuer name/designation; retain as metadata under the existing source-bound preservation decision."
+              },
+              {
+                "region_id": "v4-l49-s1",
+                "source_line": 49,
+                "start": 0,
+                "end": 43,
+                "raw_text": "Deputy Secretary to the Government of India",
+                "image_bbox": {
+                  "x0": 1293.0,
+                  "top": 2872.0,
+                  "x1": 2280.0,
+                  "bottom": 2941.0
+                },
+                "crop_sha256": "ee7111f26ad801304cd5e6e8c10131f7d9111ccf27b3ddb12096bc7876c42c29",
+                "prior_scope": "mixed_review",
+                "scope": "metadata",
+                "basis": "Agent visual comparison confirms printed issuer name/designation; retain as metadata under the existing source-bound preservation decision."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "evaluation_scope": {
+    "distribution_errors_counted_as_correct": false,
+    "note": "A retrieval exclusion does not make transcription accurate. Full-page OCR evaluation remains separate; any substantive-content evaluation must declare its excluded regions and denominator explicitly."
+  },
+  "global_policy_changes": false,
+  "new_full_page_reference_verified": false,
+  "tax_review_completed": false,
+  "originals_modified": false,
+  "raw_ocr_modified": false,
+  "production_ingestion_modified": false,
+  "next_implementation_requirements": [
+    "Keep raw source, reviewed field values and retrieval scope as separate versioned evidence.",
+    "Apply administrative exclusions by verified source region only; preserve mixed overlaps for review.",
+    "Prioritize dates, amounts, rates, identifiers, conditions, exceptions, table associations and reading order in substantive content.",
+    "Never ask the answering LLM to infer a missing or corrupted critical date from context alone."
+  ],
+  "supersedes_review_sha256": "2e7e96d01e9f201787ce88e2489efe9a29ead3643323d52f4d646f90e6b167c0"
+}

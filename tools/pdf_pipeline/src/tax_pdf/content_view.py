@@ -7,6 +7,7 @@ from .review import CSS, JS, attrs, escape
 LABELS = {
     "content_candidate": "Content candidates",
     "administrative_excluded": "Administrative text proposed for exclusion",
+    "signature_excluded": "Reviewed signature artifacts (excluded)",
     "metadata": "Header and issuer metadata",
     "mixed_review": "Mixed boundaries needing review",
     "table_review": "Text overlapping table candidates",
@@ -102,7 +103,7 @@ def write_content_view(preview, root):
             f'<section class="page" id="variant-{index}" data-width="{page.image_width}" data-height="{page.image_height}">'
             f"<h2>{escape(page.title)} · page {page.page}</h2><p>{escape(page.variant)}</p>"
             f"<p>{len(page.source_lines)} provider lines → {len(page.regions)} completely accounted spans · "
-            f"{counts['administrative_excluded']} administrative spans · {changes} explicit header edit(s)</p>"
+            f"{counts['administrative_excluded']} administrative spans · {counts['signature_excluded']} signature artifacts · {changes} explicit header edit(s)</p>"
             f'{missing}<details class="metadata"><summary>Reviewed field values and unresolved issues</summary>'
             f"{fields}<p>These are printed header dates, not verified legal applicability dates. "
             "Field values are source-reviewed; only bound raw variants receive text edits.</p>"
@@ -113,8 +114,8 @@ def write_content_view(preview, root):
             f'<img loading="lazy" src="{escape(page.source_image)}" alt="Original source page">'
             '<div class="highlight"></div></div><div class="transcript">'
             '<p class="selection">Click a text region to highlight its original position.</p>'
-            '<p class="notice">Geometric order is proposed. Every region still needs transcription and order review. '
-            "Unknown signatures and noise are retained.</p>"
+            '<p class="notice">Geometric order is proposed. Content candidates still need transcription and order review. '
+            "Reviewed signatures stay in excluded evidence; unknown marks are retained for review.</p>"
             + "".join(groups)
             + "<details><summary>Structured table candidates</summary>"
             + tables_html(page)
