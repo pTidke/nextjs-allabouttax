@@ -1,0 +1,44 @@
+{
+  "schema_version": "0.1.0",
+  "frozen_on": "2026-11-06",
+  "selection": "Circulars 13, 14 and 15/2025: consecutive older CBDT circular numbers selected before local acquisition/OCR. Page 1 only for each. No replacement based on OCR success. Failed acquisitions remain in the record.",
+  "identifiers": [
+    "Circular 13/2025",
+    "Circular 14/2025",
+    "Circular 15/2025"
+  ],
+  "pages": [
+    1
+  ],
+  "max_sources": 3,
+  "max_cases": 3,
+  "ocr_variants": [
+    {
+      "languages": "eng",
+      "psm": 3,
+      "preprocessing": "unchanged"
+    },
+    {
+      "languages": "eng+hin",
+      "psm": 3,
+      "preprocessing": "unchanged"
+    },
+    {
+      "languages": "eng",
+      "psm": 3,
+      "preprocessing": "flattened"
+    }
+  ],
+  "rules": [
+    "named-month date with an unexpected suffix mark",
+    "wrong ordinal suffix for day number",
+    "calendar-invalid day/month/year",
+    "superscript glyph used in a named-month date"
+  ],
+  "notes": [
+    "Freeze warning rules before reading fresh local OCR. No auto-correction or variant selection.",
+    "Search metadata/snippets may have been seen; no reference labels are supplied to extraction or warning rules. These are new lab documents, not blind evaluation.",
+    "CBDT circular templates are related to development sources. No held-out family, representative-sample or complete accuracy claim.",
+    "General clean-looking substitutions, Hindi date grammar, ambiguous numeric date order and date legal roles remain outside these initial rules."
+  ]
+}

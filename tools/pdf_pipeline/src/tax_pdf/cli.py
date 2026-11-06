@@ -82,9 +82,25 @@ def main():
     targeted.add_argument("--models", type=Path, required=True)
     targeted.add_argument("--out", type=Path, required=True)
     targeted.add_argument("--easyocr-models", type=Path)
+    dates = sub.add_parser("review-dates")
+    dates.add_argument("manifest", type=Path)
+    dates.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "targeted-ocr":
+        if args.command == "review-dates":
+            from .date_review import audit_dates
+
+            report = audit_dates(args.manifest, args.out)
+            print(
+                json.dumps(
+                    {
+                        "inputs": len(report["inputs"]),
+                        "warnings": report["warning_count"],
+                        "publication_eligible": False,
+                    }
+                )
+            )
+        elif args.command == "targeted-ocr":
             from .targeted_ocr import targeted_trials
 
             report = targeted_trials(
