@@ -1,0 +1,54 @@
+{
+  "schema_version": "0.1.0",
+  "state": "DEVELOPMENT_ONLY_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "report_sha256": "1121b5b4994447762e61392a61f7aaaee72003830007c9db88ab135eb5fc1a95",
+  "dataset_sha256": "ff9bcd2fb2918f994406deb390f73f71067d87f76d9d783af24e6aada82f6e26",
+  "scorer_sha256": "48e35b2f034d7101f5efddc80dc8fb75213b1bffb4812b8363599573d13cad65",
+  "adapter_sha256": "52c6ef19050da43e3b8bcc2449cae2badae972908974b0dc73650779757deb68",
+  "local_report": "work/pdf-lab/demo-v2/benchmarks/reference-development-v3/results-v1/report.json",
+  "official_verified_pages": 1,
+  "reference_pages": 23,
+  "verified_reference": {
+    "id": "4859b7812f85-p1",
+    "path": "tools/pdf_pipeline/benchmark/references/notification-1-2026-p1.json",
+    "sha256": "f6135eb8f43de709979a645cc39cbcc2165455668582ffec507d2068691a30ea"
+  },
+  "official": {
+    "candidate_attempts": 32,
+    "scored_attempts": 1,
+    "unscored_attempts": 31,
+    "reference_characters": 4337,
+    "character_edits": 1,
+    "cer": 0.00023057412958266084,
+    "reference_words": 715,
+    "word_edits": 1,
+    "wer": 0.0013986013986013986,
+    "missing_output_attempts": 0,
+    "failed_attempts": 0,
+    "critical_count_checks": 0,
+    "critical_count_matches": 0,
+    "clean_claims": 0,
+    "false_clean_text_claims": 0,
+    "observed_empty_attempts": 2,
+    "reading_order_accuracy": null,
+    "semantic_table_accuracy": null,
+    "accepted_extractions": 0
+  },
+  "confirmed_page_native_score": {
+    "reference_characters": 4337,
+    "observed_characters": 4337,
+    "character_edits": 1,
+    "reference_words": 715,
+    "word_edits": 1,
+    "exact_text": false,
+    "missing_output": false,
+    "critical_string_counts": []
+  },
+  "limits": [
+    "Only one previously inspected native official page has a verified full transcript. Other seventeen official pages remain unscored.",
+    "The confirmed Hindi correction is retained only in the reference; the original extraction still contains the mapping error.",
+    "A score against a reviewed development candidate is regression evidence, not an independent estimate of unseen-document accuracy.",
+    "No legal review, extraction acceptance, retrieval publication or production update occurred."
+  ]
+}
