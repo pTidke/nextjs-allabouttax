@@ -1,0 +1,628 @@
+{
+  "$defs": {
+    "Box": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "minimum": 0,
+          "title": "X0",
+          "type": "number"
+        },
+        "top": {
+          "minimum": 0,
+          "title": "Top",
+          "type": "number"
+        },
+        "x1": {
+          "minimum": 0,
+          "title": "X1",
+          "type": "number"
+        },
+        "bottom": {
+          "minimum": 0,
+          "title": "Bottom",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "top",
+        "x1",
+        "bottom"
+      ],
+      "title": "Box",
+      "type": "object"
+    },
+    "Cell": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "row": {
+          "minimum": 0,
+          "title": "Row",
+          "type": "integer"
+        },
+        "column": {
+          "minimum": 0,
+          "title": "Column",
+          "type": "integer"
+        },
+        "raw_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Raw Text"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Box"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row_span": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Row Span"
+        },
+        "column_span": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Column Span"
+        },
+        "header_path": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Header Path",
+          "type": "array"
+        },
+        "header_verified": {
+          "const": false,
+          "default": false,
+          "title": "Header Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "row",
+        "column",
+        "raw_text",
+        "bbox"
+      ],
+      "title": "Cell",
+      "type": "object"
+    },
+    "ContentPage": {
+      "additionalProperties": false,
+      "properties": {
+        "input_id": {
+          "title": "Input Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "variant": {
+          "title": "Variant",
+          "type": "string"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "source_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        },
+        "source_render_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Source Render Sha256",
+          "type": "string"
+        },
+        "raw_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Raw Sha256",
+          "type": "string"
+        },
+        "expected_pages": {
+          "minimum": 1,
+          "title": "Expected Pages",
+          "type": "integer"
+        },
+        "unrepresented_pages": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Unrepresented Pages",
+          "type": "array"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "image_width": {
+          "exclusiveMinimum": 0,
+          "title": "Image Width",
+          "type": "integer"
+        },
+        "image_height": {
+          "exclusiveMinimum": 0,
+          "title": "Image Height",
+          "type": "integer"
+        },
+        "source_image": {
+          "title": "Source Image",
+          "type": "string"
+        },
+        "original": {
+          "title": "Original",
+          "type": "string"
+        },
+        "raw": {
+          "title": "Raw",
+          "type": "string"
+        },
+        "artifact": {
+          "title": "Artifact",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "source_lines": {
+          "items": {
+            "$ref": "#/$defs/SourceLine"
+          },
+          "maxItems": 2000,
+          "title": "Source Lines",
+          "type": "array"
+        },
+        "regions": {
+          "items": {
+            "$ref": "#/$defs/ContentRegion"
+          },
+          "maxItems": 6000,
+          "title": "Regions",
+          "type": "array"
+        },
+        "tables": {
+          "items": {
+            "$ref": "#/$defs/Table"
+          },
+          "title": "Tables",
+          "type": "array"
+        },
+        "reviewed_fields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Reviewed Fields",
+          "type": "object"
+        },
+        "warnings": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "holds": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Holds",
+          "type": "array"
+        },
+        "state": {
+          "const": "DRAFT_REVIEW_REQUIRED",
+          "default": "DRAFT_REVIEW_REQUIRED",
+          "title": "State",
+          "type": "string"
+        },
+        "publication_eligible": {
+          "const": false,
+          "default": false,
+          "title": "Publication Eligible",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "input_id",
+        "title",
+        "variant",
+        "page",
+        "source_sha256",
+        "source_render_sha256",
+        "raw_sha256",
+        "expected_pages",
+        "unrepresented_pages",
+        "width",
+        "height",
+        "image_width",
+        "image_height",
+        "source_image",
+        "original",
+        "raw",
+        "artifact",
+        "artifact_sha256",
+        "source_lines",
+        "regions",
+        "holds"
+      ],
+      "title": "ContentPage",
+      "type": "object"
+    },
+    "ContentRegion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "source_line": {
+          "minimum": 1,
+          "title": "Source Line",
+          "type": "integer"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "minimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "raw_text": {
+          "title": "Raw Text",
+          "type": "string"
+        },
+        "reviewed_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed Text"
+        },
+        "edits": {
+          "items": {
+            "$ref": "#/$defs/FieldEdit"
+          },
+          "title": "Edits",
+          "type": "array"
+        },
+        "image_bbox": {
+          "$ref": "#/$defs/Box"
+        },
+        "bbox": {
+          "$ref": "#/$defs/Box"
+        },
+        "scope": {
+          "enum": [
+            "content_candidate",
+            "administrative_excluded",
+            "metadata",
+            "mixed_review",
+            "table_review"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "scope_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Scope Evidence",
+          "type": "array"
+        },
+        "proposed_order": {
+          "minimum": 1,
+          "title": "Proposed Order",
+          "type": "integer"
+        },
+        "order_verified": {
+          "const": false,
+          "default": false,
+          "title": "Order Verified",
+          "type": "boolean"
+        },
+        "holds": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Holds",
+          "type": "array"
+        },
+        "table_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Table Ids",
+          "type": "array"
+        },
+        "crop": {
+          "title": "Crop",
+          "type": "string"
+        },
+        "crop_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Crop Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source_line",
+        "start",
+        "end",
+        "raw_text",
+        "image_bbox",
+        "bbox",
+        "scope",
+        "proposed_order",
+        "crop",
+        "crop_sha256"
+      ],
+      "title": "ContentRegion",
+      "type": "object"
+    },
+    "FieldEdit": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "minimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "before": {
+          "title": "Before",
+          "type": "string"
+        },
+        "after": {
+          "title": "After",
+          "type": "string"
+        },
+        "field": {
+          "const": "printed_header_date",
+          "title": "Field",
+          "type": "string"
+        },
+        "review_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Review Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "before",
+        "after",
+        "field",
+        "review_sha256"
+      ],
+      "title": "FieldEdit",
+      "type": "object"
+    },
+    "SourceLine": {
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "minimum": 1,
+          "title": "Number",
+          "type": "integer"
+        },
+        "raw_text": {
+          "title": "Raw Text",
+          "type": "string"
+        },
+        "image_bbox": {
+          "$ref": "#/$defs/Box"
+        },
+        "bbox": {
+          "$ref": "#/$defs/Box"
+        },
+        "confidence": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        }
+      },
+      "required": [
+        "number",
+        "raw_text",
+        "image_bbox",
+        "bbox",
+        "confidence"
+      ],
+      "title": "SourceLine",
+      "type": "object"
+    },
+    "Table": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/Box"
+        },
+        "rows": {
+          "minimum": 1,
+          "title": "Rows",
+          "type": "integer"
+        },
+        "columns": {
+          "minimum": 1,
+          "title": "Columns",
+          "type": "integer"
+        },
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/Cell"
+          },
+          "title": "Cells",
+          "type": "array"
+        },
+        "structure_verified": {
+          "const": false,
+          "default": false,
+          "title": "Structure Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "bbox",
+        "rows",
+        "columns",
+        "cells"
+      ],
+      "title": "Table",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0",
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "const": "DRAFT_NOT_ACCEPTED",
+      "default": "DRAFT_NOT_ACCEPTED",
+      "title": "State",
+      "type": "string"
+    },
+    "manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "date_report_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Date Report Sha256",
+      "type": "string"
+    },
+    "scope_review_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Scope Review Sha256",
+      "type": "string"
+    },
+    "code_sha256": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Code Sha256",
+      "type": "object"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/ContentPage"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+    },
+    "comparisons": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Comparisons",
+      "type": "array"
+    },
+    "notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    },
+    "acceptance": {
+      "default": null,
+      "title": "Acceptance",
+      "type": "null"
+    },
+    "publication_eligible": {
+      "const": false,
+      "default": false,
+      "title": "Publication Eligible",
+      "type": "boolean"
+    },
+    "tax_review_completed": {
+      "const": false,
+      "default": false,
+      "title": "Tax Review Completed",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "manifest_sha256",
+    "date_report_sha256",
+    "scope_review_sha256",
+    "code_sha256",
+    "pages",
+    "comparisons",
+    "notes"
+  ],
+  "title": "ContentPreview",
+  "type": "object"
+}

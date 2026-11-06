@@ -85,9 +85,34 @@ def main():
     dates = sub.add_parser("review-dates")
     dates.add_argument("manifest", type=Path)
     dates.add_argument("--out", type=Path, required=True)
+    content = sub.add_parser("prepare-content")
+    content.add_argument("manifest", type=Path)
+    content.add_argument("--date-report", type=Path, required=True)
+    content.add_argument("--review", type=Path, required=True)
+    content.add_argument("--out", type=Path, required=True)
+    content_schema = sub.add_parser("content-schema")
+    content_schema.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "review-dates":
+        if args.command == "prepare-content":
+            from .structured_content import prepare_content
+
+            report = prepare_content(args.manifest, args.date_report, args.review, args.out)
+            print(
+                json.dumps(
+                    {
+                        "variants": len(report.pages),
+                        "state": report.state,
+                        "publication_eligible": False,
+                    }
+                )
+            )
+        elif args.command == "content-schema":
+            from .content_models import ContentPreview
+
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(json.dumps(ContentPreview.model_json_schema(), indent=2) + "\n")
+        elif args.command == "review-dates":
             from .date_review import audit_dates
 
             report = audit_dates(args.manifest, args.out)
