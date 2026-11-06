@@ -34,7 +34,8 @@ def date_findings(text):
     if not isinstance(text, str) or len(text) > 20000:
         raise ValueError("Date line text budget exceeded")
     findings = []
-    for match in DATE.finditer(text):
+    dates = list(DATE.finditer(text))
+    for match in dates:
         day, month, year = int(match["day"]), MONTHS[match["month"].lower()], int(match["year"])
         suffix = match["suffix"]
         codes = []
@@ -56,6 +57,21 @@ def date_findings(text):
             )
         if len(findings) > 100:
             raise ValueError("Date warning budget exceeded")
+    # A corrupted day/month can defeat the named-month parser entirely.
+    # This cue deliberately abstains on numeric dates too; it never guesses
+    # handwriting or interprets whether a date is legally applicable.
+    cue = re.search(r"\bdated|\bdate\s*:", text, re.IGNORECASE)
+    year = re.search(r"(?<![0-9])[12][0-9]{3}(?![0-9])", text[cue.end() :]) if cue else None
+    if cue and year and not dates:
+        end = cue.end() + year.end()
+        findings.append(
+            {
+                "start": cue.start(),
+                "end": end,
+                "raw": text[cue.start() : end],
+                "codes": ["DATE_CUE_UNPARSED_REVIEW"],
+            }
+        )
     return findings
 
 
@@ -209,7 +225,7 @@ def audit_dates(manifest_file, output):
             "notes": [
                 "Warnings are independent of confidence. Literal date spans and source geometry are preserved; no replacements are supplied.",
                 "An asterisk may be a real footnote. Nonstandard ordinals may exist in the source. Verify the original rather than automatically repairing text.",
-                "No warning is not a clean verdict. Plausible wrong digits/names, Hindi dates, numeric date order, cross-line dates, other symbols and legal date roles are not covered.",
+                "No warning is not a clean verdict. Plausible wrong digits/names, Hindi dates, numeric date order, cross-line dates, other symbols and legal date roles are not covered. An unparsed dated/date: cue with a four-digit year is held for source review, including valid numeric dates.",
                 "This is a limited English named-month date checker, not a complete quality gate, accuracy score or publication approval.",
             ],
         }
@@ -225,14 +241,27 @@ def audit_dates(manifest_file, output):
 
 
 def write_html(report, output):
+    messages = {
+        "DATE_SUFFIX_MARK_REVIEW": "A mark may have replaced a date ending, or may be a real footnote.",
+        "ORDINAL_FORM_REVIEW": "The date ending looks unusual.",
+        "CALENDAR_DATE_REVIEW": "This day and month do not form a valid calendar date.",
+        "DATE_SUPERSCRIPT_REVIEW": "Check the raised letters or digits against the scan.",
+        "DATE_CUE_UNPARSED_REVIEW": "This line refers to a date that the checker cannot read reliably.",
+    }
+    states = {
+        "REVIEW_REQUIRED": "Needs source review",
+        "NO_RULE_HITS_NOT_CLEAN": "No rule matched; extraction remains unverified",
+        "EMPTY_OCR_NOT_ASSESSED": "No text returned; not assessed",
+        "NOT_ASSESSED": "OCR unavailable; not assessed",
+    }
     sections = []
     for i, row in enumerate(report["inputs"]):
         notes = "".join(
-            f'<li><strong>{escape(w["raw"])}</strong> — {escape(", ".join(w["codes"]))}. OCR line confidence {w["line_confidence"]:.0f}. Compare with the original; no correction suggested.<img class="date-crop" src="{w["source_crop"]}" alt="Unchanged source date line"></li>'
+            f'<li><strong>{escape(w["raw"])}</strong> — {escape(" ".join(messages[c] for c in w["codes"]))} OCR line confidence {w["line_confidence"]:.0f}. Compare with the original; no correction suggested.<img class="date-crop" src="{w["source_crop"]}" alt="Unchanged source date line"></li>'
             for w in row["warnings"]
         )
         sections.append(
-            f'<article id="case-{i}"><h2>{escape(row["title"])}</h2><p>{escape(row["variant"])} · {escape(row["state"])}</p><ul>{notes}</ul><div class="compare"><a href="{row["source_image"]}"><img loading="lazy" src="{row["source_image"]}" alt="Original source page"></a><pre>{escape(row.get("text", "OCR unavailable; not assessed"))}</pre></div></article>'
+            f'<article id="case-{i}"><h2>{escape(row["title"])}</h2><p>{escape(row["variant"])} · {states[row["state"]]}</p><ul>{notes}</ul><div class="compare"><a href="{row["source_image"]}"><img loading="lazy" src="{row["source_image"]}" alt="Original source page"></a><pre>{escape(row.get("text", "OCR unavailable; not assessed"))}</pre></div></article>'
         )
     (output / "index.html").write_text(
         '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src \'self\'; style-src \'self\'; base-uri \'none\'; form-action \'none\'"><title>Date review warnings</title><link rel="stylesheet" href="review.css"><header><h1>Date and superscript review warnings</h1><p>Raw text preserved · no automatic corrections · publication disabled</p></header><main><p class="notice">'

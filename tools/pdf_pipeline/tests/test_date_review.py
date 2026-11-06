@@ -16,6 +16,10 @@ from tax_pdf.runner import process
     [
         ("New Delhi, dated the 31* March, 2026", ["DATE_SUFFIX_MARK_REVIEW"]),
         ("31st March, 2026", []),
+        ("New Delhi, datedgq Detober, 2025", ["DATE_CUE_UNPARSED_REVIEW"]),
+        ("Circular dated 29.10.2025", ["DATE_CUE_UNPARSED_REVIEW"]),
+        ("New Delhi, dated the 31st March, 2026", []),
+        ("This was updated in 2025", []),
         ("21th March 2026", ["ORDINAL_FORM_REVIEW"]),
         ("11st March 2026", ["ORDINAL_FORM_REVIEW"]),
         ("13rd March 2026", ["ORDINAL_FORM_REVIEW"]),
