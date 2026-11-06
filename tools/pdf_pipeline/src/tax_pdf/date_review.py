@@ -22,7 +22,7 @@ MONTHS.update({name.lower(): i for i, name in enumerate(calendar.month_abbr) if 
 MONTHS["sept"] = 9
 MONTH_PATTERN = "|".join(sorted(MONTHS, key=len, reverse=True))
 DATE = re.compile(
-    rf"(?<![\w.])(?P<day>[0-9]{{1,2}})(?P<suffix>[^\s0-9,;:]{{0,4}})"
+    rf"(?<![\w.])(?P<day>[0-9]{{1,6}})(?P<suffix>[^\s0-9,;:]{{0,4}})"
     rf"[ \t]+(?P<month>{MONTH_PATTERN})\.?[ \t]*,?[ \t]+"
     r"(?P<year>[12][0-9]{3})(?![0-9])",
     re.IGNORECASE,
@@ -30,15 +30,27 @@ DATE = re.compile(
 SUPERSCRIPT = set("ˢᵗⁿᵈʳ¹²³⁴⁵⁶⁷⁸⁹⁰")
 
 
+def date_matches(text):
+    for match in DATE.finditer(text):
+        # A numbered section followed by a month/year is not a day field.
+        if len(match["day"]) > 2 and re.search(
+            r"\b(section|clause|rule|para|paragraph|no\.)\s+$", text[: match.start()], re.IGNORECASE
+        ):
+            continue
+        yield match
+
+
 def date_findings(text):
     if not isinstance(text, str) or len(text) > 20000:
         raise ValueError("Date line text budget exceeded")
     findings = []
-    dates = list(DATE.finditer(text))
+    dates = list(date_matches(text))
     for match in dates:
         day, month, year = int(match["day"]), MONTHS[match["month"].lower()], int(match["year"])
         suffix = match["suffix"]
         codes = []
+        if len(match["day"]) > 2:
+            codes.append("DAY_DIGIT_COUNT_REVIEW")
         if not 1 <= day <= calendar.monthrange(year, month)[1]:
             codes.append("CALENDAR_DATE_REVIEW")
         if suffix and suffix.lower() not in ("st", "nd", "rd", "th"):
@@ -76,32 +88,15 @@ def date_findings(text):
 
 
 def warnings(raw, page):
-    mapped = mapped_lines(raw, page)
-    provider = [
-        line
-        for b in raw.get("blocks") or []
-        for p in b.get("paragraphs") or []
-        for line in p.get("lines") or []
-    ]
-    result = []
-    for i, (line, display) in enumerate(zip(provider, mapped, strict=True), 1):
-        for issue in date_findings(line["text"]):
-            result.append(
-                {
-                    **issue,
-                    "line_number": i,
-                    "line_text": line["text"],
-                    "line_confidence": display["confidence"],
-                    "image_bbox": line["bbox"],
-                    "source_bbox": display["bbox"],
-                    "action": "COMPARE_WITH_ORIGINAL",
-                    "suggested_replacement": None,
-                }
-            )
-    return result
+    from .date_regions import date_evidence
+
+    return [r for r in date_evidence(raw, page) if r["codes"]]
 
 
 def audit_dates(manifest_file, output):
+    from .date_disagreement import compare_inputs
+    from .date_regions import date_evidence
+
     if output.exists() or manifest_file.stat().st_size > 2 * 1024**2:
         raise ValueError("Use a fresh output and a bounded manifest")
     manifest = json.loads(manifest_file.read_text())
@@ -161,6 +156,7 @@ def audit_dates(manifest_file, output):
                 "source_render_sha256": page.render_sha256,
                 "state": "NOT_ASSESSED",
                 "warnings": [],
+                "date_evidence": [],
                 "clean": None,
                 "publication_eligible": False,
             }
@@ -182,11 +178,12 @@ def audit_dates(manifest_file, output):
                 with Image.open(image) as supplied:
                     if (raw.get("width"), raw.get("height")) != supplied.size:
                         raise ValueError("Date OCR dimensions changed")
-                row["warnings"] = warnings(raw, page)
+                row["date_evidence"] = date_evidence(raw, page)
+                row["warnings"] = [r for r in row["date_evidence"] if r["codes"]]
                 if len(row["warnings"]) > 100:
                     raise ValueError("Date warning budget exceeded")
                 with Image.open(render) as source:
-                    for j, warning in enumerate(row["warnings"]):
+                    for j, warning in enumerate(row["date_evidence"]):
                         b = warning["image_bbox"]
                         crop = [
                             max(0, int(b["x0"]) - 8),
@@ -220,12 +217,23 @@ def audit_dates(manifest_file, output):
             "code_sha256": digest(Path(__file__)),
             "inputs": rows,
             "warning_count": sum(len(r["warnings"]) for r in rows),
+            "comparisons": compare_inputs(rows),
+            "dependency_sha256": {
+                name: digest(Path(__file__).with_name(name))
+                for name in (
+                    "date_regions.py",
+                    "date_disagreement.py",
+                    "targeted_ocr.py",
+                    "ocr_compare.py",
+                )
+            },
             "cohort": manifest.get("cohort", {}),
             "accuracy": None,
             "notes": [
                 "Warnings are independent of confidence. Literal date spans and source geometry are preserved; no replacements are supplied.",
                 "An asterisk may be a real footnote. Nonstandard ordinals may exist in the source. Verify the original rather than automatically repairing text.",
-                "No warning is not a clean verdict. Plausible wrong digits/names, Hindi dates, numeric date order, cross-line dates, other symbols and legal date roles are not covered. An unparsed dated/date: cue with a four-digit year is held for source review, including valid numeric dates.",
+                "No warning is not a clean verdict. Plausible wrong digits/names, Hindi dates, numeric date order, other symbols and legal date roles are not covered. Up to three nearby lines in one provider paragraph may form a search window; exact source fragments are retained and reading order stays unverified. Unparsed dated/date: cues are held for source review, including valid numeric dates.",
+                "Spatial comparisons preserve disagreements, missing candidates and ambiguous alignment. Identical surface text and multiple variants do not prove correctness or engine independence. No candidate is selected.",
                 "This is a limited English named-month date checker, not a complete quality gate, accuracy score or publication approval.",
             ],
         }
@@ -242,6 +250,7 @@ def audit_dates(manifest_file, output):
 
 def write_html(report, output):
     messages = {
+        "DAY_DIGIT_COUNT_REVIEW": "The extracted day has too many digits.",
         "DATE_SUFFIX_MARK_REVIEW": "A mark may have replaced a date ending, or may be a real footnote.",
         "ORDINAL_FORM_REVIEW": "The date ending looks unusual.",
         "CALENDAR_DATE_REVIEW": "This day and month do not form a valid calendar date.",
@@ -263,13 +272,47 @@ def write_html(report, output):
         sections.append(
             f'<article id="case-{i}"><h2>{escape(row["title"])}</h2><p>{escape(row["variant"])} · {states[row["state"]]}</p><ul>{notes}</ul><div class="compare"><a href="{row["source_image"]}"><img loading="lazy" src="{row["source_image"]}" alt="Original source page"></a><pre>{escape(row.get("text", "OCR unavailable; not assessed"))}</pre></div></article>'
         )
+    comparison_html = []
+    inputs = {r["id"]: r for r in report["inputs"]}
+    explanations = {
+        "DATE_OCR_DISAGREEMENT": "The OCR readings differ at overlapping source locations.",
+        "UNMATCHED_DATE_REGION": "A date region has no matching candidate. This may reflect missing OCR or a parsing/layout limitation.",
+        "AMBIGUOUS_DATE_ALIGNMENT": "More than one date could match this location; the association needs review.",
+    }
+    for comparison in report["comparisons"]:
+        left, right = (inputs[comparison[k]] for k in ("left_input", "right_input"))
+        items = []
+        for flag in comparison["flags"]:
+            sides = []
+            for key, row in (("left", left), ("right", right)):
+                dates = {d["id"]: d for d in row["date_evidence"]}
+                sides.append(
+                    "<div>"
+                    + (
+                        "".join(
+                            f'<p>{escape(dates[identity]["raw"])}</p><img loading="lazy" src="{dates[identity]["source_crop"]}" class="date-crop" alt="Original date region">'
+                            for identity in flag[key]
+                        )
+                        or "<p>No matching date candidate</p>"
+                    )
+                    + "</div>"
+                )
+            items.append(
+                f'<p>{explanations[flag["kind"]]} Neither reading is selected.</p><div class="compare">{sides[0]}{sides[1]}</div>'
+            )
+        comparison_html.append(
+            f"<details><summary>{escape(left['variant'])} / {escape(right['variant'])} — {len(comparison['flags'])} review flags</summary><p>{escape(comparison['state'])}. Identical text is not proof of correctness or engine independence.</p>{''.join(items)}</details>"
+        )
     (output / "index.html").write_text(
         '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src \'self\'; style-src \'self\'; base-uri \'none\'; form-action \'none\'"><title>Date review warnings</title><link rel="stylesheet" href="review.css"><header><h1>Date and superscript review warnings</h1><p>Raw text preserved · no automatic corrections · publication disabled</p></header><main><p class="notice">'
         + str(report["warning_count"])
         + ' warnings. A warning asks for source comparison. No warnings does not mean the extraction is correct. All variants remain separate.</p><p><a href="date-review.json">Evidence and diagnostics</a></p>'
+        + '<article id="differences"><h2>Compare OCR readings</h2><p>Spatial matches are review hints. Missing or ambiguous candidates remain unresolved.</p>'
+        + "".join(comparison_html)
+        + "</article>"
         + "".join(sections)
         + "</main></html>"
     )
     (output / "review.css").write_text(
-        "body{margin:0;background:#f3f6f7;color:#183344;font:16px/1.6 system-ui}header{background:#102f40;color:white;padding:28px}main{max-width:1350px;margin:auto;padding:24px}article{background:white;border:1px solid #ccdce2;margin:20px 0;padding:20px}.notice{background:#fff0d6;padding:16px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:22px}img{width:100%;border:1px solid #ccdce2}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}a{color:#00745d}@media(max-width:800px){.compare{grid-template-columns:1fr}}"
+        "body{margin:0;background:#f3f6f7;color:#183344;font:16px/1.6 system-ui}header{background:#102f40;color:white;padding:28px}main{max-width:1350px;margin:auto;padding:24px}article{background:white;border:1px solid #ccdce2;margin:20px 0;padding:20px}.notice{background:#fff0d6;padding:16px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:22px}img{width:100%;border:1px solid #ccdce2}img.date-crop{display:block;width:auto;max-width:100%;max-height:180px;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}a{color:#00745d}@media(max-width:800px){.compare{grid-template-columns:1fr}}"
     )
