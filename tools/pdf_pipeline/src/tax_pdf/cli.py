@@ -22,6 +22,8 @@ def main():
     )
     check = sub.add_parser("verify")
     check.add_argument("package", type=Path)
+    reference_schema = sub.add_parser("reference-schema")
+    reference_schema.add_argument("--out", type=Path, required=True)
     schema = sub.add_parser("schema")
     schema.add_argument("--out", type=Path, required=True)
     profile = sub.add_parser("triage")
@@ -53,9 +55,44 @@ def main():
     scans.add_argument("manifest", type=Path)
     scans.add_argument("--models", type=Path, required=True)
     scans.add_argument("--out", type=Path, required=True)
+    refs = sub.add_parser("reference-pack")
+    refs.add_argument("--root", type=Path, required=True)
+    refs.add_argument("--native-report", type=Path, required=True)
+    refs.add_argument("--scan-report", type=Path, required=True)
+    refs.add_argument("--plan", type=Path, required=True)
+    refs.add_argument("--out", type=Path, required=True)
+    scores = sub.add_parser("score-references")
+    scores.add_argument("dataset", type=Path)
+    scores.add_argument("--root", type=Path, required=True)
+    scores.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "compare-scans":
+        if args.command == "reference-schema":
+            from .reference_eval import Reference
+
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(json.dumps(Reference.model_json_schema(), indent=2) + "\n")
+        elif args.command == "reference-pack":
+            from .reference_pack import build_pack
+
+            report = build_pack(
+                args.root, args.native_report, args.scan_report, args.plan, args.out
+            )
+            print(
+                json.dumps(
+                    {"reference_pages": report["reference_pages"], "publication_eligible": False}
+                )
+            )
+        elif args.command == "score-references":
+            from .reference_pack import evaluate_pack
+
+            report = evaluate_pack(args.root, args.dataset, args.out)
+            print(
+                json.dumps(
+                    {"reference_pages": report["reference_pages"], "publication_eligible": False}
+                )
+            )
+        elif args.command == "compare-scans":
             from .scan_benchmark import scan_benchmark
 
             scan_benchmark(args.manifest, args.models, args.out)

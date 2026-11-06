@@ -209,3 +209,46 @@ The measured extension directly fetched Circulars 2, 4 and 7/2026 using the appl
 English and English/Hindi local Tesseract candidates remain separate. Empty default-layout results explicitly raise `OCR_RETURNED_NO_LINES` and trigger a separate PSM 6 layout experiment, marked `ALTERNATIVE_LAYOUT_UNVERIFIED`. The original empty result is retained. The wider run found one readable scanned page where both default attempts yielded no lines; alternate attempts yielded candidates, without proving complete or correct transcription. Provider confidence, nonempty text and completed jobs are never accuracy scores or approval. The HTML gallery links every candidate to its image region, with unchanged native text and raw provider output retained. Character/word/table accuracy stay null until accepted labels exist. CI mocks OCR and downloads no models; the actual local runs are recorded separately.
 
 The expanded scan comparison is a raw engine experiment. It does not apply the prior Circular 6 reviewer exclusions/corrections; the separately preserved refinement and scope-review packages remain the evidence for that work.
+
+## Source-bound reference dataset and error scoring
+
+The frozen `benchmark/reference-plan-v1.json` selects **18 official development pages** (11 originals) and **5 authored synthetic pages** (4 originals). All inspected/tuned circulars stay in development, and related forms remain one group. This is a risk-focused lab sample, not representative sampling or an untouched holdout. A new unseen source/template cohort, including real image-only scans, is still needed for final evaluation.
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf reference-pack \
+  --root work/pdf-lab/demo-v2 \
+  --native-report work/pdf-lab/demo-v2/benchmarks/native-engineering-v2/report.json \
+  --scan-report work/pdf-lab/demo-v2/benchmarks/expanded-scans-v3/scan-report.json \
+  --plan tools/pdf_pipeline/benchmark/reference-plan-v1.json \
+  --out work/pdf-lab/demo-v2/benchmarks/FRESH_REFERENCE_SET
+
+tools/pdf_pipeline/.venv/bin/tax-pdf score-references \
+  work/pdf-lab/demo-v2/benchmarks/FRESH_REFERENCE_SET/dataset.json \
+  --root work/pdf-lab/demo-v2 \
+  --out work/pdf-lab/demo-v2/benchmarks/FRESH_REFERENCE_SET/FRESH_RESULTS
+```
+
+`dataset.json` preserves the full selected page/attempt inventory. Separate reference files, candidate snapshots and input-evidence hashes keep proposed text apart from references. Original bytes and selected render hashes are rechecked on scoring. Raw OCR files and source reports are pinned. Different-DPI OCR renders are recorded explicitly; these text metrics compare transcriptions, not cross-render geometry. Edited candidates, stale verified annotations, duplicate source pages/attempts, path traversal and changed evidence are rejected. Every rescore writes a fresh result directory; no earlier result is overwritten.
+
+`PROPOSED` official references start with **no expected transcript** and never receive accuracy scores. Candidate text is available alongside the original page as a proposal to check, not a source of automatic labels. Authored synthetic references are derived from the deterministic fixture specification, after exact original-byte hash verification, independently of extractor output. They must never be described as accepted official labels.
+
+`schemas/reference.schema.json` defines the label contract. A `HUMAN_VERIFIED` record requires complete expected text, source/render/page binding, a named reviewer, timezone-aware review time, `visual_source_comparison` and the SHA-256 of the canonical annotation (`Reference.annotation()` / `sha_json`). Changing any annotation, source or scope invalidates that verification. This is a **self-attested local annotation record**, not authenticated identity, a cryptographic signature, extraction acceptance, legal review or publication permission. No tool in this increment marks an official reference verified automatically.
+
+### Reference annotation rubric
+
+1. Transcribe visible printed text in source reading order, checking the image rather than copying the PDF text layer unchecked. Preserve punctuation, case, Unicode, dates, names, section identifiers, rates, negations and list labels. Record applicable handwriting separately for future region-scoped labels; do not infer unclear characters from sequence or context.
+2. Do not insert signature guesses, reverse-side show-through or invisible text-layer artifacts into the expected transcript. The current complete printed-text contract cannot express their region labels, partial/unreadable text or ambiguous order: leave those references proposed until a region-scoped contract and visual review resolve them. Existing Circular 6 exclusions remain separate evidence, not transferred labels on new region IDs.
+3. For each table, account for every grid position. Distinguish text, a confirmed empty cell and a covered merged position; identify the anchor and spans for every merge. Zero, dash, blank and unresolved null are different. Preserve header rows; header paths, units and footnote associations still require a richer relationship evaluator.
+4. A full-page reference must cover the whole page. Partial checks, qualitative “looks good,” status choices and a few corrected strings do not establish a verified transcript. Keep notes/disagreements and incomplete work; do not force uncertain references into a score.
+5. Recheck all critical names, dates, identifiers, figures and negations. Keep transcription review separate from finance/tax interpretation. A finance reviewer later determines legal authority/applicability; that does not retroactively prove transcription quality.
+
+### Metric definitions and limits
+
+- **CER:** exact unit-cost Levenshtein edits over NFC Unicode code points, divided by reference code points, after folding whitespace. **WER:** the same over whitespace-separated tokens. No case folding, ASCII conversion, punctuation removal, digit grouping repair or number/name correction is permitted. Rates can exceed 100% due to insertions. Unicode code points are not grapheme clusters; WER is not a language-specific linguistic tokenizer.
+- Micro totals sum edit counts and reference lengths over **all scored attempts**, retaining empty/failed output as omissions. Unverified references remain in coverage/attempt totals but have null error rates, never zero error. The report also counts observed empty outputs independently of label availability.
+- Report separate engine/transform results. Repeated synthetic derivatives are correlated attempts, not independent pages or evidence of generalization. Overall synthetic totals mix those attempts and are diagnostics only.
+- Critical-string occurrence counts are checks, **not critical-token accuracy**: they cannot prove location/meaning or detect every substituted occurrence. Reading-order accuracy is null (text edit scores may still penalize reordered content).
+- Table diagnostics pair tables by supplied page order and compare literal cell values/spans. Null cannot prove a covered cell, and unspecified spans stay unresolved. Missing/extra tables are counted. Header relationships and semantic/table-structure accuracy remain unmeasured; exact cell text does not establish a correct table.
+- A false-clean text diagnostic requires an explicit clean claim and a verified transcript mismatch. Current lab candidates make no clean claims, so zero such cases has a zero claim denominator and is **not evidence of a safe quality gate**.
+
+The first run caught approximately 90% character error on the rotated synthetic image despite nonempty OCR output. Both OCR language variants matched the unchanged and blurred simple synthetic image after the stated normalization. Native-only extraction omitted two synthetic scanned pages. All 14 synthetic table value cells matched, while merged-anchor spans and the covered relationship remained unresolved. These measurements do not establish official-document accuracy. No accepted extractions or tax knowledge were created.

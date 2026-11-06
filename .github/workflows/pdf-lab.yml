@@ -45,5 +45,7 @@ jobs:
           .pdf-lab-venv/bin/ruff format --check tools/pdf_pipeline
           .pdf-lab-venv/bin/tax-pdf schema --out /tmp/pdf-artifact.schema.json
           diff tools/pdf_pipeline/schemas/artifact.schema.json /tmp/pdf-artifact.schema.json
+          .pdf-lab-venv/bin/tax-pdf reference-schema --out /tmp/pdf-reference.schema.json
+          diff tools/pdf_pipeline/schemas/reference.schema.json /tmp/pdf-reference.schema.json
       - name: Test with synthetic local PDFs only
         run: .pdf-lab-venv/bin/python -m pytest tools/pdf_pipeline/tests -q
