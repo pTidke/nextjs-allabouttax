@@ -258,3 +258,29 @@ The first run caught approximately 90% character error on the rotated synthetic 
 `benchmark/references/notification-1-2026-p1.json` preserves the first complete owner-confirmed development transcript. The owner confirmed the displayed full Notification 1/2026 page, then explicitly confirmed the Hindi header correction from `रािपत्र` to `राजपत्र`. The raw candidate and original PDF are unchanged. The local reference set was copied to a fresh `reference-development-v3` revision; earlier references/reports remain preserved. `benchmark/reference-reviews.json` records both statements, the exact one-character correction, source/render/candidate/reference hashes and the reference's self-attested verification scope.
 
 `benchmark/reference-verification-run.json` records the rescore: **one character and one word edit** on this native page, rather than a perfect score against its own uncorrected candidate. Only one of the eighteen official pages is verified; the other seventeen stay unscored. This is development regression evidence for an already inspected page, not unseen-document accuracy or tax/extraction publication approval. The initial `reference-run.json` remains the historical pre-verification run. To reproduce the verified revision from a fresh generated pack, copy the committed reference over its matching proposed reference file, validate source/render binding and rescore into a new result directory.
+
+## Reviewed scan defects and image-only recovery trials
+
+`benchmark/expanded-scan-feedback.json` preserves 25 owner-reported findings from the expanded scan gallery. Bindings include the exact scan-report digest, language/layout and full original line records (text, source-point box and image-pixel box). Validation rechecks original PDF bytes, source artifacts, renders, OCR input images and raw output files. Numbering restarts across OCR language/layout variants, so a bare region ID is never sufficient. Region highlights use image coordinates against the supplied image dimensions, rather than mixing source points and image pixels.
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf review-scans \
+  work/pdf-lab/demo-v2/benchmarks/expanded-scans-v3/scan-report.json \
+  tools/pdf_pipeline/benchmark/expanded-scan-feedback.json \
+  --out work/pdf-lab/demo-v2/comparisons/FRESH_SCAN_REVIEW
+
+tools/pdf_pipeline/.venv/bin/tax-pdf recover-scans \
+  work/pdf-lab/demo-v2/benchmarks/expanded-scans-v3/scan-report.json \
+  tools/pdf_pipeline/benchmark/expanded-scan-feedback.json \
+  --models work/tesseract-fast-models \
+  --reference work/pdf-lab/demo-v2/benchmarks/reference-development-v3/references/944d5d44b2c9-p1.json \
+  --out work/pdf-lab/demo-v2/benchmarks/FRESH_RECOVERY
+```
+
+The read-only review view keeps every raw region alongside the scoped correction. Decorative stars differ from the `th` fragment associated with the handwritten 25th March date. A mixed body/signature region must be split, and Rubal Singh / other printed names are retained even if the region also contains a signature. Clause/list prefixes are partial corrections; text following them is not replaced. The already correct Devanagari `५` is retained. The broad Circular 4 page 1 bleed-through report rejects its OCR candidates but supplies no safe foreground/background mask. Circular 6's general punctuation/script comments and the ambiguously specified positive synthetic comment remain qualitative; no whole page is accepted from them.
+
+Recovery uses only source pixels and generic OCR settings. On each of the two narrow columns it finds horizontal ink bands without reading an expected sequence length, preserves the unchanged tight crop, and OCRs each candidate row with white padding and 2x resizing. The threshold is used only for segmentation; it never erases pixels in the OCR input. Short discarded ink runs are recorded and remain a quality hold. There is no sequence completion, digit substitution, punctuation repair or recipient association. Reviewer sequences enter diagnostics only after all row OCR jobs finish.
+
+For the rotated synthetic case, all four quarter-turns and both Tesseract language settings are tried separately. Every attempt, including empty/failed ones, is retained. Authored reference text enters diagnostics only after OCR. Source boxes use inverse quarter-turn transforms. No angle is selected based on the gold transcript or confidence, and this control does not establish orientation detection on unseen documents. The total worker budget is 300 seconds with bounded image/row counts and per-job limits inherited from the local OCR worker. Optional EasyOCR is not called by these recovery commands.
+
+`benchmark/scan-recovery-run.json` records 24 actual local attempts. Both columns separated into the expected 9 and 7 row candidates, but raw OCR still misreads some labels, including Circular 6's 2/5/7 and `I.` for 1. The synthetic text matched its authored reference in four of the eight orientation/language attempts; the failed alternatives remain in the report. These are development findings, not a production quality gate or accepted full-page transcription. The first Notification 1 reference remains the only human-verified official page. No RAG, production ingestion, original PDF or raw OCR file was changed.

@@ -65,9 +65,38 @@ def main():
     scores.add_argument("dataset", type=Path)
     scores.add_argument("--root", type=Path, required=True)
     scores.add_argument("--out", type=Path, required=True)
+    scan_review = sub.add_parser("review-scans")
+    scan_review.add_argument("report", type=Path)
+    scan_review.add_argument("feedback", type=Path)
+    scan_review.add_argument("--out", type=Path, required=True)
+    recovery = sub.add_parser("recover-scans")
+    recovery.add_argument("report", type=Path)
+    recovery.add_argument("feedback", type=Path)
+    recovery.add_argument("--models", type=Path, required=True)
+    recovery.add_argument("--reference", type=Path, required=True)
+    recovery.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "reference-schema":
+        if args.command == "review-scans":
+            from .scan_feedback import write_feedback_view
+
+            print(json.dumps(write_feedback_view(args.report, args.feedback, args.out)))
+        elif args.command == "recover-scans":
+            from .scan_recovery import recover_scans
+
+            report = recover_scans(
+                args.report, args.feedback, args.models, args.reference, args.out
+            )
+            print(
+                json.dumps(
+                    {
+                        "columns": len(report["columns"]),
+                        "orientation_attempts": len(report["orientation_attempts"]),
+                        "publication_eligible": False,
+                    }
+                )
+            )
+        elif args.command == "reference-schema":
             from .reference_eval import Reference
 
             args.out.parent.mkdir(parents=True, exist_ok=True)
