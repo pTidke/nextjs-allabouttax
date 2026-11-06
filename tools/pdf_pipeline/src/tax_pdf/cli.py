@@ -75,9 +75,36 @@ def main():
     recovery.add_argument("--models", type=Path, required=True)
     recovery.add_argument("--reference", type=Path, required=True)
     recovery.add_argument("--out", type=Path, required=True)
+    targeted = sub.add_parser("targeted-ocr")
+    targeted.add_argument("report", type=Path)
+    targeted.add_argument("feedback", type=Path)
+    targeted.add_argument("previous", type=Path)
+    targeted.add_argument("--models", type=Path, required=True)
+    targeted.add_argument("--out", type=Path, required=True)
+    targeted.add_argument("--easyocr-models", type=Path)
     args = parser.parse_args()
     try:
-        if args.command == "review-scans":
+        if args.command == "targeted-ocr":
+            from .targeted_ocr import targeted_trials
+
+            report = targeted_trials(
+                args.report,
+                args.feedback,
+                args.previous,
+                args.models,
+                args.out,
+                easyocr_models=args.easyocr_models,
+            )
+            print(
+                json.dumps(
+                    {
+                        "numeric_columns": len(report["numeric_columns"]),
+                        "foreground_attempts": len(report["foreground"]["attempts"]),
+                        "publication_eligible": False,
+                    }
+                )
+            )
+        elif args.command == "review-scans":
             from .scan_feedback import write_feedback_view
 
             print(json.dumps(write_feedback_view(args.report, args.feedback, args.out)))

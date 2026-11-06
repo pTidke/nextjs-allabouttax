@@ -187,7 +187,7 @@ def mapped_lines(raw, page: Page):
     return lines
 
 
-def run_ocr(image, models, output, *, psm, languages, deadline):
+def run_ocr(image, models, output, *, psm, languages, deadline, profile="text"):
     """Only pixels/settings enter the worker; feedback/expected text is excluded."""
     remaining = deadline - time.monotonic()
     if remaining <= 0:
@@ -198,6 +198,12 @@ def run_ocr(image, models, output, *, psm, languages, deadline):
         "psm": psm,
         "languages": languages,
     }
+    if profile not in {"text", "numeric_label"} or (
+        profile == "numeric_label" and (psm not in {7, 10} or languages != "eng")
+    ):
+        raise ValueError("Unsupported OCR profile")
+    if profile != "text":
+        job["profile"] = profile
     job_path = output.with_suffix(".job.json")
     job_path.write_text(json.dumps(job))
     worker = Path(__file__).resolve().parents[2] / "ocr" / "worker.mjs"
@@ -221,8 +227,19 @@ def run_ocr(image, models, output, *, psm, languages, deadline):
             or value.get("state") != "EXPERIMENTAL_NOT_ACCEPTED"
             or value.get("languages") != languages.split("+")
             or value.get("psm") != psm
+            or value.get("profile", "text") != profile
         ):
             raise ValueError("OCR worker protocol mismatch")
+        if profile == "numeric_label" and (
+            value.get("profile_module_sha256") != digest(worker.with_name("profiles.mjs"))
+            or value.get("applied_parameters")
+            != {
+                "tessedit_pageseg_mode": str(psm),
+                "user_defined_dpi": "300",
+                "tessedit_char_whitelist": "0123456789.",
+            }
+        ):
+            raise ValueError("Numeric OCR parameters do not match the fixed profile")
         return value
     finally:
         job_path.unlink(missing_ok=True)

@@ -295,3 +295,52 @@ def test_blank_ocr_output_is_not_replaced_with_reviewer_text(tmp_path, monkeypat
     assert report["findings"][1]["attempts"][0]["text"] == ""
     assert report["state"] == "BLOCKED"
     assert "no text detected" in (out / "index.html").read_text()
+
+
+def test_numeric_worker_protocol_has_fixed_settings_and_no_expected_labels(tmp_path, monkeypatch):
+    image = tmp_path / "glyph.png"
+    with Image.new("RGB", (80, 80), "white") as im:
+        im.save(image)
+
+    def run(command, *, stdout, **kwargs):
+        job = json.loads(Path(command[-1]).read_text())
+        assert set(job) == {"image", "models", "psm", "languages", "profile"}
+        assert job["profile"] == "numeric_label"
+        raw = raw_ocr(image, "7.")
+        raw.update(
+            languages=["eng"],
+            psm=7,
+            profile="numeric_label",
+            profile_module_sha256=ocr_compare.digest(
+                Path(ocr_compare.__file__).resolve().parents[2] / "ocr/profiles.mjs"
+            ),
+            applied_parameters={
+                "tessedit_pageseg_mode": "7",
+                "user_defined_dpi": "300",
+                "tessedit_char_whitelist": "0123456789.",
+            },
+        )
+        stdout.write(json.dumps(raw).encode())
+        return type("Result", (), {"returncode": 0})()
+
+    monkeypatch.setattr(ocr_compare.subprocess, "run", run)
+    result = ocr_compare.run_ocr(
+        image,
+        tmp_path / "models",
+        tmp_path / "ocr.json",
+        psm=7,
+        languages="eng",
+        profile="numeric_label",
+        deadline=time.monotonic() + 30,
+    )
+    assert result["text"] == "7."
+    with pytest.raises(ValueError, match="Unsupported"):
+        ocr_compare.run_ocr(
+            image,
+            tmp_path / "models",
+            tmp_path / "bad.json",
+            psm=3,
+            languages="eng",
+            profile="numeric_label",
+            deadline=time.monotonic() + 30,
+        )

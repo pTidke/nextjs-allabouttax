@@ -205,7 +205,9 @@ def numeric_items(records):
     return [r["text"] for r in records if re.fullmatch(r"[0-9]+", r["text"].strip())]
 
 
-def run_probe(requests, models, output):
+def run_probe(requests, models, output, *, timeout=180):
+    if not 0 < timeout <= 180:
+        raise ValueError("Invalid EasyOCR wall budget")
     job = output.with_suffix(".job.json")
     job.write_text(json.dumps(requests))
     env = {k: v for k, v in os.environ.items() if k in {"PATH", "LANG", "SYSTEMROOT", "TMPDIR"}}
@@ -226,7 +228,7 @@ def run_probe(requests, models, output):
             env=env,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            timeout=180,
+            timeout=timeout,
             check=False,
         )
         if result.returncode or not output.is_file() or output.stat().st_size > 20 * 1024**2:
