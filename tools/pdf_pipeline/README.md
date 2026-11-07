@@ -424,3 +424,21 @@ The added search is bounded to 2,000 provider lines, 100 month/year anchors, eig
 All 21 prior date regions, including sixteen warnings, remain. Two same-row review regions are added, bringing warnings to eighteen. Circular 2/2024's displaced `0sth` is now flagged with its original `Dated` and month/year fragments (provider lines 8, 64, 9). Circular 15/2025's displaced `10th` is associated with `December, 2025`; source comparison shows a correct date, so this is a layout-review hint, not a new transcription-error verdict. Source crops, exact raw spans and previous diagnostics were independently checked. The scoped March/April references, variant preferences and Form 49A row reviews are unchanged.
 
 Reproduce the current audit with `tax-pdf review-dates work/pdf-lab/demo-v2/date-fragment-inputs-v2.json --out work/pdf-lab/demo-v2/comparisons/FRESH_DATE_FRAGMENT_REVIEW`. The retained preview is `comparisons/date-fragments-v1/index.html#case-7`. The source-bound three-line circular subset in `tests/fixtures/circular2-displaced-date.json` is a development regression; only its raw text and geometry enter the detector. Tests also retain ambiguity, separate superscripts, unchanged single-line dates, unrelated nearby text, known tables and all search-budget holds. There is no measured false-warning rate, held-out precision/recall, auto-repair, engine selection, tax review, RAG publication or production integration in this increment.
+
+
+## Broader native-table layout trial
+
+`benchmark/table-layout-plan.json` fixes a seven-page development trial on three reused originals: reviewed Form 49A page 4, adjacent ITR validation-manual pages 20–22, and the middle pages 6–8 of the longer thirteen-page return-form notification. All sources were previously seen; only manual pages 20/22 are newly processed relative to the source-transfer run. The native extractor and page/table contracts are unchanged. This does not test scanned-table OCR or establish held-out performance.
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf benchmark \
+  work/pdf-corpus/table-layout-v1/sources.json \
+  --plan tools/pdf_pipeline/benchmark/table-layout-plan.json \
+  --out work/pdf-lab/demo-v2/benchmarks/FRESH_TABLE_LAYOUT_TRIAL
+```
+
+`benchmark/table-layout-run.json` records seven processed pages out of 62 original pages, twelve candidate grids and 894 retained source cells, with no failed native runs and 2.287 seconds of measured native-run time. Every original page remains accounted. All twelve drafts and source artifacts stay unaccepted/blocked. The nine filled Form 49A control values match the earlier references on the same PDF and exact native table digests; this does not separately approve the new lower-resolution render or transfer whole-table acceptance.
+
+The ITR pages each contain an 18-row/two-column candidate grid. The longer form has 11-column grids on pages 6/7, another ten-column grid on page 7 and a twenty-column grid on page 8. Four adjacent-page inventories are retained without merging. Matching column counts cannot establish table continuity, and geometric containment (four nested Form 49A grids) cannot establish semantic hierarchy. Headers, spans, blank/covered cells, units, footnotes and cross-page relationships remain unverified. Local `structure-notes.json` binds those inventories to their exact table/source revisions; `files.json` checks every retained artifact. This is coverage and hold-behavior evidence, not table accuracy.
+
+The review workspace is `benchmarks/table-layout-v1/tables/index.html`. Browser QA selected the ITR page-20 grid and located its first row label on the original image without confirming or saving any review choice. All twelve tables are available, and zero draft choices/revisions were recorded. The next validation work is source review of representative multi-level headers, spans and page-boundary relationships, followed by separately planned scanned/Hindi/faint-text table samples. No production ingestion or RAG changes are included.
