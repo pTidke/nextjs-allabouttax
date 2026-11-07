@@ -1,0 +1,68 @@
+{
+  "schema_version": "0.1.0",
+  "reviewed_on": "2026-11-06",
+  "reviewer_role": "product_owner",
+  "user_statement": "easyocr-eng for circular 2/2024\n01st april is good\ntesseract-eng+hin-psm3 is good for 05th march",
+  "kind": "SCOPED_COMPARATIVE_PREFERENCE",
+  "prior_field_review_sha256": "4461d9b201411dea39df00e1ed965dcb1bc96d7d5a5fff75067b07a53cfb5a60",
+  "prior_field_review": "tools/pdf_pipeline/benchmark/transfer-field-review.json",
+  "mapping_basis": "Interpreted in context of the preceding three confirmed fields: EasyOCR for the circular identifier and April date; bilingual Tesseract for the March date. The first two statements do not independently specify a field ID.",
+  "preferences": [
+    {
+      "field_id": "circular-2-2024-number",
+      "candidate_id": "easyocr-eng",
+      "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+      "page": 1,
+      "source_render_sha256": "877975b3eb55fb8549cdfc9286af93bae03823ddd05bc252b76aa3adcb1377c2",
+      "crop_sha256": "292f737cde9b503aa65aa856b173998210c80338813fae65fd1e8f093e1c726f",
+      "bound_comparison_sha256": "5039f9a8fbc2661592414273096dc3d4e6dd065c62a0a470778fd8aa11a84daf",
+      "candidate_raw_sha256": "f189ef3f5c1dcf81ac73cf77da4aba390c149f90dd104457f6dff8a57143cad6",
+      "candidate_field_text": "2/2024",
+      "confirmed_reference": "2/2024",
+      "existing_literal_comparison": "MATCH",
+      "preference_recorded": true,
+      "field_automatically_accepted": false
+    },
+    {
+      "field_id": "itr2-validations-2024-25-date",
+      "candidate_id": "easyocr-eng",
+      "source_sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "page": 1,
+      "source_render_sha256": "8685b92955a2383ac164a564b0efdaa4c1788431f0d52768a87f562b08c79faf",
+      "crop_sha256": "17c73c51eae0780a870276470145dbaf0ee8f2465f8ffee92ca1a8e6f2b3a529",
+      "bound_comparison_sha256": "d69a3f23c61f2b2a33779cebc9e181f5c2f1ae5dc3dede330225f457653e3a1d",
+      "candidate_raw_sha256": "ad3bbedbfa45021212bf157882dd87903639fb8c67515801b0b236c75fe4a318",
+      "candidate_field_text": "01st April 2024",
+      "confirmed_reference": "01st april 2024",
+      "existing_literal_comparison": "MATCH",
+      "preference_recorded": true,
+      "field_automatically_accepted": false
+    },
+    {
+      "field_id": "circular-2-2024-date",
+      "candidate_id": "tesseract-eng+hin-psm3",
+      "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+      "page": 1,
+      "source_render_sha256": "877975b3eb55fb8549cdfc9286af93bae03823ddd05bc252b76aa3adcb1377c2",
+      "crop_sha256": "37ea2e609530864636ec9c43a98212d1af698c34dc6a066911bb9a7be0c0456e",
+      "bound_comparison_sha256": "df5333ebbb9dc3030566e4e4612ed8042d6a05ee61d9453f64e2e8942a3aee8c",
+      "candidate_raw_sha256": "945f002c1ad4bda2237a209fd66b9d93c1dff99bc746769814edfcde03b6acad",
+      "candidate_field_text": "05\" March, 2024",
+      "confirmed_reference": "05th march, 2024",
+      "existing_literal_comparison": "MISMATCH",
+      "preference_recorded": true,
+      "field_automatically_accepted": false
+    }
+  ],
+  "raw_comparisons_changed": false,
+  "automatic_engine_selection_authorized": false,
+  "new_full_page_references_verified": 0,
+  "tax_review_completed": false,
+  "publication_eligible": false,
+  "local_preview": "work/pdf-lab/demo-v2/comparisons/transfer-field-review-v2/index.html",
+  "limits": [
+    "Positive comparative feedback is retained as field-level preference, not an assertion that the raw output is an exact transcription.",
+    "The existing owner-confirmed field values remain the references. The Tesseract March ordinal is still literally a quote mark; its mismatch and date warning remain visible.",
+    "No general engine winner, whole-page approval, date-role inference or production release follows from these preferences."
+  ]
+}
