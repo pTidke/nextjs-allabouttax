@@ -222,6 +222,7 @@ def audit_dates(manifest_file, output):
                 name: digest(Path(__file__).with_name(name))
                 for name in (
                     "date_regions.py",
+                    "date_spatial.py",
                     "date_disagreement.py",
                     "targeted_ocr.py",
                     "ocr_compare.py",
@@ -232,7 +233,7 @@ def audit_dates(manifest_file, output):
             "notes": [
                 "Warnings are independent of confidence. Literal date spans and source geometry are preserved; no replacements are supplied.",
                 "An asterisk may be a real footnote. Nonstandard ordinals may exist in the source. Verify the original rather than automatically repairing text.",
-                "No warning is not a clean verdict. Plausible wrong digits/names, Hindi dates, numeric date order, other symbols and legal date roles are not covered. Up to three nearby lines in one provider paragraph may form a search window; exact source fragments are retained and reading order stays unverified. Unparsed dated/date: cues are held for source review, including valid numeric dates.",
+                "No warning is not a clean verdict. Plausible wrong digits/names, Hindi dates, numeric date order, other symbols and legal date roles are not covered. Up to three consecutive vertical lines in one paragraph, or four closely adjacent same-row fragments across provider paragraphs, may form search hints. Spatial association requires a date cue or explicit ordinal, excludes known native tables and preserves competing alternatives. Exact source fragments and provider indices remain; reading order stays unverified. These layout guards do not establish general column separation or scanned-table structure.",
                 "Spatial comparisons preserve disagreements, missing candidates and ambiguous alignment. Identical surface text and multiple variants do not prove correctness or engine independence. No candidate is selected.",
                 "This is a limited English named-month date checker, not a complete quality gate, accuracy score or publication approval.",
             ],
@@ -256,6 +257,9 @@ def write_html(report, output):
         "CALENDAR_DATE_REVIEW": "This day and month do not form a valid calendar date.",
         "DATE_SUPERSCRIPT_REVIEW": "Check the raised letters or digits against the scan.",
         "DATE_CUE_UNPARSED_REVIEW": "This line refers to a date that the checker cannot read reliably.",
+        "DATE_SPATIAL_FRAGMENTS_REVIEW": "Nearby fragments may belong to one date; check their association on the original.",
+        "DATE_FRAGMENT_UNPARSED_REVIEW": "The literal fragments do not form a reliably parsed date; no day is guessed.",
+        "DATE_FRAGMENT_AMBIGUITY_REVIEW": "Competing fragments fit this location; no alternative is selected.",
     }
     states = {
         "REVIEW_REQUIRED": "Needs source review",

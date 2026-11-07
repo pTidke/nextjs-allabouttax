@@ -157,4 +157,14 @@ def date_evidence(raw, page):
                     )
                     if len(found) > 100:
                         raise ValueError("Date region budget exceeded")
+    from .date_spatial import spatial_date_evidence
+
+    for candidate in spatial_date_evidence([r for g in groups for r in g], raw, page):
+        key = tuple((f["line_number"], f["start"], f["end"]) for f in candidate["fragments"])
+        if key in seen:
+            continue
+        seen.add(key)
+        found.append({**candidate, "id": f"date-{len(found) + 1}"})
+        if len(found) > 100:
+            raise ValueError("Date region budget exceeded")
     return found

@@ -241,6 +241,7 @@ def run_transfer(manifest_file, plan_file, prior_file, models, easy_models, outp
                     "worker.py",
                     "ocr_compare.py",
                     "date_regions.py",
+                    "date_spatial.py",
                     "date_review.py",
                     "refine_compare.py",
                     "easyocr_probe.py",
