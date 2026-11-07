@@ -1,0 +1,485 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-05",
+  "state": "EXPERIMENTAL_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "local_report": "work/pdf-lab/demo-v2/benchmarks/targeted-ocr-v2/trials.json",
+  "local_html": "work/pdf-lab/demo-v2/benchmarks/targeted-ocr-v2/index.html",
+  "report_sha256": "ce413a675eecdd5bf8758e45b42bb1ab1fc73e6f711728f7c41730c2b1d779bc",
+  "scan_report_sha256": "a8c2a223cb86cfb7253dc36544f47dff8f611f29e0f4eb0831d8567484c033ac",
+  "feedback_sha256": "95a35ed2139896dc09f3a81708c32d62553760eb4e7bf5e9b78bdc679c8b2899",
+  "previous_recovery_sha256": "435bcb2fff1ebe0c27c43bb19d3bc0a2a72d191a78bafbc76ebcdde2ede60a76",
+  "models_sha256": "50b38feb1ddceadb8f445dfefa81489ab64cfbdbc68bb9fda46f2e221c1f389a",
+  "code_sha256": "09cdc691ba1333f3d29f0bb25060bc034e53955118902244a0822ed59a960125",
+  "worker_sha256": "0b2be0d11f69b45609eb940fd566936a93ca9d577eaaeacc2f3a178ec8288d26",
+  "profiles_sha256": "45aab890154fe7c12458866cf153f8884d4242a6ac36ed550b25e2d60e1d612b",
+  "dependency_sha256": {
+    "ocr_compare.py": "ef2297b7636c7a0a92c34881703abcfe0b306c14be593281f8693663ea4cc5ca",
+    "refine_compare.py": "1e35842d5a2173ac18f40db15b4422e0e2c3a04f8b6ff6fe5bfed81122926a79",
+    "easyocr_probe.py": "f9a39461ddce9983062a1e14d656863c88396ec128acb7b448c3d17944ee30b0"
+  },
+  "image_attempts": {
+    "numeric_profile_tesseract": 16,
+    "independent_easyocr": 16,
+    "paper_background_tesseract": 9,
+    "total": 41
+  },
+  "numeric_columns": [
+    {
+      "finding_id": "c7-number-column",
+      "case_id": "62e34ef5e8c8-p1-unchanged",
+      "source_title": "Circular No. 7/2026",
+      "parsed_digits": [
+        null,
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "reviewer_expected_sequence": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "matches_reviewer_numbers": false,
+      "holds": [
+        "NUMERIC_ALPHABET_CAN_FORCE_WRONG_DIGITS",
+        "LIST_ASSOCIATIONS_UNVERIFIED"
+      ],
+      "baseline_raw": [
+        "I.\n",
+        "2.\n",
+        "3.\n",
+        "4.\n",
+        "5.\n",
+        "6.\n",
+        "7.\n",
+        "8.\n",
+        "9.\n"
+      ],
+      "numeric_profile_raw": [
+        ".\n",
+        "2.\n",
+        "3.\n",
+        "4.\n",
+        "5.\n",
+        "6.\n",
+        "7.\n",
+        "8.\n",
+        "9.\n"
+      ],
+      "independent_raw": [
+        "1.",
+        "2",
+        "3_",
+        "4",
+        "5_",
+        "6_",
+        "7",
+        "8_",
+        "9"
+      ],
+      "independent_parsed_digits": [
+        "1",
+        "2",
+        null,
+        "4",
+        null,
+        null,
+        "7",
+        null,
+        "9"
+      ],
+      "independent_matches_reviewer_numbers": false,
+      "independent_raw_sha256": "de0b90885b54d2ec64f5ad4d5c7ec994badd80d567c9a1d0e021b75d8b5318a5",
+      "independent_models_sha256": "ef8df2acd5cb98a18628df3c63463b8c18a46cccf745de982cdc48aabcda87b0",
+      "independent_versions": {
+        "easyocr": "1.7.2",
+        "torch": "2.15.0",
+        "torchvision": "0.29.2",
+        "opencv-python-headless": "5.0.0.93",
+        "numpy": "2.5.4",
+        "Pillow": "13.0.0"
+      }
+    },
+    {
+      "finding_id": "c6-number-column",
+      "case_id": "cc4238745db8-p2-unchanged",
+      "source_title": "Circular No. 6/2026",
+      "parsed_digits": [
+        null,
+        null,
+        "3",
+        "4",
+        null,
+        "6",
+        "2"
+      ],
+      "reviewer_expected_sequence": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "matches_reviewer_numbers": false,
+      "holds": [
+        "NUMERIC_ALPHABET_CAN_FORCE_WRONG_DIGITS",
+        "LIST_ASSOCIATIONS_UNVERIFIED"
+      ],
+      "baseline_raw": [
+        "I.\n",
+        "a\n",
+        "3:\n",
+        "4.\n",
+        "Bi\n",
+        "6.\n",
+        "=\n"
+      ],
+      "numeric_profile_raw": [
+        ".\n",
+        "",
+        "3\n",
+        "4.\n",
+        "",
+        "6.\n",
+        "2\n"
+      ],
+      "independent_raw": [
+        "1",
+        "2.",
+        "3.",
+        "4",
+        "5",
+        "6.",
+        "7"
+      ],
+      "independent_parsed_digits": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independent_matches_reviewer_numbers": true,
+      "independent_raw_sha256": "e2e65bc2d828bd2f5c200e1d357953cb2bbbe8b87ddba906c165ddc1ae5149d0",
+      "independent_models_sha256": "ef8df2acd5cb98a18628df3c63463b8c18a46cccf745de982cdc48aabcda87b0",
+      "independent_versions": {
+        "easyocr": "1.7.2",
+        "torch": "2.15.0",
+        "torchvision": "0.29.2",
+        "opencv-python-headless": "5.0.0.93",
+        "numpy": "2.5.4",
+        "Pillow": "13.0.0"
+      }
+    }
+  ],
+  "foreground": {
+    "case_id": "ffa0e21cd3db-p1-unchanged",
+    "source_sha256": "ffa0e21cd3db036707a4850414aa2e7d673d4be28ee1991a1fd3f1c1222c5e78",
+    "source_image_sha256": "e898e04666d151ca8dd005c4416a351f124fed7f8f8327526d66c57b6164c5e0",
+    "baseline_variants": [
+      {
+        "languages": "eng",
+        "psm": 3,
+        "line_candidates": 0,
+        "state": "EXPERIMENTAL_NOT_ACCEPTED"
+      },
+      {
+        "languages": "eng+hin",
+        "psm": 3,
+        "line_candidates": 0,
+        "state": "EXPERIMENTAL_NOT_ACCEPTED"
+      },
+      {
+        "languages": "eng",
+        "psm": 6,
+        "line_candidates": 15,
+        "state": "EXPERIMENTAL_NOT_ACCEPTED"
+      },
+      {
+        "languages": "eng+hin",
+        "psm": 6,
+        "line_candidates": 16,
+        "state": "EXPERIMENTAL_NOT_ACCEPTED"
+      }
+    ],
+    "attempts": [
+      {
+        "preprocessing": "grayscale",
+        "scope": "full_page",
+        "psm": 3,
+        "line_candidates": 3,
+        "candidate_y_bins": [
+          0
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "8fd2e71f2dddd99df095f14246898f407cdd057109a705818d944e16f4c8ace3"
+      },
+      {
+        "preprocessing": "grayscale",
+        "scope": "full_page",
+        "psm": 6,
+        "line_candidates": 19,
+        "candidate_y_bins": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "8f7038c477b7b444f1bed7a4a66a63252d2bbd6b42fc441623b5565a248d6443"
+      },
+      {
+        "preprocessing": "flattened",
+        "scope": "full_page",
+        "psm": 3,
+        "line_candidates": 39,
+        "candidate_y_bins": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "c2e403742017876a2f2104de4459296bcaf6c797e1577a9bfaed7e956f892008"
+      },
+      {
+        "preprocessing": "flattened",
+        "scope": "full_page",
+        "psm": 6,
+        "line_candidates": 41,
+        "candidate_y_bins": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "c20773ddd8806537ddcd77d26ec1f70b067a0274874cbe7e1998d80aaa0d53ee"
+      },
+      {
+        "preprocessing": "ink-threshold",
+        "scope": "full_page",
+        "psm": 3,
+        "line_candidates": 39,
+        "candidate_y_bins": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "b1a24c06723df22651f52c67fe49df804938861bdfe5f7a9fa145e10f6e52c47"
+      },
+      {
+        "preprocessing": "ink-threshold",
+        "scope": "full_page",
+        "psm": 6,
+        "line_candidates": 38,
+        "candidate_y_bins": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "ce763fa57b30c927fc092b7be74c9009bf9aed61ee92f7b5cd0b1c7d3eb5bbec"
+      },
+      {
+        "preprocessing": "flattened",
+        "scope": "overlapping_strip",
+        "psm": 6,
+        "line_candidates": 14,
+        "candidate_y_bins": [
+          0,
+          1,
+          2
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "e02c1425f5d264cd40c721e63f87794636832379f61005697ad928b6acdd3c73"
+      },
+      {
+        "preprocessing": "flattened",
+        "scope": "overlapping_strip",
+        "psm": 6,
+        "line_candidates": 19,
+        "candidate_y_bins": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "83fd4cbc9fccdcd3ac144ed9a9264ad4d158aab59af6bf55c3d8a569d64d9b01"
+      },
+      {
+        "preprocessing": "flattened",
+        "scope": "overlapping_strip",
+        "psm": 6,
+        "line_candidates": 12,
+        "candidate_y_bins": [
+          5,
+          6,
+          7
+        ],
+        "accuracy": null,
+        "holds": [
+          "COMPLETE_TRANSCRIPT_UNVERIFIED",
+          "FAINT_FOREGROUND_LOSS_UNMEASURED",
+          "READING_ORDER_UNVERIFIED"
+        ],
+        "raw_sha256": "b413c001617eec96488c33e6ceefb0f4812a645e1f53a24cc7895cc8907e6d0f"
+      }
+    ],
+    "selected_variant": null,
+    "accuracy": null
+  },
+  "preliminary_experiments": {
+    "numeric_profile_only_report": "work/pdf-lab/demo-v2/benchmarks/targeted-ocr-v1/trials.json",
+    "numeric_profile_only_sha256": "7213886213900c055ec77804b807af8703fc9430a9236da8ea6795e213d96037",
+    "single_character_smoke_raws": {
+      "work/pdf-lab/glyph-mode-smoke-v1/1.json": "94c28c7af6c5d8ae45a2ae1fce7e964502e64f8d84e8b48e101fa1268e4540bc",
+      "work/pdf-lab/glyph-mode-smoke-v1/2.json": "39a57ba9c8c0e7d8e8e20dd1b1a494bea954b2bda6db1af8adeaf51e9907ae36",
+      "work/pdf-lab/glyph-mode-smoke-v1/5.json": "899c9ded2a0d240640c1e254fe51a118de0728698aa08b2de60ec3fc0f5fa04d",
+      "work/pdf-lab/glyph-mode-smoke-v1/7.json": "e97fa911f4b494f905abacb159b84ce1d09052af93ad0d6aeb5c300fd1adda09",
+      "work/pdf-lab/glyph-mode-smoke-v1/easyocr.json": "8da1e047fc7af4408ac5d105333a6606762b0422d4152ac87e836512795a19d4"
+    },
+    "finding": "Single-character layout did not repair the four tested Circular 6 labels; numeric-only recognition misread the visible 7 as 2. Independent OCR success on those four crops motivated a complete separate-engine comparison, not automatic routing."
+  },
+  "output_inventory_sha256": {
+    "c6-number-column-independent.json": "e2e65bc2d828bd2f5c200e1d357953cb2bbbe8b87ddba906c165ddc1ae5149d0",
+    "c6-number-column-row-1.json": "7099891f23f993fedc455c1f443ad4238bb865066d2dddc29ddae7e506e650cc",
+    "c6-number-column-row-1.png": "f2f075a2ca097826b2f19bd739063e0e3c40887663b594fcfd1afc6171646a51",
+    "c6-number-column-row-2.json": "2865dbb73cede9f837958df9639df4cda0f39b635753f17804d72a181766bdd0",
+    "c6-number-column-row-2.png": "2a79013be5864e66e5e17cb5dd916c29244b8ff8a40d03f07556305f800a05cc",
+    "c6-number-column-row-3.json": "c2da6c3e1cb5f03c553d56e9f25f39cb267ecef3a9cede07b7f2c3ae7f068bf2",
+    "c6-number-column-row-3.png": "c7643dccc51bc35ecf7f1cf337dbe7e85bbb348477244ef7036985677593202f",
+    "c6-number-column-row-4.json": "91c18fbb9df8d203210ec0c97b661c56c95dc79d59e9b03a2ca9cd16e4aea5ed",
+    "c6-number-column-row-4.png": "e05756a39f043f47546d018704ec4ee37ac43b502e2b152679a95d4bb6139dfa",
+    "c6-number-column-row-5.json": "1ea3ef9885adecc6afe2d5ed2f129e6685b39b69262b23d447617ae9f8d983fa",
+    "c6-number-column-row-5.png": "7ccc8f99411acfb4123a7bff71207da55e170ad5886c1d6847fff7f323411537",
+    "c6-number-column-row-6.json": "6f642d8c84ae41bcb249cfac50eccf3001e4abd403d3d22d70912bc29fcb177e",
+    "c6-number-column-row-6.png": "09efa7c55d5877125338cf5fa1a1f7a9d656260ffd2ec3f19db7d1b45ddeff28",
+    "c6-number-column-row-7.json": "fab6dcb0b74a6ed79c2b4444b927e5aa534bf06afe7a8f36927646b15b589fa0",
+    "c6-number-column-row-7.png": "4d4e56e735d715b78099083742b6087e642a24ddbab6e42a6d08a0c857a8cf59",
+    "c7-number-column-independent.json": "de0b90885b54d2ec64f5ad4d5c7ec994badd80d567c9a1d0e021b75d8b5318a5",
+    "c7-number-column-row-1.json": "bb0561ab91a8a42c468065782ae5f80dab147663605131a7c72943cc8ceb9769",
+    "c7-number-column-row-1.png": "d76784e306ef8a25e5829da085de71a4805843f38942f614ee182418fb0074a6",
+    "c7-number-column-row-2.json": "1e237850f16c3c6e2d5af1ad82f7372de4793a34edbea7a1603e8965ad3cbbe0",
+    "c7-number-column-row-2.png": "9aad3fa698f53c1dd1dcd6d3cdd042dc0e42cc97144ba96fc65350fc6f134775",
+    "c7-number-column-row-3.json": "af5641d184973fb482605e0e4f2cd21081d7a34591cf90e0582283f18a407a4d",
+    "c7-number-column-row-3.png": "3e3358e17239fce59f90d3fb4ae44497850c5c139e861ec239fc6d84a3f2adb2",
+    "c7-number-column-row-4.json": "9bcf757df28d90b2c04ae2573d97d8fc83da734f145d4114561b4726ffc59087",
+    "c7-number-column-row-4.png": "77ea56debd0a041c9a0d8a502187cfb5c335c54d20d45c7711f848fed2fb968d",
+    "c7-number-column-row-5.json": "e58e720e887bb9912b65dad6761f097b39cbde79c1cbb15ecb3fb6b7fdbd037a",
+    "c7-number-column-row-5.png": "98e548b661380389cb7cfc83d601008e1727fbe295601ed7c9dbb616f6eaafdc",
+    "c7-number-column-row-6.json": "dd6a615c5317531efe7428d2e7f171b32cc0b0d1e04a1f4687adc80c145c8f06",
+    "c7-number-column-row-6.png": "80d81fdfd770440934a3cf7b84d4ccea828f3ffdef9f490c9b088abeb190e3f8",
+    "c7-number-column-row-7.json": "3fc0daff84d827148947b86ae2befc5ebc75e31ce363b24433d2a494d240d454",
+    "c7-number-column-row-7.png": "b9dfc705cf7007edcab6a121975d3f5da3edec0b3ddfd517730b35e86fe14086",
+    "c7-number-column-row-8.json": "4f4725a8d1d4c75856d67a76ff78b57c33feb54d5897dc51e715efe0969d8883",
+    "c7-number-column-row-8.png": "07a5cea6eba0ff4b18b5b40a61876ea869a7c22f9c4c77fcdd22a2d3e4012dc2",
+    "c7-number-column-row-9.json": "5949fe8a7ff68c0c32f659640d7dfdc66a0f7f3e0834f7849bdba48a83744804",
+    "c7-number-column-row-9.png": "fb151beafc9ff865ecdae35b864b410a68d9639345aa51cc239ba1ac85db516f",
+    "foreground-flattened-psm3.json": "c2e403742017876a2f2104de4459296bcaf6c797e1577a9bfaed7e956f892008",
+    "foreground-flattened-psm6.json": "c20773ddd8806537ddcd77d26ec1f70b067a0274874cbe7e1998d80aaa0d53ee",
+    "foreground-flattened.png": "2f1899c6151c9a8dd3fe12e8cc2d65013503b2abf42e9e5b4785ecbf3068844d",
+    "foreground-grayscale-psm3.json": "8fd2e71f2dddd99df095f14246898f407cdd057109a705818d944e16f4c8ace3",
+    "foreground-grayscale-psm6.json": "8f7038c477b7b444f1bed7a4a66a63252d2bbd6b42fc441623b5565a248d6443",
+    "foreground-grayscale.png": "b9969d988411c3e95e8ac6c2bb3c304623df7cc81aef04eed2a5478feb3de780",
+    "foreground-ink-threshold-psm3.json": "b1a24c06723df22651f52c67fe49df804938861bdfe5f7a9fa145e10f6e52c47",
+    "foreground-ink-threshold-psm6.json": "ce763fa57b30c927fc092b7be74c9009bf9aed61ee92f7b5cd0b1c7d3eb5bbec",
+    "foreground-ink-threshold.png": "8269e53c08cc19131a54c7a527d1d1287651feb14eb8b8e3a0f6530ec456e020",
+    "foreground-source.png": "e898e04666d151ca8dd005c4416a351f124fed7f8f8327526d66c57b6164c5e0",
+    "foreground-strip-1.json": "e02c1425f5d264cd40c721e63f87794636832379f61005697ad928b6acdd3c73",
+    "foreground-strip-1.png": "188c31087f3aee65bff773e934d60ccd749c6cb43255a28c5e57609370ce0969",
+    "foreground-strip-2.json": "83fd4cbc9fccdcd3ac144ed9a9264ad4d158aab59af6bf55c3d8a569d64d9b01",
+    "foreground-strip-2.png": "17d4e46e305ca038825a89f96e35815332b2bb3b6af95d394c02396ba693d66f",
+    "foreground-strip-3.json": "b413c001617eec96488c33e6ceefb0f4812a645e1f53a24cc7895cc8907e6d0f",
+    "foreground-strip-3.png": "ee2dba4ce2f66683b89e72f5e6aad5aec828cd6a2864bac1a6698de5aebcbfff",
+    "index.html": "8fdcaf848bae0a6d68cd58d7844866de514870e5874f377c1e60c734d2015825",
+    "report.css": "3a68477d2ae759e3eb899508a2953bbb9b3ce603c04add6111343429e254c413",
+    "trials.json": "ce413a675eecdd5bf8758e45b42bb1ab1fc73e6f711728f7c41730c2b1d779bc"
+  },
+  "full_page_references_newly_verified": 0,
+  "limits": [
+    "All trials use previously inspected development sources; they do not estimate general OCR accuracy.",
+    "Independent Circular 6 digits match all seven reviewer labels. Circular 7 independently reads 3_, 5_, 6_, 8_; those punctuation errors remain unresolved under the literal label parser.",
+    "The fixed numeric alphabet does not reliably repair recognition and can force incorrect digits. No engine is selected and no sequence is completed or merged.",
+    "Paper-background flattening improves coverage from empty/header-only output to 39 line candidates across all eight vertical bins. Counts are not accuracy or foreground recall.",
+    "Circular 4 still has visible date and punctuation errors; foreground loss and reading order remain unverified. Threshold candidates may erase faint foreground and remain separate.",
+    "Originals, raw outputs and previous results are preserved. No paid OCR calls, accepted extractions, legal approvals, embeddings or production RAG changes."
+  ]
+}

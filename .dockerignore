@@ -9,3 +9,8 @@ coverage
 *.log
 *.tsbuildinfo
 .DS_Store
+**/.venv
+.pdf-lab-venv
+**/__pycache__
+
+**/node_modules

@@ -1,0 +1,626 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-06",
+  "state": "TRANSFER_PILOT_UNVERIFIED",
+  "publication_eligible": false,
+  "local_output": "work/pdf-lab/demo-v2/benchmarks/source-transfer-v4",
+  "report_sha256": "94d4c4d478e6fb5fb091fcfd82d7913fcb28c8c94247fbdc1ac8b36b12d135aa",
+  "preview_sha256": "c99f3761d29da59ec3774cb310329f850fed6caeb37985daab29298448210d1f",
+  "file_ledger_sha256": "3c3a56252ffff06d7e719bf6cb2f8f90df16c1042819439483b6725ca95afb1f",
+  "input_sha256": {
+    "plan": "1550d1770c13fae1951496c9cd47584855d9678e8a93d491957d0671223ed34b",
+    "manifest": "3766306b9d54285ad9353d4b86e957447a0226d44ee767f1b306770b62d03ef1",
+    "prior": "ae9db9d32305f46d645b72ab32c709ad21af8de0dd3cfef821c3b03280c04c3c"
+  },
+  "code_sha256": {
+    "transfer_evaluation.py": "9afc1934814c381d5f83f033aa5fe3ef3b4d22c7f21e2b06ffc9866f015666f3",
+    "transfer_view.py": "96f5d658335ad2d2fa0776624891947f219c3c27a7b0cb5e566e1173953ad39d",
+    "runner.py": "32a8fdc0bd4fc1495559a2bbbdcf87f93a6c98764f9a0316e89160626747f1c3",
+    "worker.py": "4c1242d5d2f08212cf2de00d1fc8b4b6bbaba57ebb9329cb99360a627c52165c",
+    "ocr_compare.py": "ef2297b7636c7a0a92c34881703abcfe0b306c14be593281f8693663ea4cc5ca",
+    "date_regions.py": "174a20b8ccd9359d37b4d904a313333997d081b8f63ea05b477677ec878854a7",
+    "date_review.py": "0113579d5205bbacc63ae4a3f57cbfeda6f8719b10c4b7fc0c3b03b2a94169df",
+    "refine_compare.py": "1e35842d5a2173ac18f40db15b4422e0e2c3a04f8b6ff6fe5bfed81122926a79",
+    "easyocr_probe.py": "f9a39461ddce9983062a1e14d656863c88396ec128acb7b448c3d17944ee30b0"
+  },
+  "tesseract_models_sha256": "50b38feb1ddceadb8f445dfefa81489ab64cfbdbc68bb9fda46f2e221c1f389a",
+  "easyocr_models_sha256": "ef8df2acd5cb98a18628df3c63463b8c18a46cccf745de982cdc48aabcda87b0",
+  "summary": {
+    "planned_sources": 6,
+    "acquired_sources": 3,
+    "failed_acquisition_slots": 3,
+    "failed_processing_sources": 0,
+    "original_pages": 52,
+    "selected_native_pages": 9,
+    "rendered_selected_pages": 9,
+    "selected_ocr_pages": 6,
+    "candidate_attempts": 24,
+    "failed_attempts": 0,
+    "empty_nonfailed_attempts": 0,
+    "native_table_candidates": 20,
+    "date_warning_count": 5,
+    "literal_inventory_disagreements": 25,
+    "zero_native_glyph_pages_with_images": 0,
+    "verified_reference_pages": 0,
+    "accepted_extractions": 0,
+    "publication_eligible": false
+  },
+  "elapsed_seconds": 79.04,
+  "acquisition_attempts": [
+    {
+      "id": "circular-1-2024",
+      "url": "https://incometaxindia.gov.in/communications/circular/circular-1-2024.pdf",
+      "state": "FAILED",
+      "reason": "Official source returned HTTP 404."
+    },
+    {
+      "id": "circular-2-2024",
+      "url": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2024-03/circular-no-2-2024.pdf",
+      "final_url": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2024-03/circular-no-2-2024.pdf",
+      "state": "ACQUIRED",
+      "sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7"
+    },
+    {
+      "id": "circular-3-2024",
+      "url": "https://incometaxindia.gov.in/communications/circular/circular-3-2024.pdf",
+      "state": "FAILED",
+      "reason": "Official source returned HTTP 404."
+    },
+    {
+      "id": "form-49a",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/103120000000007917-pdf-2",
+      "final_url": "https://www.incometaxindia.gov.in/documents/d/guest/103120000000007917-pdf-2",
+      "state": "ACQUIRED",
+      "sha256": "fbe3a013d4eae664403272dbb80f8cd11dcf0014667ca5d77a7be1e71a7c009f"
+    },
+    {
+      "id": "taxpayer-charter",
+      "url": "https://incometaxindia.gov.in/Documents/taxpayer-charter.pdf",
+      "state": "FAILED",
+      "reason": "Official source returned HTTP 404."
+    },
+    {
+      "id": "itr2-validations-2024-25",
+      "url": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2024-06/CBDT_e-Filing_ITR%202_Validation%20Rules%20for%20AY%202024-25.pdf",
+      "final_url": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2024-06/CBDT_e-Filing_ITR%202_Validation%20Rules%20for%20AY%202024-25.pdf",
+      "state": "ACQUIRED",
+      "sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8"
+    },
+    {
+      "id": "circular-1-2024",
+      "url": "https://incometaxindia.gov.in/news/circular-1-2024.pdf",
+      "state": "FAILED",
+      "reason": "Official source returned HTTP 404."
+    },
+    {
+      "id": "circular-3-2024",
+      "url": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2024-03/circular-no-3-2024.pdf",
+      "state": "FAILED",
+      "reason": "Official source returned HTTP 404."
+    },
+    {
+      "id": "taxpayer-charter",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/taxpayer-charter-pdf",
+      "state": "FAILED",
+      "reason": "Official source returned HTTP 404."
+    }
+  ],
+  "source_documents": [
+    {
+      "id": "circular-1-2024",
+      "family": "cbdt-circular-related",
+      "prior_family_exposure": true,
+      "state": "ACQUISITION_FAILED"
+    },
+    {
+      "id": "circular-2-2024",
+      "family": "cbdt-circular-related",
+      "prior_family_exposure": true,
+      "state": "UNVERIFIED_CANDIDATES",
+      "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+      "expected_pages": 3,
+      "native_selected": [
+        1,
+        2,
+        3
+      ],
+      "ocr_selected": [
+        1,
+        3
+      ],
+      "unselected_pages": [],
+      "artifact_sha256": "acb163623343fc4daf88ce18fc26dbe5c7496bd66352ad2d1fe6b9bfcd7d821d",
+      "page_accounting_complete": true
+    },
+    {
+      "id": "circular-3-2024",
+      "family": "cbdt-circular-related",
+      "prior_family_exposure": true,
+      "state": "ACQUISITION_FAILED"
+    },
+    {
+      "id": "form-49a",
+      "family": "tax-form-related",
+      "prior_family_exposure": true,
+      "state": "UNVERIFIED_CANDIDATES",
+      "source_sha256": "fbe3a013d4eae664403272dbb80f8cd11dcf0014667ca5d77a7be1e71a7c009f",
+      "expected_pages": 8,
+      "native_selected": [
+        1,
+        4,
+        8
+      ],
+      "ocr_selected": [
+        1,
+        8
+      ],
+      "unselected_pages": [
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "artifact_sha256": "b9628f37e9b60dcf52bbacfd0a621cb034ff90eb86aea3369b8ffd267d6666e1",
+      "page_accounting_complete": true
+    },
+    {
+      "id": "taxpayer-charter",
+      "family": "taxpayer-information-poster",
+      "prior_family_exposure": false,
+      "state": "ACQUISITION_FAILED"
+    },
+    {
+      "id": "itr2-validations-2024-25",
+      "family": "efiling-validation-manual",
+      "prior_family_exposure": false,
+      "state": "UNVERIFIED_CANDIDATES",
+      "source_sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "expected_pages": 41,
+      "native_selected": [
+        1,
+        21,
+        41
+      ],
+      "ocr_selected": [
+        1,
+        41
+      ],
+      "unselected_pages": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40
+      ],
+      "artifact_sha256": "887943f9f448c3c033bffd4f3558e6fa5e84b8d4dd94fa080aa954d81a60a26c",
+      "page_accounting_complete": true
+    }
+  ],
+  "source_checks": [
+    {
+      "id": "circular-2-2024-1",
+      "source_id": "circular-2-2024",
+      "title": "CBDT Circular 2/2024",
+      "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+      "page": 1,
+      "source_image": "packages/efc82c78e8f4-1793998191315948000/pages/0001.png",
+      "source_render_sha256": "877975b3eb55fb8549cdfc9286af93bae03823ddd05bc252b76aa3adcb1377c2",
+      "crop": "source-checks/circular-2-2024-1.png",
+      "crop_sha256": "37ea2e609530864636ec9c43a98212d1af698c34dc6a066911bb9a7be0c0456e",
+      "crop_pixels": [
+        1715,
+        690,
+        2227,
+        787
+      ],
+      "focus": "Printed date candidate: read the original; machine geometry supplies no reference text",
+      "status": "UNLABELLED_SOURCE_CHECK",
+      "expected_text": null,
+      "critical_fields": [],
+      "reviewer": null,
+      "whole_page_verified": false,
+      "publication_eligible": false
+    },
+    {
+      "id": "form-49a-1",
+      "source_id": "form-49a",
+      "title": "Form 49A and instructions (historical specimen)",
+      "source_sha256": "fbe3a013d4eae664403272dbb80f8cd11dcf0014667ca5d77a7be1e71a7c009f",
+      "page": 1,
+      "source_image": "packages/fbe3a013d4ea-1793998218058212000/pages/0001.png",
+      "source_render_sha256": "85741c9b27ac4e64e25fa0bd88b87544bd16f6d3747523d984e606e66cd06001",
+      "crop": "source-checks/form-49a-1.png",
+      "crop_sha256": "d70dea0bc1ac91827cae03102ead2bde31801a06e993d42f2d5a866db2a25c57",
+      "crop_pixels": [
+        99,
+        175,
+        2382,
+        1333
+      ],
+      "focus": "Header / identifier / printed date",
+      "status": "UNLABELLED_SOURCE_CHECK",
+      "expected_text": null,
+      "critical_fields": [],
+      "reviewer": null,
+      "whole_page_verified": false,
+      "publication_eligible": false
+    },
+    {
+      "id": "itr2-validations-2024-25-1",
+      "source_id": "itr2-validations-2024-25",
+      "title": "ITR-2 validation rules AY 2024-25",
+      "source_sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "page": 1,
+      "source_image": "packages/045b8b91e32c-1793998248409536000/pages/0001.png",
+      "source_render_sha256": "8685b92955a2383ac164a564b0efdaa4c1788431f0d52768a87f562b08c79faf",
+      "crop": "source-checks/itr2-validations-2024-25-1.png",
+      "crop_sha256": "17c73c51eae0780a870276470145dbaf0ee8f2465f8ffee92ca1a8e6f2b3a529",
+      "crop_pixels": [
+        280,
+        1428,
+        872,
+        1540
+      ],
+      "focus": "Printed date candidate: read the original; machine geometry supplies no reference text",
+      "status": "UNLABELLED_SOURCE_CHECK",
+      "expected_text": null,
+      "critical_fields": [],
+      "reviewer": null,
+      "whole_page_verified": false,
+      "publication_eligible": false
+    },
+    {
+      "id": "circular-2-2024-2",
+      "source_id": "circular-2-2024",
+      "title": "CBDT Circular 2/2024",
+      "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+      "page": 2,
+      "source_image": "packages/efc82c78e8f4-1793998191315948000/pages/0002.png",
+      "source_render_sha256": "522d150922ce28e26873395094def8756b876439bff8cde4fe0f3c1e1989748e",
+      "crop": "source-checks/circular-2-2024-2.png",
+      "crop_sha256": "38101f9b2ed862fe484a9b3c0ee8390e662ed21e610f103eb0fc400efb13a989",
+      "crop_pixels": [
+        101,
+        707,
+        2418,
+        1872
+      ],
+      "focus": "Body / table relationships / conditions",
+      "status": "UNLABELLED_SOURCE_CHECK",
+      "expected_text": null,
+      "critical_fields": [],
+      "reviewer": null,
+      "whole_page_verified": false,
+      "publication_eligible": false
+    },
+    {
+      "id": "form-49a-2",
+      "source_id": "form-49a",
+      "title": "Form 49A and instructions (historical specimen)",
+      "source_sha256": "fbe3a013d4eae664403272dbb80f8cd11dcf0014667ca5d77a7be1e71a7c009f",
+      "page": 4,
+      "source_image": "packages/fbe3a013d4ea-1793998218058212000/pages/0004.png",
+      "source_render_sha256": "8f8b64af974d257d0e7f672494dc1e9f8208672a4044cddf1796c2cec857f806",
+      "crop": "source-checks/form-49a-2.png",
+      "crop_sha256": "05ecde22f7d4ab5ae4018084dea33fa211e0862e265ecf73e0474e7e314b92dc",
+      "crop_pixels": [
+        83,
+        88,
+        2394,
+        854
+      ],
+      "focus": "Partial table window: compare row/column associations against the full source",
+      "status": "UNLABELLED_SOURCE_CHECK",
+      "expected_text": null,
+      "critical_fields": [],
+      "reviewer": null,
+      "whole_page_verified": false,
+      "publication_eligible": false
+    },
+    {
+      "id": "itr2-validations-2024-25-2",
+      "source_id": "itr2-validations-2024-25",
+      "title": "ITR-2 validation rules AY 2024-25",
+      "source_sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "page": 21,
+      "source_image": "packages/045b8b91e32c-1793998248409536000/pages/0021.png",
+      "source_render_sha256": "651960e67b3baf87f47299deef6d3785b8cd055d57ce48f524e81cc9c4b9237a",
+      "crop": "source-checks/itr2-validations-2024-25-2.png",
+      "crop_sha256": "93347884dbf7fc83f72dd02d0685ce139995d729f91540ca61c3f920b25067ce",
+      "crop_pixels": [
+        293,
+        293,
+        2256,
+        1059
+      ],
+      "focus": "Partial table window: compare row/column associations against the full source",
+      "status": "UNLABELLED_SOURCE_CHECK",
+      "expected_text": null,
+      "critical_fields": [],
+      "reviewer": null,
+      "whole_page_verified": false,
+      "publication_eligible": false
+    }
+  ],
+  "observations": [
+    {
+      "source_id": "circular-2-2024",
+      "page": 1,
+      "status": "AGENT_SOURCE_COMPARISON_NOT_OWNER_VERIFIED",
+      "agent_source_reading": "Dated 05th March, 2024",
+      "source_check_id": "circular-2-2024-1",
+      "engine_lines": [
+        {
+          "candidate_id": "native",
+          "line": {
+            "id": "p1-b8",
+            "text": "Dated osth March, 2024",
+            "bbox": {
+              "x0": 416.35,
+              "top": 170.56589999999994,
+              "x1": 529.58388,
+              "bottom": 184.2659
+            },
+            "image_bbox": {
+              "x0": 1735.4749245109622,
+              "top": 710.8915575676435,
+              "x1": 2207.4685821189446,
+              "bottom": 767.9909797773392
+            },
+            "confidence": null
+          }
+        },
+        {
+          "candidate_id": "tesseract-eng-psm3",
+          "line": {
+            "id": "p1-ocr-eng-8",
+            "text": "Dated 05\" March, 2024\n\n",
+            "confidence": 81.0,
+            "low_confidence": false,
+            "bbox": {
+              "x0": 417.1956850393701,
+              "top": 171.55164835164834,
+              "x1": 529.7113700787402,
+              "bottom": 183.54826711749786
+            },
+            "order_verified": false,
+            "image_bbox": {
+              "x0": 1739.0,
+              "top": 715.0,
+              "x1": 2208.0,
+              "bottom": 765.0
+            }
+          }
+        },
+        {
+          "candidate_id": "tesseract-eng+hin-psm3",
+          "line": {
+            "id": "p1-ocr-eng-hin-8",
+            "text": "Dated 05\" March, 2024\n\n",
+            "confidence": 87.0,
+            "low_confidence": false,
+            "bbox": {
+              "x0": 417.1956850393701,
+              "top": 171.55164835164834,
+              "x1": 529.7113700787402,
+              "bottom": 183.54826711749786
+            },
+            "order_verified": false,
+            "image_bbox": {
+              "x0": 1739.0,
+              "top": 715.0,
+              "x1": 2208.0,
+              "bottom": 765.0
+            }
+          }
+        },
+        {
+          "candidate_id": "easyocr-eng",
+          "line": {
+            "id": "p1-ocr-eng-8",
+            "text": "Dated",
+            "confidence": 99.99700385945926,
+            "low_confidence": false,
+            "bbox": {
+              "x0": 414.7966299212598,
+              "top": 172.7513102282333,
+              "x1": 446.22425196850395,
+              "bottom": 183.54826711749786
+            },
+            "order_verified": false,
+            "image_bbox": {
+              "x0": 1729.0,
+              "top": 720.0,
+              "x1": 1860.0,
+              "bottom": 765.0
+            }
+          }
+        },
+        {
+          "candidate_id": "easyocr-eng",
+          "line": {
+            "id": "p1-ocr-eng-64",
+            "text": "0sth",
+            "confidence": 63.95278573036194,
+            "low_confidence": true,
+            "bbox": {
+              "x0": 445.48441068693387,
+              "top": 168.9745528531991,
+              "x1": 469.75511687212133,
+              "bottom": 185.88543024063014
+            },
+            "order_verified": false,
+            "image_bbox": {
+              "x0": 1856.9161138650584,
+              "top": 704.2590756247694,
+              "x1": 1958.0838861349416,
+              "bottom": 774.7409243752306
+            }
+          }
+        }
+      ],
+      "interpretation": "Literal extraction/date-order issue only; no legal date-role inference or complete-page reference."
+    },
+    {
+      "source_id": "itr2-validations-2024-25",
+      "page": 1,
+      "status": "AGENT_SOURCE_COMPARISON_NOT_OWNER_VERIFIED",
+      "agent_source_reading": "01st April 2024",
+      "source_check_id": "itr2-validations-2024-25-1",
+      "engine_lines": [
+        {
+          "candidate_id": "native",
+          "line": {
+            "id": "p1-b6",
+            "text": "01st April 2024",
+            "bbox": {
+              "x0": 72.024,
+              "top": 347.59592000000004,
+              "x1": 204.71756,
+              "bottom": 364.79372
+            },
+            "image_bbox": {
+              "x0": 300.1,
+              "top": 1448.7552170707072,
+              "x1": 852.9898333333333,
+              "bottom": 1520.4344314646464
+            },
+            "confidence": null
+          }
+        },
+        {
+          "candidate_id": "tesseract-eng-psm3",
+          "line": {
+            "id": "p1-ocr-eng-9",
+            "text": "015 April 2024\n\n",
+            "confidence": 67.0,
+            "low_confidence": true,
+            "bbox": {
+              "x0": 72.72,
+              "top": 348.374431990306,
+              "x1": 204.0,
+              "bottom": 364.68948803392914
+            },
+            "order_verified": false,
+            "image_bbox": {
+              "x0": 303.0,
+              "top": 1452.0,
+              "x1": 850.0,
+              "bottom": 1520.0
+            }
+          }
+        },
+        {
+          "candidate_id": "tesseract-eng+hin-psm3",
+          "line": {
+            "id": "p1-ocr-eng-hin-9",
+            "text": "015 April 2024\n\n",
+            "confidence": 92.0,
+            "low_confidence": false,
+            "bbox": {
+              "x0": 72.72,
+              "top": 348.374431990306,
+              "x1": 204.0,
+              "bottom": 364.68948803392914
+            },
+            "order_verified": false,
+            "image_bbox": {
+              "x0": 303.0,
+              "top": 1452.0,
+              "x1": 850.0,
+              "bottom": 1520.0
+            }
+          }
+        },
+        {
+          "candidate_id": "easyocr-eng",
+          "line": {
+            "id": "p1-ocr-eng-11",
+            "text": "01st April 2024",
+            "confidence": 94.37537464800107,
+            "low_confidence": false,
+            "bbox": {
+              "x0": 70.08,
+              "top": 345.73523174795514,
+              "x1": 207.12,
+              "bottom": 367.32868827627993
+            },
+            "order_verified": false,
+            "image_bbox": {
+              "x0": 292.0,
+              "top": 1441.0,
+              "x1": 863.0,
+              "bottom": 1531.0
+            }
+          }
+        }
+      ],
+      "interpretation": "Literal extraction/date-order issue only; no legal date-role inference or complete-page reference."
+    }
+  ],
+  "checks": {
+    "file_ledger_matches": true,
+    "code_hashes_match": true,
+    "all_six_crops_recreated_from_unchanged_source": true,
+    "browser_highlight_verified": true,
+    "browser_no_horizontal_overflow": true,
+    "browser_no_logged_errors": true,
+    "all_six_crop_images_loaded": true
+  },
+  "accuracy": {
+    "status": "UNMEASURED_NO_VERIFIED_COHORT_REFERENCES",
+    "cer": null,
+    "wer": null,
+    "critical_field_accuracy": null,
+    "table_relationship_accuracy": null,
+    "false_clean_rate": null
+  },
+  "full_page_references_verified": 0,
+  "selected_engine": null,
+  "tax_review_completed": false,
+  "rag_index_modified": false,
+  "production_ingestion_modified": false,
+  "limitations": [
+    "Only three of six frozen source slots acquired; failed circular/poster URLs remain and no source was substituted.",
+    "Final v4 run uses the same fixed choices/settings as correlated development reruns. Reruns are not independent trials.",
+    "Related circular/form families were seen before; search snippets were seen. This is not blind or representative accuracy evaluation.",
+    "Twenty native table grids are unverified; plain OCR does not establish row/column, footnote or exception relationships.",
+    "No confirmed real image-only, Hindi or faint-front-side sample in this acquired cohort. A scan with embedded OCR glyphs is not counted as image-only.",
+    "Five date warnings and twenty-five pairwise literal-inventory disagreements are hints across correlated alternatives, not confirmed-error counts or recall.",
+    "Source-check requests verify only their stated field/region; they do not approve a whole page, legal applicability or publication."
+  ]
+}

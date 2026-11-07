@@ -13,7 +13,8 @@
     "tax:worker": "tsx scripts/tax-worker.ts",
     "tax:probe": "tsx scripts/tax-probe.ts",
     "tax:health": "tsx scripts/tax-health.ts",
-    "tax:evaluate": "tsx scripts/tax-evaluate.ts"
+    "tax:evaluate": "tsx scripts/tax-evaluate.ts",
+    "tax:corpus": "tsx scripts/tax-corpus.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

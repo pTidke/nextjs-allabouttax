@@ -1,0 +1,470 @@
+{
+  "local_output": "work/pdf-lab/demo-v2/benchmarks/expanded-scans-v3",
+  "report_sha256": "a8c2a223cb86cfb7253dc36544f47dff8f611f29e0f4eb0831d8567484c033ac",
+  "state": "BLOCKED",
+  "publication_eligible": false,
+  "documents": [
+    {
+      "title": "Circular No. 2/2026 : Order under section 119 of the Income-tax Act, 1961 for extension of timeline for issuance of tax deducted at source (TDS) certificate under section 203 of the Act for the quarter ending 31st December 2025",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/circular-2-2026-pdf",
+      "source_sha256": "f9f2c1a621f743482efc3d33433729a6c4892ada845c0a1126ee6252abce50f7",
+      "kind": "official",
+      "acquisition": "Direct official URL with existing allowlisted application fetcher; selected before extraction",
+      "expected_pages": 1,
+      "selected_pages": [
+        1
+      ],
+      "accounted": true,
+      "package": "packages/f9f2c1a621f7-1793920701339160000",
+      "artifact_sha256": "74166238621c9bfcdb5838e544de9389a7458ccfbe36cf25eda8273198a96497"
+    },
+    {
+      "title": "Circular No. 4/2026 : Referencing by Document Identification Number (DIN)",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/circular-4-2026-pdf",
+      "source_sha256": "ffa0e21cd3db036707a4850414aa2e7d673d4be28ee1991a1fd3f1c1222c5e78",
+      "kind": "official",
+      "acquisition": "Direct official URL with existing allowlisted application fetcher; selected before extraction",
+      "expected_pages": 2,
+      "selected_pages": [
+        1,
+        2
+      ],
+      "accounted": true,
+      "package": "packages/ffa0e21cd3db-1793920706985457000",
+      "artifact_sha256": "346f321d63cde6ab27bc9e4771ad0277de093136cbd7da213201f2b4a710a659"
+    },
+    {
+      "title": "Circular No. 7/2026 : Extension of timelines for filing of various reports of audit and Income Tax Returns (ITRs) for the Assessment Year 2026-27",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/circular-7-2026-pdf",
+      "source_sha256": "62e34ef5e8c82fcd12342cfd0aa28ed723aa90a141620117dff7017962ab2cda",
+      "kind": "official",
+      "acquisition": "Direct official URL with existing allowlisted application fetcher; selected before extraction",
+      "expected_pages": 1,
+      "selected_pages": [
+        1
+      ],
+      "accounted": true,
+      "package": "packages/62e34ef5e8c8-1793920715267017000",
+      "artifact_sha256": "dcaf6005f4616c69a5850a03b93a30b21dad96d84321aaccc38fe88443413e92"
+    },
+    {
+      "title": "Circular No. 6/2026 : Condonation of delay in filing Form No. 10AB electronically for approval under clause(ii) of the first proviso to section 80G(5) of the Income-tax Act, 1961",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/circular-no-06-2026-pdf",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "kind": "official",
+      "acquisition": null,
+      "expected_pages": 2,
+      "selected_pages": [
+        1,
+        2
+      ],
+      "accounted": true,
+      "package": "packages/cc4238745db8-1793920718581058000",
+      "artifact_sha256": "15a7b1c41b758533140b1f55bc4dab386073a3f0f475310b1a4569b1859d0290"
+    },
+    {
+      "title": "SYNTHETIC scan \u2014 NOT TAX LAW",
+      "url": null,
+      "source_sha256": "944d5d44b2c98d2c5c48b585e1e9f646bcf443bf1d1bdbd451b41ed1571012cf",
+      "kind": "synthetic",
+      "acquisition": null,
+      "expected_pages": 1,
+      "selected_pages": [
+        1
+      ],
+      "accounted": true,
+      "package": "packages/944d5d44b2c9-1793920727631194000",
+      "artifact_sha256": "189beca2c5d2f4a08f8f92ba60c0f4cbbf966fbf4dfd6f61a7b8ddfb9ac87795"
+    }
+  ],
+  "cases": [
+    {
+      "id": "f9f2c1a621f7-p1-unchanged",
+      "kind": "official",
+      "transform": "unchanged",
+      "image_sha256": "27ae694cf4c1e30de9e039d78bea741552e1effec969c1246ba78c2f4a201bfc",
+      "native_status": "ocr_required",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "6b92fc74b610cb3e8f461a2ee33bcd671a40008784c3ca124bcbb5cb907398a3",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 2.039,
+          "line_candidates": 46
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "1183fe6d932da7d7c5f5368a8c7f63e177419a46c21c7cef2c0108cc83f6508b",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 3.017,
+          "line_candidates": 46
+        }
+      ]
+    },
+    {
+      "id": "ffa0e21cd3db-p1-unchanged",
+      "kind": "official",
+      "transform": "unchanged",
+      "image_sha256": "e898e04666d151ca8dd005c4416a351f124fed7f8f8327526d66c57b6164c5e0",
+      "native_status": "ocr_required",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [
+            "OCR_RETURNED_NO_LINES"
+          ],
+          "raw_sha256": "dc67df0473058b8a85678dea09937d3e84932d494a671d7c21e45550a4516311",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.722,
+          "line_candidates": 0
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [
+            "OCR_RETURNED_NO_LINES"
+          ],
+          "raw_sha256": "195583a3bfa8aa78b5455e571f424016d78af9cb56995b3bd42c41bb9c4284f4",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.663,
+          "line_candidates": 0
+        },
+        {
+          "languages": "eng",
+          "psm": 6,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [
+            "ALTERNATIVE_LAYOUT_UNVERIFIED"
+          ],
+          "raw_sha256": "45052cda02092a5cfe2ee64c4bb33885d34f2bf6918cf1f345ed08af10f7111d",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.829,
+          "line_candidates": 15
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 6,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [
+            "ALTERNATIVE_LAYOUT_UNVERIFIED"
+          ],
+          "raw_sha256": "878ffc2f576f9443fc81c9a192b3e3b3356df85f507eb2ca46e546da2a61618d",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 1.22,
+          "line_candidates": 16
+        }
+      ]
+    },
+    {
+      "id": "ffa0e21cd3db-p2-unchanged",
+      "kind": "official",
+      "transform": "unchanged",
+      "image_sha256": "fd0edfbb9eaf8ba28e4253ec0c0904ddb7687bfadaf69f6685d2612680b2d61a",
+      "native_status": "ocr_required",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "137c640a38eda6752ad3883dc0c45bfe3c8268278dce1955ce9650f4d6427523",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 1.655,
+          "line_candidates": 36
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "00f2217e4481d3dde1a5f18040ecd593fd81242dbccba4254b30a9c9b021e2e6",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 2.193,
+          "line_candidates": 36
+        }
+      ]
+    },
+    {
+      "id": "62e34ef5e8c8-p1-unchanged",
+      "kind": "official",
+      "transform": "unchanged",
+      "image_sha256": "a35f136e64fb9b027fed11a14fd2d62885aaf9ca3350ce8762814c09da74a292",
+      "native_status": "native_candidate",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "3cbae6aa743997588288663d4fd1881103735bd33cd83d38caad50d411958aa2",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 1.326,
+          "line_candidates": 35
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "8cad30d9a37ebbfec6bd0aaa752823f82013a291b203a84a20e529214e803b4f",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 1.599,
+          "line_candidates": 36
+        }
+      ]
+    },
+    {
+      "id": "cc4238745db8-p1-unchanged",
+      "kind": "official",
+      "transform": "unchanged",
+      "image_sha256": "cf400e2d66ed7d27cdae7c1deb9f4240b0b65cc7f97e958d87c97501c7102c66",
+      "native_status": "ocr_required",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "866a0f861763defa23745164774839e4b4eda84925d9b79764b130ed8088621c",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 2.099,
+          "line_candidates": 34
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "f1fca6ab1336c6ed93ece7bb8d36364073324eaa8b831e28ddc64004a9284a49",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 2.699,
+          "line_candidates": 34
+        }
+      ]
+    },
+    {
+      "id": "cc4238745db8-p2-unchanged",
+      "kind": "official",
+      "transform": "unchanged",
+      "image_sha256": "1501b0645e239814bccdc33af9aedfa88411c132637e7abd630837bfea3958b3",
+      "native_status": "ocr_required",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "48729f0a25a5d85ae6b16a7a7fb0598f6493c138b0b8887dd83915a14c164517",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 1.229,
+          "line_candidates": 26
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "8883a9463a814c9ef19775c78fc2503727a180b0df818bc2c5825a982a66fb23",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 1.878,
+          "line_candidates": 26
+        }
+      ]
+    },
+    {
+      "id": "944d5d44b2c9-p1-unchanged",
+      "kind": "synthetic",
+      "transform": "unchanged",
+      "image_sha256": "c85de0a49615ca85890166d1570f1cb3acfed95a86572cf7d6e785712c68c7cc",
+      "native_status": "ocr_required",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "6379aaff2684978975ee620690b844a49ce967503e990cb85ffad0975fc0c53f",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.574,
+          "line_candidates": 5
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "5681403ccf5914f493cfd8529b98bfb6af951a0aa33bc4945b30cfa6ab60a112",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.617,
+          "line_candidates": 5
+        }
+      ]
+    },
+    {
+      "id": "944d5d44b2c9-p1-rotated90",
+      "kind": "synthetic",
+      "transform": "rotated90",
+      "image_sha256": "f465d1048ead852a53f50d7ec5cd9fca1fc6f9a0eccc58350c37057792b6095b",
+      "native_status": "ocr_required",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "4c13c47cfed645b04872f2a1595bd709b4a32f5df30fa49101f43d286fb2fa49",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.572,
+          "line_candidates": 5
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "cb4cb5c125142e31f2b459492b94afa928ab82e609af27839e300af59f1e26a7",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.792,
+          "line_candidates": 5
+        }
+      ]
+    },
+    {
+      "id": "944d5d44b2c9-p1-blurred",
+      "kind": "synthetic",
+      "transform": "blurred",
+      "image_sha256": "c4cd96c0da111feae8578ec29fc4b4ac56c18a82805b3547fd578ebb8a96a6ec",
+      "native_status": "ocr_required",
+      "variants": [
+        {
+          "languages": "eng",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "b82a2324944887479668cf322c2d9662cbb8f29b238c48207352695de0a50617",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.457,
+          "line_candidates": 5
+        },
+        {
+          "languages": "eng+hin",
+          "psm": 3,
+          "state": "EXPERIMENTAL_NOT_ACCEPTED",
+          "quality_issues": [],
+          "raw_sha256": "6513350d2b6ab03379f26f2ea9ea8904586751342463b588716a620bf743a331",
+          "engine_versions": {
+            "tesseract.js": "7.0.0",
+            "tesseract.js-core": "7.0.0",
+            "node": "v26.13.0"
+          },
+          "wall_seconds": 0.504,
+          "line_candidates": 5
+        }
+      ]
+    }
+  ],
+  "accuracy": {
+    "status": "UNMEASURED_NO_ACCEPTED_LABELS",
+    "cer": null,
+    "wer": null,
+    "table_accuracy": null
+  },
+  "notes": [
+    "Direct-fetched additions were selected by circular number before this run; legacy listing metadata still creates sampling bias.",
+    "The cohort contains scans with embedded OCR and a native control; a separate real image-only cohort remains a gap.",
+    "Previously tuned Circular 6 is a tuning/control case, never a held-out score.",
+    "Only synthetic inputs receive rotation/blur transforms; originals remain unchanged.",
+    "Provider confidence and candidate agreement are not accuracy or acceptance.",
+    "Empty default-layout results trigger a separate PSM 6 experiment, never automatic replacement or acceptance.",
+    "This bounded run is not a representative completed benchmark or a cost per accepted page."
+  ],
+  "worker_sha256": "13afb6b9f180e6d28b18a80a52c6b356c7f93ac7bc7ac3dafdf7a47267d0c064",
+  "comparison_code_sha256": "b21cbf8b99a1b965b23bebe10ebad08bdc0516eee3b6aaeff59583bf583d1c8c",
+  "model_manifest_sha256": "50b38feb1ddceadb8f445dfefa81489ab64cfbdbc68bb9fda46f2e221c1f389a",
+  "raw_tuning_control_note": "Previous Circular 6 feedback/exclusions are not applied in this separate raw-engine comparison."
+}
