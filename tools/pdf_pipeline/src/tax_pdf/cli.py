@@ -85,6 +85,10 @@ def main():
     dates = sub.add_parser("review-dates")
     dates.add_argument("manifest", type=Path)
     dates.add_argument("--out", type=Path, required=True)
+    structure = sub.add_parser("review-table-structure")
+    structure.add_argument("package", type=Path)
+    structure.add_argument("plan", type=Path)
+    structure.add_argument("--out", type=Path, required=True)
     content = sub.add_parser("prepare-content")
     content.add_argument("manifest", type=Path)
     content.add_argument("--date-report", type=Path, required=True)
@@ -101,7 +105,12 @@ def main():
     transfer.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "evaluate-transfer":
+        if args.command == "review-table-structure":
+            from .table_structure import write_structure_review
+
+            report = write_structure_review(args.package, args.plan, args.out)
+            print(json.dumps(report["summary"]))
+        elif args.command == "evaluate-transfer":
             from .transfer_evaluation import run_transfer
 
             report = run_transfer(
