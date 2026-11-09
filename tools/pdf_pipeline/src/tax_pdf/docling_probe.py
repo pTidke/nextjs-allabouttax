@@ -150,11 +150,100 @@ def probe(file: Path, models: Path, out: Path, start: int, end: int, language: s
     return report
 
 
+def probe_image(file: Path, models: Path, out: Path, language: str):
+    """Image-only input: no PDF, embedded text, source cells or reference enters Docling."""
+    from PIL import Image
+
+    if out.exists() or file.stat().st_size > 40 * 1024**2:
+        raise ValueError("Fresh output and a bounded PNG are required")
+    data = file.read_bytes()
+    with Image.open(io.BytesIO(data)) as image:
+        width, height = image.size
+        if (
+            image.format != "PNG"
+            or getattr(image, "n_frames", 1) != 1
+            or not 0 < width * height <= 16_000_000
+        ):
+            raise ValueError("Only a single bounded PNG may enter the image probe")
+        image.verify()
+    manifest = json.loads((models / "weights-manifest.json").read_text())
+    if (
+        language not in manifest["languages"]
+        or manifest["files"] != model_manifest(models)
+        or manifest["docling_version"] != importlib.metadata.version("docling")
+    ):
+        raise ValueError("Prepared image models/language/version do not match")
+    os.environ.update(
+        HF_HUB_OFFLINE="1",
+        HF_HUB_DISABLE_IMPLICIT_TOKEN="1",
+        TOKENIZERS_PARALLELISM="false",
+    )
+    import onnxruntime
+
+    onnxruntime.disable_telemetry_events()
+    from docling.datamodel.accelerator_options import AcceleratorOptions
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import OcrMode, PdfPipelineOptions, RapidOcrOptions
+    from docling.document_converter import DocumentConverter, ImageFormatOption
+    from docling_core.types.io import DocumentStream
+
+    options = PdfPipelineOptions(
+        artifacts_path=models,
+        enable_remote_services=False,
+        allow_external_plugins=False,
+        do_ocr=True,
+        do_table_structure=True,
+        document_timeout=180,
+        accelerator_options=AcceleratorOptions(device="cpu", num_threads=2),
+        ocr_options=RapidOcrOptions(lang=[language], backend="onnxruntime", mode=OcrMode.FULL_PAGE),
+    )
+    converter = DocumentConverter(
+        allowed_formats=[InputFormat.IMAGE],
+        format_options={InputFormat.IMAGE: ImageFormatOption(pipeline_options=options)},
+    )
+    began = time.monotonic()
+    result = converter.convert(
+        DocumentStream(name="pixels.png", stream=io.BytesIO(data)),
+        max_file_size=40 * 1024**2,
+        max_num_pages=1,
+        raises_on_error=False,
+    )
+    raw = result.document.export_to_dict()
+    report = {
+        "state": "EXPERIMENTAL_NOT_ACCEPTED",
+        "publication_eligible": False,
+        "input_kind": "PNG_PIXELS_ONLY",
+        "image_sha256": hashlib.sha256(data).hexdigest(),
+        "width": width,
+        "height": height,
+        "returned_pages": sorted(int(p) for p in raw.get("pages", {})),
+        "provider_status": str(result.status.value),
+        "language_config": language,
+        "ocr_mode": "full_page",
+        "elapsed_seconds": round(time.monotonic() - began, 2),
+        "engine_versions": {
+            p: importlib.metadata.version(p)
+            for p in ["docling", "docling-core", "rapidocr", "onnxruntime", "torch"]
+        },
+        "weights_manifest_sha256": hash_file(models / "weights-manifest.json"),
+        "limitations": [
+            "Only the configured English image OCR/table pipeline is under test.",
+            "Raw provider cells, headers, spans and order are not accepted structure.",
+            "Application remote services disabled; OS network sandbox not enforced.",
+        ],
+    }
+    out.mkdir(parents=True)
+    (out / "raw-docling.json").write_text(json.dumps(raw, ensure_ascii=False, indent=2) + "\n")
+    (out / "candidate.md").write_text(result.document.export_to_markdown(), encoding="utf8")
+    (out / "probe.json").write_text(json.dumps(report, indent=2) + "\n")
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Optional Docling CPU experiment. Never accepts or publishes documents."
     )
-    parser.add_argument("mode", choices=["prepare", "probe"])
+    parser.add_argument("mode", choices=["prepare", "probe", "image-probe"])
     parser.add_argument("--models", type=Path, required=True)
     parser.add_argument("--languages", default="en")
     parser.add_argument("--file", type=Path)
@@ -171,6 +260,10 @@ def main():
     try:
         if args.mode == "prepare":
             result = prepare(args.models.resolve(), args.languages.split(","))
+        elif args.mode == "image-probe":
+            if not args.file or not args.out:
+                raise ValueError("Image probe requires file and output directory")
+            result = probe_image(args.file, args.models.resolve(), args.out, args.languages)
         else:
             if not args.file or not args.out:
                 raise ValueError("Probe requires file and output directory")

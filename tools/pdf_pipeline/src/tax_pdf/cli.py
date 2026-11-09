@@ -89,6 +89,16 @@ def main():
     structure.add_argument("package", type=Path)
     structure.add_argument("plan", type=Path)
     structure.add_argument("--out", type=Path, required=True)
+    scan_tables = sub.add_parser("trial-scan-tables")
+    scan_tables.add_argument("manifest", type=Path)
+    scan_tables.add_argument("--plan", type=Path, required=True)
+    scan_tables.add_argument("--models", type=Path, required=True)
+    scan_tables.add_argument("--docling-models", type=Path, required=True)
+    scan_tables.add_argument("--out", type=Path, required=True)
+    saved_tables = sub.add_parser("review-scan-tables")
+    saved_tables.add_argument("trial", type=Path)
+    saved_tables.add_argument("--findings", type=Path)
+    saved_tables.add_argument("--out", type=Path, required=True)
     content = sub.add_parser("prepare-content")
     content.add_argument("manifest", type=Path)
     content.add_argument("--date-report", type=Path, required=True)
@@ -105,7 +115,17 @@ def main():
     transfer.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "review-table-structure":
+        if args.command == "trial-scan-tables":
+            from .scan_tables import run_trial
+
+            report = run_trial(args.manifest, args.plan, args.models, args.docling_models, args.out)
+            print(json.dumps(report["summary"]))
+        elif args.command == "review-scan-tables":
+            from .scan_tables import review_trial
+
+            report = review_trial(args.trial, args.out, args.findings)
+            print(json.dumps(report["summary"]))
+        elif args.command == "review-table-structure":
             from .table_structure import write_structure_review
 
             report = write_structure_review(args.package, args.plan, args.out)
