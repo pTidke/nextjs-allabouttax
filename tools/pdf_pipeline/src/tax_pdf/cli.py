@@ -11,6 +11,21 @@ def main():
         description="Local PDF laboratory. Never publishes or changes tax approvals."
     )
     sub = parser.add_subparsers(dest="command", required=True)
+    staging = sub.add_parser("validate-staging-import")
+    staging.add_argument(
+        "--registry",
+        type=Path,
+        required=True,
+        help="Operator-selected local registry, never request-supplied",
+    )
+    staging.add_argument("envelope", type=Path)
+    staging_demo = sub.add_parser("prepare-staging-demo")
+    staging_demo.add_argument("--root", type=Path, required=True)
+    staging_demo.add_argument("--history", type=Path, required=True)
+    staging_demo.add_argument("--plan", type=Path, required=True)
+    staging_demo.add_argument("--out", type=Path, required=True)
+    staging_schema = sub.add_parser("staging-schema")
+    staging_schema.add_argument("--out", type=Path, required=True)
     run = sub.add_parser("process")
     run.add_argument("file", type=Path)
     run.add_argument("--out", type=Path, default=Path("work/pdf-lab"))
@@ -122,7 +137,38 @@ def main():
     transfer.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "prepare-table-repairs":
+        if args.command == "validate-staging-import":
+            from .staging import validate_import
+            from .staging_bundle import load_registry
+
+            if args.envelope.stat().st_size > 1024**2:
+                raise ValueError("Import envelope exceeds byte budget")
+            receipt = validate_import(
+                json.loads(args.envelope.read_text()), load_registry(args.registry)
+            )
+            print(json.dumps(receipt))
+            raise SystemExit(2 if receipt["state"] == "BLOCKED" else 0)
+        elif args.command == "prepare-staging-demo":
+            from .staging_demo import prepare_demo
+
+            report = prepare_demo(args.root, args.history, args.plan, args.out)
+            print(
+                json.dumps(
+                    {
+                        "states": {
+                            key: value["state"] for key, value in report["receipts"].items()
+                        },
+                        "publication_eligible": False,
+                        "retrieval_items_created": 0,
+                    }
+                )
+            )
+        elif args.command == "staging-schema":
+            from .staging import ImportEnvelope
+
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(json.dumps(ImportEnvelope.model_json_schema(), indent=2) + "\n")
+        elif args.command == "prepare-table-repairs":
             from .repair_workspace import prepare_workspace
 
             report = prepare_workspace(args.trial, args.plan, args.out)

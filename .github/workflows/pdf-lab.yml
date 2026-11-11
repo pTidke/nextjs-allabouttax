@@ -50,5 +50,7 @@ jobs:
           diff tools/pdf_pipeline/schemas/artifact.schema.json /tmp/pdf-artifact.schema.json
           .pdf-lab-venv/bin/tax-pdf reference-schema --out /tmp/pdf-reference.schema.json
           diff tools/pdf_pipeline/schemas/reference.schema.json /tmp/pdf-reference.schema.json
+          .pdf-lab-venv/bin/tax-pdf staging-schema --out /tmp/pdf-staging-import.schema.json
+          diff tools/pdf_pipeline/schemas/staging-import.schema.json /tmp/pdf-staging-import.schema.json
       - name: Test with synthetic local PDFs only
         run: .pdf-lab-venv/bin/python -m pytest tools/pdf_pipeline/tests -q

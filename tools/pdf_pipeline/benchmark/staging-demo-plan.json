@@ -1,0 +1,35 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-11",
+  "state": "FIXED_STAGING_DEMONSTRATION_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "examples": [
+    {
+      "id": "native-page-draft",
+      "kind": "native_full_pages",
+      "run_id": "4859b7812f85-1793867951113571000",
+      "source_sha256": "4859b7812f854f48cfb0458a67294027661ca0908bd8773ac0b1f5dc4c1db099",
+      "artifact_sha256": "95530f0e0c3ee5e0b3e52e1aeba47aa159541221944df9e3e5a8f5f269c020a6",
+      "pages": [
+        1
+      ],
+      "official_url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-1-2026-pdf",
+      "reference_file": "references/notification-1-2026-p1.json",
+      "reference_sha256": "f6135eb8f43de709979a645cc39cbcc2165455668582ffec507d2068691a30ea",
+      "scope_note": "Complete native page proposed for extraction review; previously confirmed Hindi header correction retained with its feedback. No new authenticated acceptance or tax approval."
+    },
+    {
+      "id": "blank-table-draft",
+      "kind": "image_table_band",
+      "run_id": "3756112e45b5-1794261062684561000",
+      "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+      "artifact_sha256": "5134e0292623a379e81bc36f4b0770235b6ead2f346414983c4917679aa813d0",
+      "pages": [
+        5
+      ],
+      "official_url": "https://www.incometaxindia.gov.in/documents/d/guest/circular-3-2026-pdf",
+      "history_revision": "d3cf72db3ead44d1d319a5f4614fcf7ddc269a20f7e03692454f73f8fab12b11",
+      "scope_note": "Part C reconstruction with nineteen saved blank states. Raw unplaced text, table relationships and whole-document context remain held. No scope or approval expansion."
+    }
+  ]
+}

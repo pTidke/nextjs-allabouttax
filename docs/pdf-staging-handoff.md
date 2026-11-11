@@ -1,6 +1,6 @@
 # PDF lab to authenticated staging
 
-Updated 11 November 2026. Implementation design, not a deployed feature or an extraction/tax approval. The live ingestion path is unchanged.
+Updated 11 November 2026. The pure validation boundary and two isolated local demonstration imports are implemented. Authenticated review, cloud integration and retrieval handoff remain design work. The live ingestion path is unchanged.
 
 ## Current boundary
 
@@ -67,4 +67,4 @@ Staging uses separate database/object namespaces and credentials, with no produc
 
 The fresh-source four-page transfer trial is development coverage. Complete source-bound references and unseen-family scans, Hindi-body tables, genuinely image-only originals and harder scan classes remain evaluation work. Record false acceptance as well as explicit holds, critical characters separately from general transcription, table relationships separately from cell text, and correction time/cost per accepted scope. Do not report accuracy from candidate counts or raw-character accounting.
 
-Next implementation is the pure import envelope/validator and its clean/blocked fixture tests. Authentication, cloud storage, review decisions, retrieval serialization and production release follow as separate reviewable increments. This document does not authorize or implement a production migration.
+The pure import envelope/validator, operator-selected local object registry and clean/blocked fixture tests are implemented in the PDF lab. The two local demonstration receipts keep all approval flags false and create no retrieval items. Next implementation is authenticated extraction revision storage and server-side reviewer capabilities in isolated application staging; it must recheck revision parents inside its persistence transaction. Cloud storage, tax decisions, retrieval serialization and production release remain later increments. This document does not authorize or implement a production migration.
