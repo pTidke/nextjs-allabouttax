@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
-import {audit,splitCell,mergeCells,points} from '../src/tax_pdf/table_assets/repair_ops.mjs';
+import {audit,splitCell,mergeCells,points,editCell} from '../src/tax_pdf/table_assets/repair_ops.mjs';
 const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/table-repair-cases.json',import.meta.url),'utf8'));
 const examples=JSON.parse(execFileSync(process.execPath,[new URL('../src/tax_pdf/table_assets/repair_examples.mjs',import.meta.url).pathname],{input:JSON.stringify(fixture),encoding:'utf8'})).samples;
 test('prepared cases restore scoped columns without selecting or accepting an OCR engine',()=>{
@@ -43,4 +43,14 @@ test('Unicode raw fragments use code point offsets and duplicate characters are 
 });
 test('a changed transcription needs an explicit source-review note',()=>{
  const s=examples[0],d=structuredClone(s.prepared);const c=d.cells.find(c=>c.id==='amount-heading');c.text='Different source transcription';c.note='';assert.throws(()=>audit(d,s),/needs a note/);c.note='Unaccepted synthetic correction note';audit(d,s);
+});
+
+test('an explicit blank edit records its choice without requiring a repetitive typed note',()=>{
+ const s=examples[0],before=structuredClone(s.prepared),id='r4c2',original=JSON.stringify(before),c=before.cells.find(c=>c.id===id);
+ const next=editCell(before,id,{state:'blank',role:c.role,headers:c.headers,note:'  ',text:'stale disabled text'}),edited=next.cells.find(c=>c.id===id);
+ assert.equal(JSON.stringify(before),original);assert.equal(edited.state,'blank');assert.equal(edited.text,'');assert.match(edited.note,/Marked blank explicitly/);assert.deepEqual(edited.source_refs,c.source_refs);assert.deepEqual(edited.headers,c.headers);audit(next,s);
+ assert.equal(next.cells.filter(c=>c.state==='blank').length,1);assert.equal(next.owner_verified,false);assert.equal(next.publication_eligible,false);
+ const manual=editCell(before,id,{state:'blank',role:c.role,headers:c.headers,note:'Owner checked this exact source cell.',text:''});assert.equal(manual.cells.find(c=>c.id===id).note,'Owner checked this exact source cell.');
+ const transcription=editCell(before,id,{state:'transcribed',role:c.role,headers:c.headers,note:'',text:'New text'});assert.throws(()=>audit(transcription,s),/needs a note/);
+ assert.throws(()=>editCell(before,'missing',{state:'blank',role:'value',headers:[],note:'',text:''}),/Select a cell/);
 });

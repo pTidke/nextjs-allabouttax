@@ -1,6 +1,13 @@
 // Pure reconstruction operations. No OCR, inferred text or acceptance occurs here.
 const copy = value => structuredClone(value);
 export const points = text => Array.from(text);
+export function editCell(value, id, fields) {
+  const d=copy(value),c=d.cells.find(c=>c.id===id);if(!c)throw Error('Select a cell before applying an edit.');
+  c.state=fields.state;c.role=fields.role;c.headers=[...fields.headers];c.note=fields.note;
+  c.text=c.state==='transcribed'?fields.text:c.state==='blank'?'':null;
+  if(c.state==='blank'&&!c.note.trim())c.note='Marked blank explicitly using the review editor.';
+  return d;
+}
 export function audit(draft, sample) {
   const binding=v=>JSON.stringify(Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))));
   if(draft.state!=='TABLE_RECONSTRUCTION_DRAFT' || draft.publication_eligible!==false || draft.owner_verified!==false || binding(draft.binding)!==binding(sample.draft.binding)) throw Error('Wrong source revision or approval state.');

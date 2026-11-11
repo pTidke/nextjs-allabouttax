@@ -1,8 +1,8 @@
-import {audit,points,splitCell,mergeCells} from './repair_ops.mjs';
+import {audit,points,splitCell,mergeCells,editCell} from './repair_ops.mjs';
 const $=id=>document.getElementById(id), clone=structuredClone;
 let samples=[],sample,draft,active=null,selected=new Set(),undo=[],redo=[],base=null,headKnown=false,pending=null;
 const key=()=> 'aat-reconstruction-v1:'+sample.id;
-function message(text){$('status').textContent=text;}
+function message(text){$('status').textContent=text;$('editor-status').textContent=text;}
 function remember(){try{localStorage.setItem(key(),JSON.stringify(draft));return true;}catch{message('Browser storage unavailable. Download JSON or save a disk revision.');return false;}}
 function pendingFields(){if(!draft)return false;const c=draft.cells.find(c=>c.id===active);return $('reviewer').value!==draft.reviewer_name||$('scope-edit').value!==draft.scope_note||Boolean(c&&($('state').value!==c.state||$('role').value!==c.role||$('text').value!==(c.text??'')||$('note').value!==c.note||JSON.stringify([...$('headers').selectedOptions].map(o=>o.value).sort())!==JSON.stringify([...c.headers].sort())));}
 function requireApplied(){if(pendingFields())throw Error('Apply the pending cell/context edits first, or explicitly discard those form fields. They have not been saved.');}
@@ -31,7 +31,7 @@ $('picker').addEventListener('change',()=>choose(Number($('picker').value)).catc
 $('start').onclick=()=>run(()=>change(clone(sample.draft)));$('prepared').onclick=()=>run(()=>change(clone(sample.prepared)));
 $('undo').onclick=()=>run(()=>{requireApplied();if(undo.length){redo.push(clone(draft));draft=undo.pop();active=null;selected.clear();remember();render();message('Previous proposal restored. No OCR was changed.');}});
 $('redo').onclick=()=>run(()=>{requireApplied();if(redo.length){undo.push(clone(draft));draft=redo.pop();active=null;selected.clear();remember();render();}});
-$('apply').onclick=()=>run(()=>{const n=clone(draft),c=n.cells.find(c=>c.id===active);c.state=$('state').value;c.text=c.state==='transcribed'?$('text').value:c.state==='blank'?'':null;c.role=$('role').value;c.note=$('note').value;c.headers=[...$('headers').selectedOptions].map(o=>o.value);n.scope_note=$('scope-edit').value;n.reviewer_name=$('reviewer').value;change(n,true);});
+$('apply').onclick=()=>run(()=>{const id=active,state=$('state').value,n=editCell(draft,id,{state,text:$('text').value,role:$('role').value,note:$('note').value,headers:[...$('headers').selectedOptions].map(o=>o.value)});n.scope_note=$('scope-edit').value;n.reviewer_name=$('reviewer').value;change(n,true);message('Applied '+(state==='blank'?'confirmed blank':state)+' to '+id+'. Save a revision to keep it in local history.');});
 $('apply-context').onclick=()=>run(()=>{if(active&&pendingFields())throw Error('Apply the cell edit first; it also keeps the context fields.');const n=clone(draft);n.scope_note=$('scope-edit').value;n.reviewer_name=$('reviewer').value;change(n,true);});
 $('discard-edits').onclick=()=>{render();message('Unapplied form fields discarded. The current draft is unchanged.');};$('state').onchange=()=>{$('text').disabled=$('state').value!=='transcribed';};
 for(const axis of ['x','y'])$('split-'+axis).onclick=()=>run(()=>change(splitCell(draft,active,axis,Number($('split-point').value),'c-'+crypto.randomUUID())));
