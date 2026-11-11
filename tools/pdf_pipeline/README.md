@@ -496,3 +496,31 @@ The final read-only gallery is `comparisons/scanned-table-review-v3/index.html`.
 The trial permits at most four pages/eight attempts, 16-megapixel PNGs and a 1,200-second overall deadline; individual Docling attempts are killed after at most 180 seconds and Tesseract after at most 120. Provider raw output is bounded to 40 MiB. Inspection limits fifty tables, ten thousand cells per table/twenty thousand per page, twenty thousand grid positions per table and one hundred thousand expanded span claims. Oversized/invalid schematics are withheld. Saved-review evidence is capped at 500 ledger entries/300 MiB; failed attempts stay in the denominator. These are application budgets, not an OS memory/network sandbox.
 
 Next: adapt image-table **proposals** into the source-bound correction workflow, retaining unmatched positions and raw provider identities as unresolved evidence. Column/header repair needs pixel/source review rather than assumptions based on expected letter sequences or identical column counts. Preserve conditional titles, section boundaries, units and footnotes with the table. Broader unseen scanned/bilingual/faint-table validation, authenticated extraction revisions and separate tax review must precede a production retrieval handoff. The present defects prevent treating provider completion as structural acceptance.
+
+## Source-bound table reconstruction drafts
+
+The isolated correction workspace adds explicit split/merge and header-link controls for image-provider tables. A reconstruction uses its own source-page boundaries and rectangular cell anchors; the complete raw provider table remains unchanged. It binds the source PDF, artifact, render, trial, raw output and selected raw-table digest. Changed bindings, overlapping/missing grid positions, duplicated raw character spans, invalid headings and unexplained transcription changes fail validation. A confirmed blank needs an explicit source note; an unresolved position is never converted to a blank or zero.
+
+Splitting adds a source boundary or uses an existing one, updates crossing spans and clears the affected transcription/source links for review. Merging requires a tiled rectangle, retains raw links and clears the merged transcription. Downstream header links to affected anchors are cleared. Released characters return to the unplaced inventory; they are not deleted. Raw links use Unicode code-point offsets. Undo/redo, browser copies, JSON import/export and conditional append-only disk revisions preserve earlier proposals. Unapplied form edits block saving until applied or explicitly discarded. The enlarged original region and proportional, independently scrollable table support side-by-side source checks.
+
+```sh
+tools/pdf_pipeline/.venv/bin/tax-pdf prepare-table-repairs \
+  work/pdf-lab/demo-v2/benchmarks/scanned-tables-v1 \
+  --plan tools/pdf_pipeline/benchmark/table-repair-plan.json \
+  --out work/pdf-lab/demo-v2/comparisons/FRESH_TABLE_RECONSTRUCTION
+
+tools/pdf_pipeline/.venv/bin/tax-pdf check-table-repair \
+  PATH_TO_BOUND_SOURCE_PACKAGE PATH_TO_DOWNLOADED_RECONSTRUCTION.json
+
+tools/pdf_pipeline/.venv/bin/tax-pdf serve-review \
+  --root work/pdf-lab/demo-v2 \
+  --store work/pdf-lab/table-reconstruction-history.sqlite3 --port 8789
+```
+
+The example generator supports exactly two source-bound development cases, using geometry and transcriptions authored after source inspection with native grid aids. It is **not an automatic repair algorithm**. The starting views are scoped authored representations of observed defects; the complete unedited provider JSON and original PDF remain linked. The prepared investment-form proposal restores a separate Amount column and B/C labels within Part C. The complex-form proposal restores Amount/Section pairs beneath B and C within a two-row heading band. Other statutory headings, conditional titles, units/reference rows, notes, verification, shaded entry fields and complete page relationships remain unreviewed and available in the original/raw evidence.
+
+`benchmark/table-repair-run.json` records the final `comparisons/table-reconstruction-v5/index.html`, code/file bindings and all 58 verified upstream ledger entries. The two provider tables retain 79 raw cells/3,659 characters. Prepared proposals still leave 19/5 unresolved cells and 292/3,062 unplaced raw characters respectively. Those figures describe scoped evidence accounting, not OCR omissions, correctness or an accuracy score. The complex example releases extraneous linked fragments, so its unplaced count increases. No raw text is lost. Four agent-authored disk revisions (starting/prepared per example) and a verified backup remain outside Git and the served directory.
+
+All reconstructions force `TABLE_RECONSTRUCTION_DRAFT`, `owner_verified=false` and `publication_eligible=false`. Server validation checks evidence/geometry consistency; a successful save does not approve extraction or authenticate the self-reported reviewer. Source-bound regression fixtures exercise these previously inspected cases without an accepted reference, model download or production credentials. Local validation totals 285 Python tests and 14 JavaScript tests, plus lint/format and browser split/merge, undo, reload recovery, pending-edit guards and source-highlight checks.
+
+Next: collect scoped owner feedback on the two prepared repairs; extend evaluation to unseen scanned/bilingual/faint tables and full table context; then implement authenticated extraction revisions and distinct tax applicability approval in isolated staging. Unplaced/unreadable text, critical fields, footnotes and cross-page relationships need explicit treatment before any retrieval handoff. No production ingestion, chunking or embeddings change in this increment.

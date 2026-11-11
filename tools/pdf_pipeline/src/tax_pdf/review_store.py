@@ -82,6 +82,11 @@ class ReviewStore:
             raise ValueError("Unknown source revision")
         if payload.get("state") == "UNFINISHED_TABLE_REVIEW":
             model, valid = validate_progress(package, payload)
+        elif payload.get("state") == "TABLE_RECONSTRUCTION_DRAFT":
+            from .table_repair import validate_repair
+
+            model, _ = validate_repair(package, payload)
+            valid = True  # Geometry/accounting consistency only, never acceptance.
         else:
             model = validate_draft(package, payload)
             valid = True

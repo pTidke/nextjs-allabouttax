@@ -120,7 +120,7 @@ class Handler(SimpleHTTPRequestHandler):
             or (target.is_dir() and not (target / "index.html").is_file())
             or (
                 target.is_file()
-                and target.suffix not in {".html", ".css", ".js", ".json", ".png", ".pdf"}
+                and target.suffix not in {".html", ".css", ".js", ".mjs", ".json", ".png", ".pdf"}
             )
         ):
             return self.respond(404, {"error": "FILE_NOT_AVAILABLE"})

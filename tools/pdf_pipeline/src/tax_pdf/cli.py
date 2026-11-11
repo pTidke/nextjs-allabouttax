@@ -99,6 +99,13 @@ def main():
     saved_tables.add_argument("trial", type=Path)
     saved_tables.add_argument("--findings", type=Path)
     saved_tables.add_argument("--out", type=Path, required=True)
+    repairs = sub.add_parser("prepare-table-repairs")
+    repairs.add_argument("trial", type=Path)
+    repairs.add_argument("--plan", type=Path, required=True)
+    repairs.add_argument("--out", type=Path, required=True)
+    check_repair = sub.add_parser("check-table-repair")
+    check_repair.add_argument("package", type=Path)
+    check_repair.add_argument("draft", type=Path)
     content = sub.add_parser("prepare-content")
     content.add_argument("manifest", type=Path)
     content.add_argument("--date-report", type=Path, required=True)
@@ -115,7 +122,17 @@ def main():
     transfer.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "trial-scan-tables":
+        if args.command == "prepare-table-repairs":
+            from .repair_workspace import prepare_workspace
+
+            report = prepare_workspace(args.trial, args.plan, args.out)
+            print(json.dumps({"versions": len(report["summaries"]), "publication_eligible": False}))
+        elif args.command == "check-table-repair":
+            from .table_repair import validate_repair
+
+            _, accounting = validate_repair(args.package, args.draft)
+            print(json.dumps(accounting))
+        elif args.command == "trial-scan-tables":
             from .scan_tables import run_trial
 
             report = run_trial(args.manifest, args.plan, args.models, args.docling_models, args.out)

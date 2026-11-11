@@ -38,6 +38,9 @@ jobs:
           node --check tools/pdf_pipeline/ocr/worker.mjs
           node --check tools/pdf_pipeline/src/tax_pdf/table_assets/workspace.js
           node --check tools/pdf_pipeline/src/tax_pdf/table_assets/history.js
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/repair.js
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/repair_ops.mjs
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/repair_examples.mjs
           node --test tools/pdf_pipeline/tests/*.test.mjs
       - name: Check Python and canonical schema
         run: |

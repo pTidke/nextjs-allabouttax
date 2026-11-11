@@ -37,4 +37,4 @@ line-length = 100
 select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
 
 [tool.setuptools.package-data]
-tax_pdf = ["table_assets/*.html", "table_assets/*.css", "table_assets/*.js"]
+tax_pdf = ["table_assets/*.html", "table_assets/*.css", "table_assets/*.js", "table_assets/*.mjs"]

@@ -1,0 +1,140 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-11",
+  "state": "AGENT_RECONSTRUCTION_EXAMPLES_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "owner_verified": false,
+  "local_trial": "work/pdf-lab/demo-v2/benchmarks/scanned-tables-v1",
+  "local_workspace": "work/pdf-lab/demo-v2/comparisons/table-reconstruction-v5",
+  "plan_sha256": "7ab4b1793425267a9da8c7ae4447c8f5c4a44f2077047f00fe1d9f4ace8fdc21",
+  "trial_report_sha256": "6d2830ec884cb3de6075bf9aa06ba2ef2bb59c9c91e8e056f77a871e46b90959",
+  "trial_file_ledger_sha256": "4e45caff3d64a0bd4f46610b7aff9a773b44cc38eb5eb2d3bffc579badf5c323",
+  "trial_ledger_entries_verified": 58,
+  "workspace_report_sha256": "cb27163cd08be03e746faa9463ef3bb21ef964c8af41aaaf37bb68f0270fb3a7",
+  "workspace_file_ledger_sha256": "d05f35d563aeaea9919dc4124932c6a7a0d4456e01ae7910f32a977761c7d125",
+  "workspace_ledger_entries_verified": 6,
+  "fixture_sha256": "f9e8d05e66cd9320cbf68c7b21485291cddfbfa968aaf334163dca316e8638ef",
+  "code_sha256": {
+    "repair_examples.mjs": "43e5e6900649b270f45283eea10aee9df8cf9cb2aa6f30fb23e99d15693059b9",
+    "repair_ops.mjs": "0c8d610fd8bab94d6576351414f50b71c888f98f80234bb032d678e07fbfb2ab",
+    "repair.js": "c3e561ef1e23e7e77e57b64bd65f945a5ae5883e58dc017406cb71ddcb4afe77",
+    "repair.html": "bc7f5c7256e249e0846fc81497b2936d1cf7990887d904540459c15f16da3e45",
+    "repair.css": "cfb46ee536503b042f9e76477cda8f656dd768b65e2626159b3e285edeacc9aa",
+    "table_repair.py": "92735f3ff668c2d1fdb5866495473e54425291f10c602ab54e88e245bef3ed47",
+    "repair_workspace.py": "fa289e27a2d4471e74a80a876f4dd27a3c4851328d89634038d0059afcf34dcb",
+    "review_store.py": "2e4ced15ae64bd4e62179c9f55519bcb1e2133690181280f80342a2a7c459015",
+    "review_server.py": "4c4c6622798e3da46e0880e4efebb933bce348ec88059a248f27011345ce4016"
+  },
+  "summaries": [
+    {
+      "case": "3756112e45b5-p5",
+      "version": "draft",
+      "rows": 7,
+      "columns": 7,
+      "raw_characters": 544,
+      "mapped_characters": 224,
+      "unplaced_characters": 320,
+      "unresolved_cells": 21,
+      "publication_eligible": false
+    },
+    {
+      "case": "3756112e45b5-p5",
+      "version": "prepared",
+      "rows": 7,
+      "columns": 8,
+      "raw_characters": 544,
+      "mapped_characters": 252,
+      "unplaced_characters": 292,
+      "unresolved_cells": 19,
+      "publication_eligible": false
+    },
+    {
+      "case": "e228528d7afc-p6",
+      "version": "draft",
+      "rows": 2,
+      "columns": 7,
+      "raw_characters": 3115,
+      "mapped_characters": 61,
+      "unplaced_characters": 3054,
+      "unresolved_cells": 5,
+      "publication_eligible": false
+    },
+    {
+      "case": "e228528d7afc-p6",
+      "version": "prepared",
+      "rows": 2,
+      "columns": 9,
+      "raw_characters": 3115,
+      "mapped_characters": 53,
+      "unplaced_characters": 3062,
+      "unresolved_cells": 5,
+      "publication_eligible": false
+    }
+  ],
+  "scope": [
+    "Scanned investment form page 5: Part C only, restore separate Amount column, separate B/C label cells and source-bound title/row associations. Part A/B, notes, verification and blank fields remain held.",
+    "Rasterized complex form page 6: letter-label/subheading band only, restore Amount/Section under B and C. Statutory headings, conditional title, references, shaded entry cells and remaining page stay outside scope."
+  ],
+  "raw_cells_retained": 79,
+  "local_history": {
+    "revisions": [
+      {
+        "id": "d13bf33a47b7377140904eb6f926fc52d5f1bac2dcc070807afd557e0c57710d",
+        "parent_id": null,
+        "case_id": "3756112e45b5-p5",
+        "publication_eligible": false,
+        "owner_verified": false
+      },
+      {
+        "id": "21734bc8bdde22054acb656bcef82881e10765525c66000ab749283122e2946e",
+        "parent_id": "d13bf33a47b7377140904eb6f926fc52d5f1bac2dcc070807afd557e0c57710d",
+        "case_id": "3756112e45b5-p5",
+        "publication_eligible": false,
+        "owner_verified": false
+      },
+      {
+        "id": "4f67eb6d2cd4bbefb8c4d5782896896603d07d5ff5208aeb1b0a8dd6a2df4ee0",
+        "parent_id": null,
+        "case_id": "e228528d7afc-p6",
+        "publication_eligible": false,
+        "owner_verified": false
+      },
+      {
+        "id": "0e42530f08386b4ebf57f009f666e34def0d8d1ff9428c2696fbc222954fbed3",
+        "parent_id": "4f67eb6d2cd4bbefb8c4d5782896896603d07d5ff5208aeb1b0a8dd6a2df4ee0",
+        "case_id": "e228528d7afc-p6",
+        "publication_eligible": false,
+        "owner_verified": false
+      }
+    ],
+    "self_reported_author": "Agent engineering proposal — not owner verified",
+    "backup_sha256": "26157a35e11eac6e4eb7f9555a5a1c08ad5f6e7ed406617324fafa74b9a92488"
+  },
+  "validation": {
+    "python_tests_passed": 285,
+    "javascript_tests_passed": 14,
+    "python_lint_and_format": "passed",
+    "browser_checks": [
+      "Split an existing cell at a new boundary; unresolved text and source-character accounting remain explicit.",
+      "Merge a selected rectangle; Undo restores the previous proposal.",
+      "Persist starting and prepared proposals independently: two unaccepted revisions per example.",
+      "Reload and recover both prepared drafts from disk history.",
+      "Unapplied text blocks saving until explicitly applied or discarded.",
+      "Original source highlight and enlarged crop match the selected Amount/Section regions.",
+      "All source images loaded; no page-level horizontal overflow or captured browser warning/error.",
+      "Narrow source columns preserve proportions within an independently scrollable readable grid.",
+      "Verified append-only history backup outside the served directory."
+    ]
+  },
+  "limitations": [
+    "Geometry and transcriptions were authored after source inspection, with native grid aids; this is not automatic table reconstruction or independent evaluation.",
+    "Starting proposals are scoped authored representations of observed provider defects, not unedited provider tables. Complete raw provider JSON remains linked.",
+    "Both examples were previously seen and selected for known failures. No unseen-source accuracy, precision, recall or production throughput claim.",
+    "Character accounting covers selected provider table cell text only, not all document text or missing OCR. Unplaced text is preserved; a lower count does not establish correctness.",
+    "The complex example releases extraneous linked raw fragments, increasing unplaced characters from 3054 to 3062. No raw text is removed.",
+    "Prepared drafts still have 19 and 5 unresolved cells respectively. No blank entry cells are confirmed.",
+    "No owner confirmation, accepted table/reference, tax review, engine selection, OCR rerun, paid service, chunk, embedding or production change.",
+    "Local self-reported authors and revision hashes do not authenticate a reviewer. Authenticated extraction review and separate tax applicability approval remain later gates.",
+    "Earlier workspace versions remain retained. Version 1 linked a repeated row marker outside Part C; subsequent versions bind the correct source row. It was never an accepted reference."
+  ]
+}
