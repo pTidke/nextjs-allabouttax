@@ -47,3 +47,9 @@ Start with a source-backed central income-tax assistant for individuals. The aud
 ## What is not complete
 
 The entire original product is not complete. The code foundation and a bounded assistant are implemented; tax coverage, operational sign-off, large/scanned-file handling, semantic retrieval and statutory draft forms remain release work. Do not market the current corpus as answering every tax question.
+
+## PDF pipeline update — 11 November 2026
+
+The isolated lab now supports source-bound table reconstruction, explicit blank-cell edits and recoverable local revisions. Owner feedback confirms a narrow set of investment-form blanks; it does not accept the complete table or its legal meaning. A frozen four-page transfer trial on two fresh originals retained all eight image-provider attempts and found critical condition/choice-label omissions despite plausible grids. Table and script coverage, complete references and authenticated review remain open.
+
+[PDF staging handoff](pdf-staging-handoff.md) now fixes the next implementation sequence: import envelope/validator and clean/blocked fixtures, authenticated extraction review, separate tax applicability decisions, then dry-run retrieval manifests. This is a design and lab-evidence increment; the current production ingestion, database and assistant are unchanged.
