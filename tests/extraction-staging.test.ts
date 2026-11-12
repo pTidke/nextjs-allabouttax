@@ -22,6 +22,11 @@ import { createHandlers } from "../src/lib/extraction-staging/handlers";
 import { createAssetHandler } from "../src/lib/extraction-staging/assets";
 import { stagingConfig } from "../src/lib/extraction-staging/config";
 import { readObject } from "../src/lib/extraction-staging/evidence";
+import {
+  recordedTableRow,
+  reviewQueue,
+  summarizeReview,
+} from "../src/lib/extraction-staging/review-queue";
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 const ref = (s: string) => ({ object_id: s, sha256: hash(s) });
@@ -75,6 +80,67 @@ function status(code: number) {
   return (e: unknown) => e instanceof HttpError && e.status === code;
 }
 
+test("focused review preserves literal date disagreements and does not assign document flags to a crop", () => {
+  const c = fixture(),
+    block = c.regions[0];
+  c.regions = [
+    {
+      ...block,
+      id: "heading",
+      raw: "MINISTRY  OF FINANCE",
+      proposed: "MINISTRY OF FINANCE",
+    },
+    {
+      ...block,
+      id: "date",
+      raw: "31* March, 2026",
+      proposed: "31st March, 2026",
+    },
+    {
+      ...block,
+      id: "deadline",
+      raw: "05th March, 2024",
+      proposed: "05th March, 2024",
+    },
+  ];
+  const queue = reviewQueue(c);
+  assert.deepEqual(
+    queue.issues.map(({ region, kind }) => [region.id, kind]),
+    [
+      ["date", "changed"],
+      ["deadline", "key_text"],
+    ],
+  );
+  assert.equal(queue.issues[0].region.raw, "31* March, 2026");
+  assert.deepEqual(queue.documentChecks, ["CHECK_CRITICAL_CHARACTERS"]);
+  assert.equal(summarizeReview(c).status, "needs_review");
+});
+
+test("a held table keeps confirmed blanks distinct and shows only source cells from the selected row", () => {
+  const c = fixture(),
+    block = c.regions[0];
+  c.kind = "image_table_band";
+  c.state = "BLOCKED";
+  c.blockingHolds = ["TABLE_STRUCTURE_UNVERIFIED"];
+  c.regions = [
+    { ...block, id: "r4c1", raw: null, proposed: "", state: "blank" },
+    { ...block, id: "r4c2", raw: null, proposed: null, state: "unresolved" },
+    { ...block, id: "r4c3", raw: "0", proposed: "0" },
+    { ...block, id: "r5c1", raw: "Other row", proposed: "Other row" },
+  ];
+  const queue = reviewQueue(c);
+  assert.deepEqual(
+    queue.issues.map(({ region }) => region.id),
+    ["r4c2"],
+  );
+  assert.deepEqual(
+    recordedTableRow(c, c.regions[1]).map((r) => r.id),
+    ["r4c1", "r4c2", "r4c3"],
+  );
+  assert.equal(summarizeReview(c).status, "blocked");
+  assert.equal(summarizeReview(c).holdCount, 1);
+});
+
 test("isolated extraction staging persists authenticated, immutable decisions in Postgres", async (t) => {
   const pg = new PGlite();
   try {
@@ -120,7 +186,10 @@ test("isolated extraction staging persists authenticated, immutable decisions in
           "Second engineering reviewer",
           expires,
         );
-        assert.equal((await store.list("reviewer-a")).length, 1);
+        const inbox = await store.list("reviewer-a");
+        assert.equal(inbox.length, 1);
+        assert.equal(inbox[0].documentCheckCount, 1);
+        assert.equal(inbox[0].status, "needs_review");
         await assert.rejects(
           new ExtractionStore(db, "wrong-stage", async () => {}).list(
             "reviewer-a",

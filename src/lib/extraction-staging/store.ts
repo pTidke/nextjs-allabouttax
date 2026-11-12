@@ -1,4 +1,5 @@
 import { HttpError } from "../http";
+import { summarizeReview } from "./review-queue";
 import {
   digest,
   parseCommand,
@@ -123,15 +124,7 @@ export class ExtractionStore {
       const r = await sql.query(
         "SELECT * FROM extraction_staging.candidates ORDER BY created_at,id LIMIT 30",
       );
-      return r.rows.map((row) => {
-        const c = candidate(row);
-        return {
-          id: c.id,
-          title: c.title,
-          state: c.state,
-          scopeNote: c.scopeNote,
-        };
-      });
+      return r.rows.map((row) => summarizeReview(candidate(row)));
     });
   }
   async get(userId: string, id: string) {
