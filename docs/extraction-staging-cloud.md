@@ -1,6 +1,6 @@
 # Cloud staging activation
 
-Prepared 11 November 2026; Neon provisioning verified 12 November UTC. The isolated Neon databases, private bucket and evidence import are now provisioned and checked. Vercel credential configuration, preview activation and real sign-in are pending. See the [activation record](extraction-staging-activation.md) for the exact resources and remaining gates.
+Prepared 11 November 2026; cloud provisioning verified 12 November UTC. The isolated Neon databases, private bucket and evidence import are provisioned and checked. Owner-approved, branch-specific Vercel settings are applied and the staging preview deployment is READY. Google callback registration, real sign-in and hosted reviewer smoke tests remain pending. See the [activation record](extraction-staging-activation.md) for the exact resources and remaining gates.
 
 ## Prepared transfer
 

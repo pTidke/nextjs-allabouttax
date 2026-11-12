@@ -27,7 +27,7 @@ The password-free production identity is pinned to `postgresql://ep-soft-flower-
 
 The private bucket is `extraction-evidence-staging`. Provider storage metadata returned the branch-specific endpoint `https://br-small-bar-beyrd1rz.storage.c-9.us-east-2.aws.neon.tech`, region `us-east-2`, with path-style addressing. The actual ACL contains only the project owner; the provider returns `NoSuchBucketPolicy`. An anonymous request for an uploaded source object returned 403.
 
-The runtime storage credential has only `storage:read`; an attempted PutObject returned `AccessDenied` / 403. The operator uploader uses a separate credential with both `storage:read` and `storage:write`, which is necessary for its privacy checks. Operator credentials are excluded from the proposed Vercel settings. An earlier unused write-only credential is retained pending explicit revocation approval; it was not used to upload files and must not be deployed.
+The runtime storage credential has only `storage:read`; an attempted PutObject returned `AccessDenied` / 403. The operator uploader uses a separate credential with both `storage:read` and `storage:write`, which is necessary for its privacy checks. Operator credentials are excluded from the Vercel settings. An earlier unused write-only credential is retained pending explicit revocation approval; it was not used to upload files and must not be deployed.
 
 The existing operator bundle `work/pdf-staging/import-v2` passed fresh independent validation. All 17 distinct content-addressed files were uploaded and downloaded again to verify their full SHA-256 hashes. Both immutable candidates were imported through the real read-only storage adapter:
 
@@ -38,20 +38,20 @@ Both remain ineligible for publication; no retrieval items or reviewer acceptanc
 
 ## Vercel status and remaining work
 
-Team access is verified for `team_l0l8vQASn6FAKRs0G4EqAWmo` (`msptidke-6657s-projects`) and the existing `allabouttax` project (`prj_uzGa7dVRMlI9ddaE95DPFVAQ3giH`). Deployment `dpl_4fzAsQ7MMoCpUoWtxyegyCHLHG9m` is READY on commit `15165014b535ad929f6f4f17572ff6ecfd0977dd` of `codex/pdf-processing-lab`, with the review feature disabled.
+Team access is verified for `team_l0l8vQASn6FAKRs0G4EqAWmo` (`msptidke-6657s-projects`) and the existing `allabouttax` project (`prj_uzGa7dVRMlI9ddaE95DPFVAQ3giH`). Application/PDF CI and the initial Vercel preview passed on commit `e77e21e2474981b81b55e98f27afd6dcc3395710`. After the owner explicitly approved storing staging credentials in Vercel, deployment `dpl_7C1GkFz6Mkh3WSPnJVQknpuRezNv` rebuilt that same commit with the new settings and reached READY. Its target is Preview (`target=null`), with only the branch alias assigned; it was not promoted to production.
 
-The existing default preview database setting also targets production. No one should use the preview for staging sign-in until branch-specific isolation settings are applied and a new deployment is verified. The Vercel credential update was rejected by automatic approval review because destination-specific permission for these new credentials was not explicit. A read-only follow-up confirmed that no branch-specific settings were applied. Owner approval has been requested; no alternative transfer method was attempted.
+The default database setting still applies to other previews and production. This staging branch now has its own override. All 15 new settings were verified to target only Preview builds of `codex/pdf-processing-lab`; secrets use Vercel's sensitive type and other configuration uses encrypted values. Existing setting IDs, update timestamps and targets were unchanged. The operator upload key was not transferred. The original transfer rejection was resolved through the owner's explicit destination approval, without an alternative transfer method.
 
-The prepared setting set uses only the restricted database roles, read-only storage credential, a separate staging session key, environment/branch/bucket identity, and `AUTH_URL`. It targets Preview builds of `codex/pdf-processing-lab` only. Production configuration and operator upload credentials are excluded.
+The applied setting set uses only the restricted database roles, read-only storage credential, a separate staging session key, environment/branch/bucket identity, and `AUTH_URL`. Production configuration and operator upload credentials are excluded. Full hosted operation is not yet established: the automated HTTP helper could not fetch through deployment protection, and a normal browser navigation reached the Vercel login screen. Runtime-log inspection returned no entries, so that HTTP result is not evidence of application-level 401 behavior. A share-link request was rejected by automatic approval review; no change to deployment protection was made. Continue using the owner's normal Vercel sign-in rather than making this deployment public.
 
-The proposed stable staging origin is:
+The assigned stable staging origin is:
 
 `https://allabouttax-git-codex-pdf-proces-b11964-msptidke-6657s-projects.vercel.app`
 
-Its Google OAuth callback, to register only after the deployment/origin is verified, is:
+Its Google OAuth callback, now ready to register on the existing web client while preserving the production callback, is:
 
 `https://allabouttax-git-codex-pdf-proces-b11964-msptidke-6657s-projects.vercel.app/api/auth/callback/google`
 
-Remaining gates: explicit Vercel credential-transfer approval; branch-specific environment configuration and redeployment; Google callback registration; a fresh staging sign-in and expiring extraction-review grant; browser draft/reload/conflict/revocation/source-asset tests; and an isolated backup/restore drill. Production ingestion, tax applicability approval and RAG release remain later steps.
+Remaining gates: owner Vercel sign-in to the protected preview; Google callback registration; a fresh staging application sign-in and expiring extraction-review grant; browser draft/reload/conflict/revocation/source-asset tests; and an isolated backup/restore drill. Google callback instructions were sent to the owner, but registration is not yet confirmed. Production ingestion, tax applicability approval and RAG release remain later steps.
 
 No secret values are recorded in this document or Git. Temporary operator configuration is kept outside the repository in an owner-only file for this activation session; it must not be committed or treated as a durable secrets manager.
