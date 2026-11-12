@@ -368,7 +368,7 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
             </details>
           </section>
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="self-start rounded border p-4 lg:sticky lg:top-4">
+            <section className="self-start rounded border p-4 lg:sticky lg:top-24">
               <h2 className="mb-3 font-semibold">
                 Original page {region?.page}
               </h2>
