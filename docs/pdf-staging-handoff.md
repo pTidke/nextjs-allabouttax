@@ -1,6 +1,6 @@
 # PDF lab to authenticated staging
 
-Updated 11 November 2026. The pure validation boundary and two isolated local demonstration imports are implemented. Authenticated review, cloud integration and retrieval handoff remain design work. The live ingestion path is unchanged.
+Updated 11 November 2026. The pure validation boundary, two isolated local demonstration imports, authenticated review routes and immutable staging revision storage are implemented. The review application is disabled by default and has not been connected to a cloud staging database or granted to real accounts. Cloud evidence storage, tax approval and retrieval handoff remain later work. The live ingestion path is unchanged.
 
 ## Current boundary
 
@@ -20,15 +20,15 @@ The first clean scope should use the already source-reviewed Notification 1/2026
 
 ## Required records
 
-| Record | Immutable evidence / decision |
-| --- | --- |
-| Source object | Official URL and fetch time, original-byte checksum, content type, byte length, object ID and complete source-page count |
-| Extraction run | Source object ID/checksum, engine/settings/weight versions, exact raw artifact IDs/checksums, status for every source page |
+| Record              | Immutable evidence / decision                                                                                                                                                          |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source object       | Official URL and fetch time, original-byte checksum, content type, byte length, object ID and complete source-page count                                                               |
+| Extraction run      | Source object ID/checksum, engine/settings/weight versions, exact raw artifact IDs/checksums, status for every source page                                                             |
 | Extraction revision | Parent revision, selected alternatives, source polygons and literal raw spans, edited text, explicit exclusions and reasons, unresolved holds, declared scope and context dependencies |
-| Table revision | Stable cell IDs, source bounds, row/column spans, cell state, units, ordered header paths, footnotes and cross-page links; raw values and edits remain separate |
-| Extraction decision | Exact revision/scope digest, authenticated reviewer ID, decision/time/reason and a complete disposition for each required region |
-| Tax decision | Accepted extraction scope digest, legal applicability metadata, supporting source regions/dependencies, reviewer ID and decision/time/reason |
-| Release manifest | Exact extraction and tax decision IDs, approved retrieval items and citation targets, dependency digests and prior release ID for rollback |
+| Table revision      | Stable cell IDs, source bounds, row/column spans, cell state, units, ordered header paths, footnotes and cross-page links; raw values and edits remain separate                        |
+| Extraction decision | Exact revision/scope digest, authenticated reviewer ID, decision/time/reason and a complete disposition for each required region                                                       |
+| Tax decision        | Accepted extraction scope digest, legal applicability metadata, supporting source regions/dependencies, reviewer ID and decision/time/reason                                           |
+| Release manifest    | Exact extraction and tax decision IDs, approved retrieval items and citation targets, dependency digests and prior release ID for rollback                                             |
 
 Local history records may be imported as attributed historical proposals, with their original self-reported names retained. They must not be upgraded to authenticated reviewer decisions. Chat-confirmed blank cells remain narrowly attributed feedback; they do not confirm other cells, table geometry or legal meaning.
 
@@ -67,4 +67,4 @@ Staging uses separate database/object namespaces and credentials, with no produc
 
 The fresh-source four-page transfer trial is development coverage. Complete source-bound references and unseen-family scans, Hindi-body tables, genuinely image-only originals and harder scan classes remain evaluation work. Record false acceptance as well as explicit holds, critical characters separately from general transcription, table relationships separately from cell text, and correction time/cost per accepted scope. Do not report accuracy from candidate counts or raw-character accounting.
 
-The pure import envelope/validator, operator-selected local object registry and clean/blocked fixture tests are implemented in the PDF lab. The two local demonstration receipts keep all approval flags false and create no retrieval items. Next implementation is authenticated extraction revision storage and server-side reviewer capabilities in isolated application staging; it must recheck revision parents inside its persistence transaction. Cloud storage, tax decisions, retrieval serialization and production release remain later increments. This document does not authorize or implement a production migration.
+The pure import envelope/validator, operator-selected local object registry and clean/blocked fixture tests are implemented in the PDF lab. Authenticated extraction revision storage now rechecks grants, environment identity, source hashes and expected parents inside its persistence transaction. No grant is implied by `ADMIN`. The two demonstration imports keep all approval flags false and create no retrieval items; their prior local review records remain historical proposals. See [the staging review runbook](extraction-staging-review.md) for setup, tests and current limits. Cloud storage, tax decisions, retrieval serialization and production release remain later increments. This document does not authorize a production migration.
