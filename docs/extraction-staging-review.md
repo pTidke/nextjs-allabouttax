@@ -1,6 +1,6 @@
 # Isolated extraction review
 
-Implemented 11 November 2026; disabled by default. This is an extraction-review increment, not a production ingestion migration. No real reviewer grants, Neon schema changes or Vercel environment changes are part of local verification. A private Neon object adapter and budgeted operator transfer commands are now prepared; see [cloud activation](extraction-staging-cloud.md). They have not been activated against a real account.
+Implemented 11 November 2026; disabled by default. This is an extraction-review increment, not a production ingestion migration. Local verification uses no real reviewer grants or cloud changes. Subsequent isolated Neon provisioning and evidence import are recorded separately in the [activation record](extraction-staging-activation.md); Vercel activation and real reviewer sign-in remain pending. See the [cloud runbook](extraction-staging-cloud.md) for operator steps.
 
 ## What is implemented
 
