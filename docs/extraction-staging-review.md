@@ -1,6 +1,6 @@
 # Isolated extraction review
 
-Implemented 11 November 2026; disabled by default. This is an extraction-review increment, not a production ingestion migration. No real reviewer grants, Neon schema changes or Vercel environment changes are part of local verification.
+Implemented 11 November 2026; disabled by default. This is an extraction-review increment, not a production ingestion migration. No real reviewer grants, Neon schema changes or Vercel environment changes are part of local verification. A private Neon object adapter and budgeted operator transfer commands are now prepared; see [cloud activation](extraction-staging-cloud.md). They have not been activated against a real account.
 
 ## What is implemented
 
@@ -45,7 +45,7 @@ The operator adapter successfully revalidates both existing local examples: Noti
 
 `tests/extraction-staging.test.ts` runs real Postgres DDL/transactions/triggers with PGlite using synthetic principals and public engineering fixtures. It covers authorization, revocation/expiry, immutable records, concurrent/stale saves, retry identities, tampered evidence, source membership and geometry, isolated configuration, HTTP origin/body boundaries and protected downloads. The normal application test command runs it without cloud credentials. The separate Python lab continues to validate extraction scope and evidence lineage.
 
-This first review screen caps the worklist at 30 candidates, each at 1,000 regions and 100 review revisions. Evidence is limited to 100 MiB per object and 300 MiB per candidate; candidate metadata is limited to 2 MB and a review request to 128 KiB. Do not silently truncate larger sources: prepare a bounded review scope or extend pagination/retention with tests before expansion. A local private object adapter is unsuitable for multi-instance serverless hosting. Backup/restore drills, managed immutable object storage, a real staging sign-in test, tax applicability decisions, wider unseen-source extraction evaluation and a dry-run retrieval release remain outstanding.
+This first review screen caps the worklist at 30 candidates, each at 1,000 regions and 100 review revisions. Local evidence is limited to 100 MiB per object and 300 MiB per candidate; the initial cloud pilot limits each object to 4 MiB for buffered web delivery. Candidate metadata is limited to 2 MB and a review request to 128 KiB. Do not silently truncate larger sources: prepare a bounded review scope or extend pagination/delivery/retention with tests before expansion. A local private object adapter is unsuitable for multi-instance serverless hosting. Backup/restore drills, cloud activation and retention controls, a real staging sign-in test, tax applicability decisions, wider unseen-source extraction evaluation and a dry-run retrieval release remain outstanding.
 
 ## Next increment
 

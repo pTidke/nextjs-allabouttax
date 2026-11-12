@@ -1,27 +1,94 @@
-import "dotenv/config";
+import "./env";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { Pool } from "pg";
 import { stagingConfig } from "../src/lib/extraction-staging/config";
 import { database } from "../src/lib/extraction-staging/runtime";
 import { ExtractionStore } from "../src/lib/extraction-staging/store";
-import { verifyEvidence } from "../src/lib/extraction-staging/evidence";
+import { evidenceReader } from "../src/lib/extraction-staging/objects";
 import { candidateFromBundle } from "../src/lib/extraction-staging/import-bundle";
+import { prepareBundle } from "../src/lib/extraction-staging/bundle-plan";
+import { uploadCandidates } from "../src/lib/extraction-staging/upload";
 async function main() {
-  const [action, ...args] = process.argv.slice(2),
-    config = stagingConfig();
-  if (!config)
-    throw new Error(
-      "Explicitly enable and configure the isolated staging environment first.",
-    );
+  const [action, ...args] = process.argv.slice(2);
   const options = new Map<string, string>();
   for (let i = 0; i < args.length; i += 2) {
     if (!args[i].startsWith("--") || !args[i + 1])
       throw new Error("Use named arguments with values.");
+    if (options.has(args[i])) throw new Error("Duplicate operator argument.");
     options.set(args[i], args[i + 1]);
   }
+  const python =
+    process.env.EXTRACTION_STAGING_PYTHON ||
+    path.resolve("tools/pdf_pipeline/.venv/bin/python");
+  if (action === "plan" || action === "upload") {
+    const bundle = options.get("--bundle");
+    if (!bundle) throw new Error("Select an operator bundle.");
+    const prepared = await prepareBundle(
+      bundle,
+      python,
+      options.has("--max-bytes")
+        ? Number(options.get("--max-bytes"))
+        : undefined,
+    );
+    const report = {
+      scopes: prepared.candidates.map((c) => ({
+        id: c.id,
+        state: c.state,
+        regions: c.regions.length,
+        blanks: c.regions.filter((r) => r.state === "blank").length,
+        blockingHolds: c.blockingHolds,
+      })),
+      ...prepared.plan,
+      cloudActivated: false,
+    };
+    if (action === "plan") {
+      console.log(JSON.stringify(report, null, 2));
+      return;
+    }
+    const config = stagingConfig();
+    if (
+      !config ||
+      config.objects.kind !== "neon-s3" ||
+      options.get("--confirm-environment") !== config.environmentId
+    )
+      throw new Error(
+        "Confirm the exact isolated Neon environment before uploading.",
+      );
+    const accessKeyId = process.env.EXTRACTION_STAGING_UPLOAD_ACCESS_KEY_ID,
+      secretAccessKey = process.env.EXTRACTION_STAGING_UPLOAD_SECRET_ACCESS_KEY;
+    if (
+      !accessKeyId ||
+      !secretAccessKey ||
+      accessKeyId === config.objects.accessKeyId
+    )
+      throw new Error(
+        "Use separate operator upload credentials, never the runtime read credential.",
+      );
+    const { readObject } =
+      await import("../src/lib/extraction-staging/evidence");
+    const result = await uploadCandidates(
+      { ...config.objects, accessKeyId, secretAccessKey },
+      prepared.candidates,
+      (ref) => readObject(prepared.root, ref),
+      prepared.plan.maxBytes,
+    );
+    console.log(
+      JSON.stringify(
+        { ...report, ...result, uploadedToStaging: true },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+  const config = stagingConfig();
+  if (!config)
+    throw new Error(
+      "Explicitly enable and configure the isolated staging environment first.",
+    );
   if (!["init", "import", "grant", "revoke"].includes(action))
-    throw new Error("Choose init, import, grant or revoke.");
+    throw new Error("Choose plan, upload, init, import, grant or revoke.");
   const pool = new Pool({
     connectionString: config.databaseUrl,
     max: 1,
@@ -29,8 +96,9 @@ async function main() {
   });
   try {
     const db = database(pool),
+      reader = evidenceReader(config.objects),
       store = new ExtractionStore(db, config.environmentId, (c) =>
-        verifyEvidence(config.objectRoot, c),
+        reader.verify(c),
       );
     if (action === "init") {
       if (options.get("--confirm-isolated") !== config.environmentId)
@@ -63,8 +131,9 @@ async function main() {
       const bundle = options.get("--bundle");
       if (
         !bundle ||
-        path.resolve(bundle, "registry", "objects") !==
-          path.resolve(config.objectRoot)
+        (config.objects.kind === "local" &&
+          path.resolve(bundle, "registry", "objects") !==
+            path.resolve(config.objects.root))
       )
         throw new Error(
           "The bundle must match the configured staging object root.",

@@ -1,6 +1,5 @@
 import { createAssetHandler } from "@/lib/extraction-staging/assets";
 import { stagingRuntime } from "@/lib/extraction-staging/runtime";
-import { readObject } from "@/lib/extraction-staging/evidence";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const get = createAssetHandler({
@@ -11,7 +10,7 @@ const get = createAssetHandler({
     return session?.user?.id ? { id: session.user.id } : null;
   },
   store: () => stagingRuntime().store,
-  readEvidence: (ref) => readObject(stagingRuntime().objectRoot, ref),
+  readEvidence: (ref) => stagingRuntime().readEvidence(ref),
 });
 export async function GET(
   _request: Request,
