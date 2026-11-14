@@ -54,8 +54,11 @@ export function stagingRuntime() {
   configured = {
     key,
     readEvidence: (ref) => reader.read(ref),
-    store: new ExtractionStore(database(pool), config.environmentId, (c) =>
-      reader.verify(c),
+    store: new ExtractionStore(
+      database(pool),
+      config.environmentId,
+      (c) => reader.verify(c),
+      process.env.EXTRACTION_OCR_REPAIR_ENABLED === "true",
     ),
   };
   return configured;

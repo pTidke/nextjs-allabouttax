@@ -5,6 +5,7 @@ export type Dependencies = {
   enabled: () => boolean;
   principal: () => Promise<Reviewer | null>;
   store: () => ExtractionStore;
+  startRepair?: (requestId: string) => Promise<void>;
 };
 const headers = {
   "Cache-Control": "no-store",
@@ -49,7 +50,25 @@ export function createHandlers(deps: Dependencies) {
         sameOrigin(request);
         const id = await user(),
           body = await readJson(request, 128 * 1024);
-        return deps.store().save(id, body);
+        const result = await deps.store().save(id, body);
+        if (
+          deps.startRepair &&
+          result.revision.command.action === "REQUEST_CHANGES" &&
+          result.revision.id === result.headRevision &&
+          result.summary.repairStatus === "QUEUED"
+        ) {
+          try {
+            await deps.startRepair(result.revision.id);
+          } catch {
+            // Keep the committed report and let the client retry the same
+            // save identity if dispatch is temporarily unavailable.
+            throw new HttpError(
+              503,
+              "Your report is saved. Retry to start the background repair.",
+            );
+          }
+        }
+        return result;
       }),
   };
 }

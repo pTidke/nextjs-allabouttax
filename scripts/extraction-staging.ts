@@ -113,9 +113,14 @@ async function main() {
         "tools/extraction-staging/tax-review.sql",
         "utf8",
       );
+      const ocrRepairSchema = await readFile(
+        "tools/extraction-staging/ocr-repair.sql",
+        "utf8",
+      );
       await db.transaction(async (sql) => {
         await sql.query(schema);
         await sql.query(taxReviewSchema);
+        await sql.query(ocrRepairSchema);
         await sql.query(
           "INSERT INTO extraction_staging.environment(singleton,environment_id) VALUES(true,$1) ON CONFLICT DO NOTHING",
           [config.environmentId],

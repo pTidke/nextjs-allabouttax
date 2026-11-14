@@ -1,0 +1,35 @@
+# All About Tax — project status
+
+Updated 2026-11-14. Read this first when resuming work. Use the linked runbooks for implementation details and update this file when a deployment, review outcome, or next step changes.
+
+## Current flow
+
+**Live assistant** — Sign in → choose FY, AY or TY → ask a question → search the approved central income-tax library → answer with official citations. The assistant flags questions with insufficient evidence.
+
+**Staging document review** — Official PDF → extract text and tables → review OCR against the original → fix flagged issues → recheck the changes → tax applicability review. The hosted preview currently uses operator repairs. The handoff from staging tax review to the live library is future work.
+
+## Live product
+
+- The live site runs on Vercel with Google sign-in, Neon PostgreSQL and Azure OpenAI deployment `gpt-5.6-luna`. The Neon cutover preserved eight existing accounts and the administrator role. The owner confirmed sign-in and a cited answer about Tax Year 2026–27 from the Income Tax Department FAQ. [Live site](https://www.allabouttax.in/) · [Deployment and activation record](docs/deployment.md)
+- The app has period-specific retrieval, citations, coverage at `/library`, private history/export/deletion at `/chats`, and a usage limit. The admin can monitor sources, queue an official URL, refresh source listings, save review drafts, and publish reviewed evidence at `/admin/knowledge`. Existing production ingestion handles HTML and text PDFs. [Tax knowledge foundation](docs/tax-foundation.md)
+- GitHub Actions checks the CBDT circular and notification listings and the Income Tax Department guidance source. The worker supports manual runs and uses a six-hour cron. Successful automatic runs are now confirmed. An independent missed-run alert is still pending. [November 14 scheduled run](https://github.com/pTidke/nextjs-allabouttax/actions/runs/43625115160)
+- Coverage is limited to reviewed central income-tax material. A broader reviewed library, historical and amendment relationships, evaluations, backup/restore drills, GST coverage, and statutory form drafts and filing remain open. [Release plan](docs/release-plan.md)
+
+## PDF extraction and staging
+
+- The isolated Python lab prefers usable PDF text and compares OCR outputs when needed. It has English/Hindi experiments with Tesseract and EasyOCR, and retains the original PDF, page render, source boxes, raw outputs and revisions. Benchmarks cover rotated scans, bleed-through, signatures, date fragments, broken text encoding, name fields, tables, spanning headers, form rows and confirmed blanks. The review samples include Circulars 2/2024, 15/2025 and several 2026 circulars, Notification 1/2026, Form 49A and an ITR-2 manual. The benchmark records preserve the scope of each confirmed correction. [Lab and benchmark history](tools/pdf_pipeline/README.md)
+- Staging runs on the protected Vercel preview for `codex/pdf-processing-lab`. It uses separate Neon auth and review databases, private evidence storage, verified Google sign-in and expiring reviewer access. The deployment at `78fa16d` was verified ready. [Staging setup](docs/extraction-staging-activation.md)
+- The extraction inbox shows flagged areas beside the PDF, offers one-click review choices with auto-advance, saves drafts and records source-linked correction requests. A corrected version returns as **Ready to recheck** with a focused list of the changes. The reviewer verifies them and accepts the extraction when its required scope checks pass. [Extraction inbox](https://allabouttax-git-codex-pdf-proces-b11964-msptidke-6657s-projects.vercel.app/staging/extraction) · [Current repair workflow](docs/extraction-repair-workflow.md)
+- Tax review checks the instrument and status, who is covered, dates and periods, and supporting source lines. An assigned tax reviewer can save a draft, request changes or accept. Each decision is tied to the accepted extraction version. The owner's staging access is for extraction review and viewing the tax screen. Vedant has the same extraction access plus permission to record tax decisions through November 26, 2026 UTC. His initial sign-in is unverified, and the Vercel preview has its own access gate. [Tax review screen](https://allabouttax-git-codex-pdf-proces-b11964-msptidke-6657s-projects.vercel.app/staging/tax-review) · [Pilot guide](docs/staging-tax-review-pilot.md)
+- **Notification No. 1/2026 (S.O. 44(E))** has an accepted extraction and is ready for Vedant's first tax review. No tax decision was recorded at the November 14 database check.
+- **Circular No. 3/2026** has a saved recheck draft. The repaired scope carries forward 19 confirmed blanks on page 5 and the structured code tables on page 6. The 37 changed regions were checked in the saved review. Acceptance is still blocked by the partial table scope and outstanding context checks.
+
+## OCR correction pilot
+
+The first implementation is in the workspace. **Report an issue → background repair → Ready to recheck** now runs in the staging integration tests. A worker sends source image crops and earlier readings to Azure, validates proposed text, and returns a new extraction for human review. The pilot handles up to four specific text line reports per request. Uncertain readings and layout or table issues go to manual repair.
+
+Azure matched three previously reviewed fields in a live probe: the date and identifier on Circular 2/2024 and the Hindi header on Notification 1/2026. The observed requests each took under three seconds. This was a small provider check with public source crops.
+
+Next, apply the staging migration, run the worker on an always-on host, and verify a real correction request through the protected preview. Track false corrections, unresolved cases, turnaround and cost on a larger benchmark before adding table repairs or choosing whether to run targeted OCR again for each case. [Worker and activation guide](docs/extraction-repair-workflow.md)
+
+In parallel, have Vedant try one real tax review and record where the screen slows him down. After the two review steps work on real documents, test a staging retrieval manifest with exact citations, dates and all qualifications before adding a production adapter. Draft filing remains a separate milestone.

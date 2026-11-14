@@ -1,5 +1,7 @@
 import { HttpError } from "../http";
+import { randomUUID } from "node:crypto";
 import { repairReview, summarizeReview } from "./review-queue";
+import { repairTargets, type RepairStatus } from "./ocr-repair-scope";
 import {
   digest,
   parseCommand,
@@ -34,6 +36,12 @@ export type SavedRevision = {
   requestHash: string;
   serverStamp: string;
   command: Command;
+};
+export type RepairJob = {
+  requestId: string;
+  candidateId: string;
+  lease: string;
+  attempts: number;
 };
 function revision(row: Row): SavedRevision {
   const v = {
@@ -88,6 +96,7 @@ export class ExtractionStore {
     readonly db: Database,
     readonly environmentId: string,
     readonly verifyEvidence: (value: Candidate) => Promise<void>,
+    readonly autoRepair = false,
   ) {}
   private async environment(sql: Sql) {
     const r = await sql.query(
@@ -195,6 +204,7 @@ export class ExtractionStore {
       await this.reviewer(sql, actor);
       const r = await sql.query(
         `SELECT c.*, h.action AS head_action, d.action AS decision_action
+           ${this.autoRepair ? ", job.status AS repair_status" : ""}
          FROM extraction_staging.candidates c
          LEFT JOIN extraction_staging.heads head ON head.candidate_id=c.id
          LEFT JOIN extraction_staging.revisions h ON h.id=head.revision_id
@@ -206,8 +216,9 @@ export class ExtractionStore {
              JOIN trail t ON r.id=t.parent_id
              WHERE t.action='SAVE_DRAFT' AND t.depth < 100 AND r.candidate_id=c.id
            )
-           SELECT action FROM trail WHERE action <> 'SAVE_DRAFT' LIMIT 1
+           SELECT id, action FROM trail WHERE action <> 'SAVE_DRAFT' LIMIT 1
          ) d ON h.action='SAVE_DRAFT'
+         ${this.autoRepair ? "LEFT JOIN extraction_staging.ocr_repair_jobs job ON job.request_id=COALESCE(d.id,h.id)" : ""}
          WHERE NOT EXISTS (
            SELECT 1 FROM extraction_staging.candidates next
            WHERE next.payload->'repair'->>'replacesCandidateId'=c.id
@@ -221,6 +232,7 @@ export class ExtractionStore {
             (row.head_action ?? undefined) as Command["action"] | undefined,
             (row.decision_action ?? undefined) as Command["action"] | undefined,
           ),
+          (row.repair_status as RepairStatus | undefined) ?? null,
         ),
       );
     });
@@ -239,7 +251,11 @@ export class ExtractionStore {
       history,
       replacementId,
       repair,
-      summary: summarizeReview(c, latestDecision(history.revisions)),
+      summary: summarizeReview(
+        c,
+        latestDecision(history.revisions),
+        await this.repairStatus(this.db, history.revisions),
+      ),
       publicationEligible: false,
       taxApproved: false,
       retrievalItemsCreated: 0,
@@ -294,7 +310,11 @@ export class ExtractionStore {
           return {
             revision: old,
             headRevision: history.headRevision,
-            summary: summarizeReview(c, latestDecision(history.revisions)),
+            summary: summarizeReview(
+              c,
+              latestDecision(history.revisions),
+              await this.repairStatus(sql, history.revisions),
+            ),
             publicationEligible: false,
             taxApproved: false,
             retrievalItemsCreated: 0,
@@ -358,12 +378,24 @@ export class ExtractionStore {
           "INSERT INTO extraction_staging.heads(candidate_id,revision_id) VALUES($1,$2) ON CONFLICT(candidate_id) DO UPDATE SET revision_id=excluded.revision_id",
           [c.id, saved.id],
         );
+        if (this.autoRepair && command.action === "REQUEST_CHANGES") {
+          await sql.query(
+            "INSERT INTO extraction_staging.ocr_repair_jobs(request_id,candidate_id,status) VALUES($1,$2,$3)",
+            [
+              saved.id,
+              c.id,
+              repairTargets(c, command).length ? "QUEUED" : "NEEDS_OPERATOR",
+            ],
+          );
+        }
+        const revisions = [saved, ...history.revisions];
         return {
           revision: saved,
           headRevision: saved.id,
           summary: summarizeReview(
             c,
-            latestDecision([saved, ...history.revisions]),
+            latestDecision(revisions),
+            await this.repairStatus(sql, revisions),
           ),
           publicationEligible: false,
           taxApproved: false,
@@ -380,6 +412,18 @@ export class ExtractionStore {
       throw new Error("Source verification was not applied.");
     return accepted;
   }
+  private async repairStatus(sql: Sql, revisions: SavedRevision[]) {
+    const request = revisions.find((r) => r.command.action !== "SAVE_DRAFT");
+    if (!this.autoRepair || request?.command.action !== "REQUEST_CHANGES")
+      return null;
+    const {
+      rows: [row],
+    } = await sql.query(
+      "SELECT status FROM extraction_staging.ocr_repair_jobs WHERE request_id=$1",
+      [request.id],
+    );
+    return (row?.status as RepairStatus | undefined) ?? null;
+  }
   private async replacementId(sql: Sql, id: string) {
     const {
       rows: [row],
@@ -389,62 +433,171 @@ export class ExtractionStore {
     );
     return row?.id;
   }
-  // Operator methods are never exposed by an HTTP handler.
+  async claimRepair(requestId?: string): Promise<RepairJob | null> {
+    if (!this.autoRepair) throw new Error("OCR repair is disabled.");
+    return this.db.transaction(async (sql) => {
+      await this.environment(sql);
+      await sql.query(
+        "UPDATE extraction_staging.ocr_repair_jobs SET status='FAILED',failure_code='LEASE_EXPIRED',lease_id=NULL,lease_until=NULL WHERE status='PROCESSING' AND lease_until <= now() AND attempts=3",
+      );
+      const lease = randomUUID();
+      const {
+        rows: [row],
+      } = await sql.query(
+        `WITH next AS (
+          SELECT request_id FROM extraction_staging.ocr_repair_jobs
+          WHERE ($2::text IS NULL OR request_id=$2)
+            AND ((status='QUEUED' AND available_at <= now())
+              OR (status='PROCESSING' AND lease_until <= now() AND attempts < 3))
+          ORDER BY available_at,request_id FOR UPDATE SKIP LOCKED LIMIT 1
+        )
+        UPDATE extraction_staging.ocr_repair_jobs job
+        SET status='PROCESSING',attempts=attempts+1,lease_id=$1,lease_until=now()+interval '5 minutes',failure_code=NULL
+        FROM next WHERE job.request_id=next.request_id
+        RETURNING job.request_id,job.candidate_id,job.attempts`,
+        [lease, requestId ?? null],
+      );
+      return row
+        ? {
+            requestId: String(row.request_id),
+            candidateId: String(row.candidate_id),
+            attempts: Number(row.attempts),
+            lease,
+          }
+        : null;
+    });
+  }
+  async repairPending(requestId: string) {
+    const { rows } = await this.db.query(
+      "SELECT 1 FROM extraction_staging.ocr_repair_jobs WHERE request_id=$1 AND status IN ('QUEUED','PROCESSING')",
+      [requestId],
+    );
+    return rows.length > 0;
+  }
+  private async validLease(sql: Sql, job: RepairJob) {
+    const { rows } = await sql.query(
+      "SELECT 1 FROM extraction_staging.ocr_repair_jobs WHERE request_id=$1 AND candidate_id=$2 AND lease_id=$3 AND status='PROCESSING' AND lease_until>clock_timestamp() FOR UPDATE",
+      [job.requestId, job.candidateId, job.lease],
+    );
+    return rows.length === 1;
+  }
+  async repairInput(job: RepairJob) {
+    return this.db.transaction(async (sql) => {
+      await this.environment(sql);
+      const c = await this.bound(sql, job.candidateId, true);
+      if (
+        !(await this.validLease(sql, job)) ||
+        (await this.replacementId(sql, c.id))
+      )
+        return null;
+      const { revisions } = await this.history(sql, c.id);
+      const request = revisions.find((r) => r.command.action !== "SAVE_DRAFT");
+      if (
+        request?.id !== job.requestId ||
+        request.command.action !== "REQUEST_CHANGES"
+      )
+        return null;
+      return { candidate: c, request: request.command };
+    });
+  }
+  async endRepair(
+    job: RepairJob,
+    status: "QUEUED" | "NEEDS_OPERATOR" | "FAILED" | "SUPERSEDED",
+    code: string,
+  ) {
+    await this.db.transaction(async (sql) => {
+      await this.environment(sql);
+      if (!(await this.validLease(sql, job))) return;
+      await sql.query(
+        `UPDATE extraction_staging.ocr_repair_jobs
+         SET status=$2,failure_code=$3,lease_id=NULL,lease_until=NULL,
+             available_at=now()+(attempts * interval '1 minute')
+         WHERE request_id=$1`,
+        [job.requestId, status, code],
+      );
+    });
+  }
+  async completeRepair(job: RepairJob, value: Candidate, model: string) {
+    const c = validateCandidate(value);
+    if (
+      c.repair?.requestRevisionId !== job.requestId ||
+      c.repair.replacesCandidateId !== job.candidateId
+    )
+      throw new Error("Repair does not belong to this job.");
+    await this.verifyEvidence(c);
+    return this.db.transaction(async (sql) => {
+      await this.environment(sql);
+      await this.candidateLock(sql, job.candidateId);
+      if (!(await this.validLease(sql, job))) return false;
+      await this.registerCandidate(sql, c);
+      await sql.query(
+        `UPDATE extraction_staging.ocr_repair_jobs
+         SET status='READY',lease_id=NULL,lease_until=NULL,failure_code=NULL,result_id=$2,model=$3
+         WHERE request_id=$1`,
+        [job.requestId, c.id, model],
+      );
+      return true;
+    });
+  }
+  // Candidate registration stays in operator and worker processes.
   async register(value: Candidate) {
     const c = validateCandidate(value);
     await this.verifyEvidence(c);
     return this.db.transaction(async (sql) => {
       await this.environment(sql);
       if (c.repair) await this.candidateLock(sql, c.repair.replacesCandidateId);
-      await this.candidateLock(sql, c.id);
-      const existing = await sql.query(
-        "SELECT * FROM extraction_staging.candidates WHERE id=$1",
-        [c.id],
-      );
-      if (existing.rows[0]) {
-        if (digest(candidate(existing.rows[0])) !== digest(c))
-          throw new HttpError(409, "Existing import has different evidence.");
-        return c.id;
-      }
-      if (c.repair) {
-        const previous = await this.bound(sql, c.repair.replacesCandidateId);
-        const history = await this.history(sql, previous.id);
-        const request = history.revisions.find(
-          (entry) => entry.command.action !== "SAVE_DRAFT",
-        );
-        if (
-          request?.id !== c.repair.requestRevisionId ||
-          request.command.action !== "REQUEST_CHANGES"
-        )
-          throw new HttpError(
-            409,
-            "The repair must answer the latest saved correction request.",
-          );
-        if (
-          c.sourceId !== previous.sourceId ||
-          c.sourceHash !== previous.sourceHash ||
-          c.kind !== previous.kind ||
-          c.revisionHash === previous.revisionHash ||
-          previous.regions.some(
-            (region) => !c.regions.some((next) => next.page === region.page),
-          )
-        )
-          throw new HttpError(
-            409,
-            "A repair needs a new extraction of the same source and reviewed pages.",
-          );
-        if (await this.replacementId(sql, previous.id))
-          throw new HttpError(
-            409,
-            "A repaired version already answers this request.",
-          );
-      }
-      await sql.query(
-        "INSERT INTO extraction_staging.candidates(id,payload,payload_hash) VALUES($1,$2::jsonb,$3)",
-        [c.id, JSON.stringify(c), digest(c)],
-      );
-      return c.id;
+      return this.registerCandidate(sql, c);
     });
+  }
+  private async registerCandidate(sql: Sql, c: Candidate) {
+    await this.candidateLock(sql, c.id);
+    const existing = await sql.query(
+      "SELECT * FROM extraction_staging.candidates WHERE id=$1",
+      [c.id],
+    );
+    if (existing.rows[0]) {
+      if (digest(candidate(existing.rows[0])) !== digest(c))
+        throw new HttpError(409, "Existing import has different evidence.");
+      return c.id;
+    }
+    if (c.repair) {
+      const previous = await this.bound(sql, c.repair.replacesCandidateId);
+      const history = await this.history(sql, previous.id);
+      const request = history.revisions.find(
+        (entry) => entry.command.action !== "SAVE_DRAFT",
+      );
+      if (
+        request?.id !== c.repair.requestRevisionId ||
+        request.command.action !== "REQUEST_CHANGES"
+      )
+        throw new HttpError(
+          409,
+          "The repair must answer the latest saved correction request.",
+        );
+      if (
+        c.sourceId !== previous.sourceId ||
+        c.sourceHash !== previous.sourceHash ||
+        c.kind !== previous.kind ||
+        c.revisionHash === previous.revisionHash ||
+        previous.regions.some(
+          (region) => !c.regions.some((next) => next.page === region.page),
+        )
+      )
+        throw new HttpError(
+          409,
+          "A repair needs a new extraction of the same source and reviewed pages.",
+        );
+      if (await this.replacementId(sql, previous.id))
+        throw new HttpError(
+          409,
+          "A repaired version already answers this request.",
+        );
+    }
+    await sql.query(
+      "INSERT INTO extraction_staging.candidates(id,payload,payload_hash) VALUES($1,$2::jsonb,$3)",
+      [c.id, JSON.stringify(c), digest(c)],
+    );
+    return c.id;
   }
   async capability(
     userId: string,

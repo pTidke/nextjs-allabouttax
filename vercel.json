@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "src/app/staging/extraction/page.tsx": { "regions": ["cle1"] },
-    "src/app/api/staging/extraction/**/route.ts": { "regions": ["cle1"] }
+    "src/app/api/staging/extraction/**/route.ts": { "regions": ["cle1"] },
+    "src/app/api/queues/extraction-ocr/route.ts": {
+      "regions": ["cle1"],
+      "experimentalTriggers": [
+        { "type": "queue/v2beta", "topic": "extraction-ocr-repair-preview" }
+      ]
+    }
   }
 }

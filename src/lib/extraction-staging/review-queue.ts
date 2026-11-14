@@ -1,4 +1,5 @@
 import type { Candidate, Command, Region, ReportedIssue } from "./contract";
+import type { RepairStatus } from "./ocr-repair-scope";
 
 type IssueKind = "unresolved" | "changed" | "key_text";
 const reasons: Record<IssueKind, string> = {
@@ -56,6 +57,7 @@ export function reviewQueue(candidate: Candidate) {
 export function summarizeReview(
   candidate: Candidate,
   action?: Command["action"],
+  repairStatus: RepairStatus | null = null,
 ) {
   const queue = reviewQueue(candidate);
   const blocked =
@@ -79,6 +81,8 @@ export function summarizeReview(
     issueCount: queue.issues.length,
     documentCheckCount: queue.documentChecks.length,
     holdCount: queue.blockingHolds.length,
+    repairStatus,
+    replacesCandidateId: candidate.repair?.replacesCandidateId ?? null,
   };
 }
 

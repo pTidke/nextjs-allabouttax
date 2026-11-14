@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type {
   Candidate,
   Command,
@@ -45,6 +45,23 @@ const statusLabel = {
   accepted: "Extraction accepted",
 };
 const statusPriority = { recheck: 0, needs_review: 1, blocked: 2, accepted: 3 };
+const repairLabel = {
+  QUEUED: "Repair queued",
+  PROCESSING: "Checking source image",
+  NEEDS_OPERATOR: "Needs a manual repair",
+  FAILED: "Automatic repair failed",
+};
+function inboxStatus(item: Summary) {
+  switch (item.repairStatus) {
+    case "QUEUED":
+    case "PROCESSING":
+    case "NEEDS_OPERATOR":
+    case "FAILED":
+      return repairLabel[item.repairStatus];
+    default:
+      return statusLabel[item.status];
+  }
+}
 const issueLabel = {
   unresolved: "Needs reading",
   changed: "Compare readings",
@@ -104,6 +121,31 @@ export default function ExtractionPanel({
   drafts: Summary[];
 }) {
   const [inbox, setInbox] = useState(drafts);
+  const repairPending = inbox.some(
+    (item) =>
+      item.repairStatus === "QUEUED" || item.repairStatus === "PROCESSING",
+  );
+  useEffect(() => {
+    if (!repairPending) return;
+    let active = true;
+    let fetching = false;
+    const poll = setInterval(async () => {
+      if (fetching || document.visibilityState !== "visible") return;
+      fetching = true;
+      try {
+        const result = await request("/api/staging/extraction");
+        if (active) setInbox(result.candidates);
+      } catch {
+        // Keep the last known inbox and try again on the next poll.
+      } finally {
+        fetching = false;
+      }
+    }, 20_000);
+    return () => {
+      active = false;
+      clearInterval(poll);
+    };
+  }, [repairPending]);
   const [refreshing, setRefreshing] = useState(false);
   const items = [...inbox].sort(
     (a, b) => statusPriority[a.status] - statusPriority[b.status],
@@ -454,7 +496,9 @@ export default function ExtractionPanel({
         action === "ACCEPT_EXTRACTION"
           ? "Extraction review recorded for this exact scope. Tax approval is still pending."
           : action === "REQUEST_CHANGES"
-            ? "Issue report saved. The inbox will show Needs repair until a corrected version is available."
+            ? result.summary.repairStatus === "QUEUED"
+              ? "Issue report saved. The repair will run in the background."
+              : "Issue report saved. Check its repair status in the inbox."
             : "Review revision saved with your signed-in identity.",
       );
     } catch (e) {
@@ -499,7 +543,10 @@ export default function ExtractionPanel({
     render = c?.renders.find((p) => p.page === region?.page),
     asset = (id: string) =>
       "/api/staging/extraction/" + c!.id + "/objects/" + id;
-  const historical = !!detail?.replacementId;
+  const replacementId =
+    detail?.replacementId ??
+    inbox.find((item) => item.replacesCandidateId === c?.id)?.id;
+  const historical = !!replacementId;
   const editable = !historical && detail?.summary.status !== "accepted";
   const latestRequest = detail?.history.revisions.find(
     (entry) => entry.command.action === "REQUEST_CHANGES",
@@ -616,7 +663,7 @@ export default function ExtractionPanel({
     c?.state === "AWAITING_EXTRACTION_REVIEW" &&
     c.kind === "native_full_pages" &&
     !c.blockingHolds.length &&
-    !detail?.replacementId;
+    !replacementId;
   const acceptanceMessage = !canAccept
     ? c?.blockingHolds.length
       ? `Acceptance is blocked by ${c.blockingHolds.length} extraction holds. Save your findings or request corrections. A repaired extraction is needed.`
@@ -722,7 +769,7 @@ export default function ExtractionPanel({
                   <span className="ml-2 text-sm">Opening…</span>
                 )}
                 <span className="block text-sm">
-                  {statusLabel[x.status]}
+                  {inboxStatus(x)}
                   {x.status === "needs_review" &&
                     x.issueCount > 0 &&
                     ` · ${x.issueCount} flagged regions`}
@@ -748,7 +795,9 @@ export default function ExtractionPanel({
             <p className="mb-1 text-sm font-medium text-emerald-800">
               {historical
                 ? "Previous extraction"
-                : statusLabel[detail.summary.status]}
+                : inboxStatus(
+                    inbox.find((item) => item.id === c.id) ?? detail.summary,
+                  )}
             </p>
             <h2 className="font-semibold">{c.title}</h2>
             {historical && (
@@ -756,7 +805,7 @@ export default function ExtractionPanel({
                 type="button"
                 disabled={busy}
                 className="mt-2 rounded bg-emerald-700 px-3 py-2 text-white"
-                onClick={() => load(detail.replacementId!)}
+                onClick={() => replacementId && load(replacementId)}
               >
                 Open corrected version
               </button>

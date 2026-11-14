@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
+import sharp from "sharp";
+import { runRepairJob } from "../src/lib/extraction-staging/ocr-repair-worker";
 import { HttpError } from "../src/lib/http";
 import {
   digest,
@@ -199,6 +201,9 @@ test("isolated extraction staging persists authenticated, immutable decisions in
     await pg.exec(
       await readFile("tools/extraction-staging/tax-review.sql", "utf8"),
     );
+    await pg.exec(
+      await readFile("tools/extraction-staging/ocr-repair.sql", "utf8"),
+    );
     await pg.query(
       "INSERT INTO extraction_staging.environment(environment_id) VALUES($1)",
       ["test-stage"],
@@ -250,6 +255,162 @@ test("isolated extraction staging persists authenticated, immutable decisions in
           ),
           /Wrong staging/,
         );
+      },
+    );
+    await t.test(
+      "automated OCR repairs preserve source evidence and return only current verified-scope proposals",
+      async () => {
+        const pilot = new ExtractionStore(
+          db,
+          "test-stage",
+          async () => {},
+          true,
+        );
+        const document = fixture("ocr-pilot");
+        const image = await sharp({
+          create: {
+            width: 1200,
+            height: 1600,
+            channels: 3,
+            background: "white",
+          },
+        })
+          .png()
+          .toBuffer();
+        await pilot.register(document);
+        await pilot.capability("ocr-reviewer", "GRANT", "OCR pilot", expires);
+        const report = command(document, {
+          action: "REQUEST_CHANGES",
+          issues: [
+            {
+              page: 1,
+              regionId: "p1-b1",
+              description: "Check the printed ordinal.",
+            },
+          ],
+        });
+        const dispatched: string[] = [];
+        const handler = createHandlers({
+          enabled: () => true,
+          principal: async () => ({ id: "ocr-reviewer" }),
+          store: () => pilot,
+          startRepair: async (id) => {
+            dispatched.push(id);
+            if (dispatched.length === 1) throw new Error("Queue unavailable");
+          },
+        });
+        const sendReport = () =>
+          handler.POST(
+            new Request("http://localhost/api/staging/extraction", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Origin: new URL(process.env.AUTH_URL || "http://localhost")
+                  .origin,
+              },
+              body: JSON.stringify(report),
+            }),
+          );
+        assert.equal((await sendReport()).status, 503);
+        const retryResponse = await sendReport();
+        assert.equal(retryResponse.status, 200);
+        const first = (await retryResponse.json()) as Awaited<
+          ReturnType<typeof pilot.save>
+        >;
+        assert.deepEqual(dispatched, [first.revision.id, first.revision.id]);
+        const retry = await pilot.save("ocr-reviewer", report);
+        assert.equal(first.revision.id, retry.revision.id);
+        assert.equal(first.summary.repairStatus, "QUEUED");
+        assert.equal(
+          await pilot.claimRepair(hash("unrelated correction request")),
+          null,
+        );
+        assert.equal(
+          (await pilot.list("ocr-reviewer")).find((d) => d.id === document.id)
+            ?.repairStatus,
+          "QUEUED",
+        );
+        const worker = (
+          propose: Parameters<typeof runRepairJob>[2]["propose"],
+        ) =>
+          runRepairJob(
+            pilot,
+            async (ref) => {
+              assert.deepEqual(ref, document.renders[0].object);
+              return image;
+            },
+            { model: "fixture", propose },
+          );
+        assert.equal(
+          await worker(async () => ({ decision: "uncertain", text: null })),
+          "NEEDS_OPERATOR",
+        );
+        assert.equal(
+          (await pilot.get("ocr-reviewer", document.id)).summary.repairStatus,
+          "NEEDS_OPERATOR",
+        );
+        const second = await pilot.save("ocr-reviewer", {
+          ...report,
+          requestId: randomUUID(),
+          parentRevision: first.revision.id,
+        });
+        let newer: string;
+        assert.equal(
+          await worker(async ({ image: crop, target }) => {
+            assert.deepEqual(target, {
+              left: 20,
+              top: 20,
+              width: 180,
+              height: 60,
+            });
+            assert.equal((await sharp(crop).metadata()).width, 260);
+            assert.equal(await pilot.claimRepair(), null);
+            const saved = await pilot.save("ocr-reviewer", {
+              ...report,
+              requestId: randomUUID(),
+              parentRevision: second.revision.id,
+            });
+            newer = saved.revision.id;
+            return { decision: "replace", text: "28th" };
+          }),
+          "SUPERSEDED",
+        );
+        assert.equal(
+          (await pilot.get("ocr-reviewer", document.id)).replacementId,
+          null,
+        );
+        assert.equal(
+          await worker(async () => ({ decision: "replace", text: "28th" })),
+          "READY",
+        );
+        const original = await pilot.get("ocr-reviewer", document.id);
+        assert.ok(original.replacementId);
+        const repaired = await pilot.get(
+          "ocr-reviewer",
+          original.replacementId,
+        );
+        assert.equal(repaired.summary.status, "recheck");
+        assert.equal(repaired.candidate.regions[0].proposed, "28th");
+        assert.equal(repaired.candidate.regions[0].raw, "29th");
+        assert.deepEqual(repaired.candidate.evidence, document.evidence);
+        assert.equal(repaired.candidate.repair?.requestRevisionId, newer!);
+        assert.equal(repaired.taxApproved, false);
+        assert.equal(await pilot.claimRepair(), null);
+        const unsupported = await pilot.save(
+          "ocr-reviewer",
+          command(repaired.candidate, {
+            action: "REQUEST_CHANGES",
+            issues: [
+              {
+                page: 1,
+                regionId: null,
+                description: "Check the page layout.",
+              },
+            ],
+          }),
+        );
+        assert.equal(unsupported.summary.repairStatus, "NEEDS_OPERATOR");
+        assert.equal(await pilot.claimRepair(), null);
       },
     );
     await t.test(
@@ -877,9 +1038,14 @@ test("isolated extraction staging persists authenticated, immutable decisions in
             }),
           );
           assert.equal(saved.revision.actorId, "reviewer-a");
-          assert.equal((await loadTaxReview(store, { id: "reviewer-a" })).canWrite, false);
+          assert.equal(
+            (await loadTaxReview(store, { id: "reviewer-a" })).canWrite,
+            false,
+          );
           await assert.rejects(
-            pg.query("UPDATE extraction_staging.tax_reviewers SET expires_at=now()"),
+            pg.query(
+              "UPDATE extraction_staging.tax_reviewers SET expires_at=now()",
+            ),
             /permission denied/,
           );
           await assert.rejects(
