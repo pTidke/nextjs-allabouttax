@@ -44,6 +44,23 @@ function candidate(row: Row) {
     throw new Error("Candidate integrity failed.");
   return data;
 }
+function reviewHistory(head: string | null, rows: Row[]) {
+  if (rows.length > 100) throw new Error("Review history exceeds budget.");
+  const records = rows.map(revision),
+    byId = new Map(records.map((r) => [r.id, r])),
+    ordered: SavedRevision[] = [];
+  let next = head;
+  while (next) {
+    const item = byId.get(next);
+    if (!item || ordered.some((r) => r.id === item.id))
+      throw new Error("Invalid review chain.");
+    ordered.push(item);
+    next = item.parentRevision;
+  }
+  if (ordered.length !== records.length)
+    throw new Error("Orphaned or rolled-back review history.");
+  return { headRevision: head, revisions: ordered };
+}
 export class ExtractionStore {
   constructor(
     readonly db: Database,
@@ -100,23 +117,54 @@ export class ExtractionStore {
       "SELECT * FROM extraction_staging.revisions WHERE candidate_id=$1 ORDER BY created_at DESC,id LIMIT 101",
       [id],
     );
-    if (rows.rows.length > 100)
-      throw new Error("Review history exceeds budget.");
-    const records = rows.rows.map(revision),
-      byId = new Map(records.map((r) => [r.id, r])),
-      ordered: SavedRevision[] = [];
-    const head = h.rows[0] ? String(h.rows[0].revision_id) : null;
-    let next = head;
-    while (next) {
-      const item = byId.get(next);
-      if (!item || ordered.some((r) => r.id === item.id))
-        throw new Error("Invalid review chain.");
-      ordered.push(item);
-      next = item.parentRevision;
-    }
-    if (ordered.length !== records.length)
-      throw new Error("Orphaned or rolled-back review history.");
-    return { headRevision: head, revisions: ordered };
+    return reviewHistory(
+      h.rows[0] ? String(h.rows[0].revision_id) : null,
+      rows.rows,
+    );
+  }
+  private async readCandidate(
+    userId: string,
+    id: string,
+    includeHistory: boolean,
+  ) {
+    if (!userId || userId.length > 200)
+      throw new HttpError(401, "Sign in first.");
+    // One statement gives the grant, candidate, and review chain a consistent
+    // snapshot without waiting for the locks used by review writes.
+    const {
+      rows: [row],
+    } = await this.db.query(
+      `WITH access AS (
+         SELECT environment_id, EXISTS (
+           SELECT 1 FROM extraction_staging.capabilities
+           WHERE user_id=$1 AND capability='EXTRACTION_REVIEW'
+             AND revoked_at IS NULL AND expires_at>now()
+         ) AS granted
+         FROM extraction_staging.environment WHERE singleton=true
+       )
+       SELECT access.*, c.id, c.payload, c.payload_hash,
+         CASE WHEN $3::boolean THEN (
+           SELECT revision_id FROM extraction_staging.heads WHERE candidate_id=c.id
+         ) END AS head_revision,
+         CASE WHEN $3::boolean THEN (
+           SELECT COALESCE(jsonb_agg(to_jsonb(r)), '[]'::jsonb) FROM (
+             SELECT * FROM extraction_staging.revisions WHERE candidate_id=c.id
+             ORDER BY created_at DESC,id LIMIT 101
+           ) r
+         ) END AS revisions
+       FROM access LEFT JOIN extraction_staging.candidates c
+         ON c.id=$2 AND access.granted AND access.environment_id=$4`,
+      [userId, id, includeHistory, this.environmentId],
+    );
+    if (row?.environment_id !== this.environmentId)
+      throw new Error("Wrong staging environment.");
+    if (row.granted !== true)
+      throw new HttpError(
+        403,
+        "Extraction reviewer access has not been granted.",
+      );
+    if (!row.id) throw new HttpError(404, "Extraction draft not found.");
+    return row;
   }
   async list(userId: string) {
     return this.db.transaction(async (sql) => {
@@ -128,31 +176,26 @@ export class ExtractionStore {
     });
   }
   async get(userId: string, id: string) {
-    return this.db.transaction(async (sql) => {
-      await this.reviewer(sql, userId);
-      const c = await this.bound(sql, id, true);
-      return {
-        candidate: c,
-        history: await this.history(sql, id),
-        publicationEligible: false,
-        taxApproved: false,
-        retrievalItemsCreated: 0,
-      };
-    });
+    const row = await this.readCandidate(userId, id, true);
+    return {
+      candidate: candidate(row),
+      history: reviewHistory(
+        row.head_revision as string | null,
+        row.revisions as Row[],
+      ),
+      publicationEligible: false,
+      taxApproved: false,
+      retrievalItemsCreated: 0,
+    };
   }
   async sourceObject(userId: string, id: string, objectId: string) {
-    return this.db.transaction(async (sql) => {
-      await this.reviewer(sql, userId);
-      const c = await this.bound(sql, id);
-      if (c.original.object_id === objectId)
-        return { ref: c.original, pdf: true };
-      const render = c.renders.find(
-        (page) => page.object.object_id === objectId,
-      );
-      if (!render)
-        throw new HttpError(404, "Evidence not available for this draft.");
-      return { ref: render.object, pdf: false };
-    });
+    const c = candidate(await this.readCandidate(userId, id, false));
+    if (c.original.object_id === objectId)
+      return { ref: c.original, pdf: true };
+    const render = c.renders.find((page) => page.object.object_id === objectId);
+    if (!render)
+      throw new HttpError(404, "Evidence not available for this draft.");
+    return { ref: render.object, pdf: false };
   }
   async save(userId: string, input: unknown) {
     const command = parseCommand(input);

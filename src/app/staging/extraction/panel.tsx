@@ -99,14 +99,19 @@ export default function ExtractionPanel({
     [fields, setFields] = useState<Fields>(empty),
     [parent, setParent] = useState<string | null>(null),
     [selected, setSelected] = useState<string | null>(null),
+    [lastResult, setLastResult] = useState<string | null>(null),
     [message, setMessage] = useState(
       drafts.length
         ? "Choose a draft to review."
         : "No drafts have been imported into staging.",
     ),
-    [operation, setOperation] = useState<"opening" | Command["action"] | null>(
-      null,
-    ),
+    [operation, setOperation] = useState<Command["action"] | null>(null),
+    [openingId, setOpeningId] = useState<string | null>(null),
+    [sourceStatus, setSourceStatus] = useState<{
+      url: string;
+      loaded: boolean;
+    } | null>(null),
+    [sourceAttempt, setSourceAttempt] = useState(0),
     [dirty, setDirty] = useState(false),
     [cacheOk, setCacheOk] = useState(true),
     [showAll, setShowAll] = useState(false),
@@ -115,7 +120,7 @@ export default function ExtractionPanel({
     [filter, setFilter] = useState<Summary["status"] | "all">("all"),
     [lastOpened, setLastOpened] = useState<string | null>(null);
   const pending = useRef<{ signature: string; requestId: string } | null>(null);
-  const busy = operation !== null;
+  const busy = operation !== null || openingId !== null;
   const key = detail
     ? "extraction-review:" + viewerId + ":" + detail.candidate.id
     : null;
@@ -151,6 +156,12 @@ export default function ExtractionPanel({
     }
   }
   function select(regionId: string | null, all = showAll) {
+    const regions = detail?.candidate.regions;
+    if (
+      regions?.find((item) => item.id === regionId)?.page !==
+      regions?.find((item) => item.id === selected)?.page
+    )
+      setSourceStatus(null);
     setSelected(regionId);
     setShowAll(all);
     setShowRow(false);
@@ -190,8 +201,7 @@ export default function ExtractionPanel({
       )
     )
       return;
-    setOperation("opening");
-    setMessage("Opening review…");
+    setOpeningId(id);
     try {
       const next: Detail = await request(
         "/api/staging/extraction?candidateId=" + id,
@@ -265,7 +275,9 @@ export default function ExtractionPanel({
           // The current form still comes from the server. Do not overwrite it with an old backup.
         }
       }
+      if (id !== detail?.candidate.id) setSourceStatus(null);
       setDetail(next);
+      setLastResult(null);
       setFields(form);
       setParent(base);
       const queue = reviewQueue(next.candidate);
@@ -281,13 +293,14 @@ export default function ExtractionPanel({
           region.id === restore?.regionId &&
           (all || queue.issues.some((issue) => issue.region.id === region.id)),
       );
+      const regions = all
+        ? next.candidate.regions
+        : queue.issues.map((issue) => issue.region);
+      const checked = new Set(form.checks.map((entry) => entry.regionId));
       const nextRegion =
         restored?.id ??
-        queue.issues.find(
-          (issue) =>
-            !form.checks.some((check) => check.regionId === issue.region.id),
-        )?.region.id ??
-        queue.issues[0]?.region.id ??
+        regions.find((item) => !checked.has(item.id))?.id ??
+        regions[0]?.id ??
         next.candidate.regions[0]?.id ??
         null;
       setSelected(nextRegion);
@@ -307,7 +320,7 @@ export default function ExtractionPanel({
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Could not load the draft.");
     } finally {
-      setOperation(null);
+      setOpeningId(null);
     }
   }
   function update(change: Partial<Fields>) {
@@ -316,7 +329,7 @@ export default function ExtractionPanel({
     setDirty(true);
     backup(next, parent);
   }
-  function check(regionId: string, state: CheckState | "") {
+  function check(regionId: string, state: CheckState | null) {
     update({
       checks: [
         ...fields.checks.filter((c) => c.regionId !== regionId),
@@ -431,15 +444,19 @@ export default function ExtractionPanel({
     render = c?.renders.find((p) => p.page === region?.page),
     asset = (id: string) =>
       "/api/staging/extraction/" + c!.id + "/objects/" + id;
-  const issueIndex =
-    queue?.issues.findIndex((item) => item.region.id === selected) ?? -1;
-  const issue = queue?.issues[issueIndex];
+  const issue = queue?.issues.find((item) => item.region.id === selected);
+  const flaggedRegions = queue?.issues.map((item) => item.region) ?? [];
+  const reviewRegions = showAll ? (c?.regions ?? []) : flaggedRegions;
+  const activeIndex = reviewRegions.findIndex((item) => item.id === selected);
+  const activeRegion = reviewRegions[activeIndex];
+  const sourceUrl = render ? asset(render.object.object_id) : null;
+  const sourceReady = sourceStatus?.url === sourceUrl && sourceStatus?.loaded;
   const checkByRegion = new Map(
     fields.checks.map((entry) => [entry.regionId, entry.state]),
   );
-  const decided =
-    queue?.issues.filter((item) => checkByRegion.has(item.region.id)).length ??
-    0;
+  const decided = reviewRegions.filter((item) =>
+    checkByRegion.has(item.id),
+  ).length;
   const row = c && region ? recordedTableRow(c, region) : [];
   const boxes =
     showRow && row.length > 1
@@ -463,25 +480,45 @@ export default function ExtractionPanel({
         }
       : null;
   function decide(state: CheckState) {
-    if (!issue || !queue) return;
-    check(issue.region.id, state);
+    if (!activeRegion || !sourceReady) return;
+    check(activeRegion.id, state);
+    setLastResult(`${activeRegion.id} · ${checkLabels[state]}`);
     const following = [
-      ...queue.issues.slice(issueIndex + 1),
-      ...queue.issues.slice(0, issueIndex),
-    ].find((item) => !checkByRegion.has(item.region.id));
-    if (following) select(following.region.id);
+      ...reviewRegions.slice(activeIndex + 1),
+      ...reviewRegions.slice(0, activeIndex),
+    ].find((item) => !checkByRegion.has(item.id));
+    if (following) select(following.id);
   }
-  const ready =
-    !!c &&
-    c.state === "AWAITING_EXTRACTION_REVIEW" &&
+  function toggleReviewMode() {
+    if (!c) return;
+    const regions = showAll ? flaggedRegions : c.regions;
+    const next = regions.find((item) => !checkByRegion.has(item.id));
+    const current = regions.find((item) => item.id === selected);
+    select(
+      next?.id ?? current?.id ?? regions[0]?.id ?? c.regions[0]?.id ?? null,
+      !showAll,
+    );
+  }
+  const canAccept =
+    c?.state === "AWAITING_EXTRACTION_REVIEW" &&
     c.kind === "native_full_pages" &&
-    !c.blockingHolds.length &&
-    fields.checks.length === c.regions.length &&
-    fields.checks.every((x) => x.state === "checked") &&
-    fields.readingOrderChecked &&
-    fields.contextChecked &&
-    fields.criticalCharactersChecked &&
-    !!fields.note.trim();
+    !c.blockingHolds.length;
+  const acceptanceMessage = !canAccept
+    ? c?.blockingHolds.length
+      ? `Acceptance is blocked by ${c.blockingHolds.length} extraction holds. Save your findings or request corrections. A repaired extraction is needed.`
+      : "This scope is available for review findings only."
+    : fields.checks.length !== c.regions.length ||
+        c.regions.some((item) => !checkByRegion.has(item.id))
+      ? "Review the remaining regions to continue."
+      : fields.checks.some((entry) => entry.state !== "checked")
+        ? "Acceptance requires every region to match the source. Request corrections for any differences."
+        : !fields.readingOrderChecked ||
+            !fields.contextChecked ||
+            !fields.criticalCharactersChecked
+          ? "Complete the whole-scope checks to continue."
+          : !fields.note.trim()
+            ? "Add a decision reason to continue."
+            : null;
   return (
     <main className="mx-auto max-w-7xl space-y-6 px-6 py-10 text-slate-900">
       <header>
@@ -530,8 +567,9 @@ export default function ExtractionPanel({
             .map((x) => (
               <button
                 key={x.id}
-                disabled={busy}
+                disabled={busy || c?.id === x.id}
                 aria-pressed={c?.id === x.id}
+                aria-busy={openingId === x.id}
                 onClick={() => load(x.id)}
                 className={
                   "rounded border p-3 text-left " +
@@ -539,6 +577,9 @@ export default function ExtractionPanel({
                 }
               >
                 <strong>{x.title}</strong>
+                {openingId === x.id && (
+                  <span className="ml-2 text-sm">Opening…</span>
+                )}
                 <span className="block text-sm">
                   {statusLabel[x.status]} · {x.issueCount} flagged regions
                   {x.documentCheckCount
@@ -557,6 +598,11 @@ export default function ExtractionPanel({
             </p>
           )}
       </nav>
+      {openingId && (
+        <p role="status" className="rounded bg-slate-100 p-3">
+          Opening {items.find((item) => item.id === openingId)?.title}…
+        </p>
+      )}
       {c && (
         <>
           <section className="rounded border bg-slate-50 p-4">
@@ -624,50 +670,62 @@ export default function ExtractionPanel({
                     {region.id}. Open the complete page to check surrounding
                     context.
                   </p>
-                  <div
-                    className="relative overflow-hidden border"
-                    style={{
-                      aspectRatio:
-                        (crop.right - crop.x) / (crop.bottom - crop.y),
-                    }}
+                  <svg
+                    role="img"
+                    aria-label={"Source crop for " + region.id}
+                    className="block h-auto w-full overflow-hidden border"
+                    width={crop.right - crop.x}
+                    height={crop.bottom - crop.y}
+                    viewBox={`${crop.x} ${crop.y} ${crop.right - crop.x} ${crop.bottom - crop.y}`}
                   >
-                    <Image
-                      src={asset(render.object.object_id)}
-                      alt={"Source crop for " + region.id}
+                    <image
+                      key={sourceUrl + ":" + sourceAttempt}
+                      href={sourceUrl ?? undefined}
                       width={render.width}
                       height={render.height}
-                      unoptimized
-                      className="absolute h-auto"
-                      style={{
-                        maxWidth: "none",
-                        width:
-                          (100 * render.width) / (crop.right - crop.x) + "%",
-                        left: (-100 * crop.x) / (crop.right - crop.x) + "%",
-                        top: (-100 * crop.y) / (crop.bottom - crop.y) + "%",
-                      }}
+                      onLoad={() =>
+                        sourceUrl &&
+                        setSourceStatus({ url: sourceUrl, loaded: true })
+                      }
+                      onError={() =>
+                        sourceUrl &&
+                        setSourceStatus({ url: sourceUrl, loaded: false })
+                      }
                     />
-                    <div
-                      className="pointer-events-none absolute border-2 border-amber-600 bg-amber-200/20"
-                      style={{
-                        left:
-                          (100 * (region.box.x0 - crop.x)) /
-                            (crop.right - crop.x) +
-                          "%",
-                        top:
-                          (100 * (region.box.top - crop.y)) /
-                            (crop.bottom - crop.y) +
-                          "%",
-                        width:
-                          (100 * (region.box.x1 - region.box.x0)) /
-                            (crop.right - crop.x) +
-                          "%",
-                        height:
-                          (100 * (region.box.bottom - region.box.top)) /
-                            (crop.bottom - crop.y) +
-                          "%",
-                      }}
-                    />
-                  </div>
+                    {sourceReady && (
+                      <rect
+                        x={region.box.x0}
+                        y={region.box.top}
+                        width={region.box.x1 - region.box.x0}
+                        height={region.box.bottom - region.box.top}
+                        className="fill-amber-200/20 stroke-amber-600"
+                        strokeWidth={2}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    )}
+                  </svg>
+                  {!sourceReady && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                      <p role="status">
+                        {sourceStatus?.url === sourceUrl
+                          ? "The source image could not be loaded."
+                          : "Loading source image…"}
+                      </p>
+                      {sourceStatus?.url === sourceUrl && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          className="rounded border px-2 py-1"
+                          onClick={() => {
+                            setSourceStatus(null);
+                            setSourceAttempt((attempt) => attempt + 1);
+                          }}
+                        >
+                          Retry source image
+                        </button>
+                      )}
+                    </div>
+                  )}
                   {row.length > 1 && (
                     <button
                       type="button"
@@ -737,245 +795,177 @@ export default function ExtractionPanel({
                 <button
                   className="rounded border px-3 py-2 text-sm"
                   disabled={busy}
-                  onClick={() =>
-                    select(
-                      showAll && !issue
-                        ? (queue?.issues[0]?.region.id ?? selected)
-                        : selected,
-                      !showAll,
-                    )
-                  }
+                  onClick={toggleReviewMode}
                 >
                   {showAll
                     ? "Show flagged evidence"
                     : "Open full source review"}
                 </button>
               </div>
-              {!showAll && queue && (
-                <div className="space-y-3 rounded border p-4">
-                  <p aria-live="polite" className="text-sm text-slate-600">
-                    {decided} of {queue.issues.length} flagged regions have a
-                    review result.
-                    {queue.documentChecks.length > 0 &&
-                      " Check the document-level warnings above as well."}
-                  </p>
-                  {issue ? (
-                    <>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <label className="text-sm">
-                          Flagged region{" "}
-                          <select
-                            className="rounded border p-2"
-                            disabled={busy}
-                            value={issue.region.id}
-                            onChange={(e) => select(e.target.value)}
-                          >
-                            {queue.issues.map(({ region: item, kind }) => (
-                              <option key={item.id} value={item.id}>
-                                {item.id} · page {item.page} ·{" "}
-                                {issueLabel[kind]}
-                                {checkByRegion.has(item.id)
-                                  ? " (result recorded)"
-                                  : ""}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button
-                          className="rounded border px-2 py-1.5 text-sm"
-                          disabled={busy || issueIndex <= 0}
-                          onClick={() =>
-                            select(queue.issues[issueIndex - 1].region.id)
-                          }
-                        >
-                          Previous issue
-                        </button>
-                        <button
-                          className="rounded border px-2 py-1.5 text-sm"
-                          disabled={
-                            busy || issueIndex >= queue.issues.length - 1
-                          }
-                          onClick={() =>
-                            select(queue.issues[issueIndex + 1].region.id)
-                          }
-                        >
-                          Next issue
-                        </button>
-                      </div>
-                      <p className="text-sm font-medium">{issue.reason}</p>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <div className="min-w-0 rounded bg-slate-50 p-3">
-                          <p className="text-xs font-semibold">
-                            Proposed transcription
-                          </p>
-                          <p className="whitespace-pre-wrap break-words">
-                            {issue.region.proposed?.trim()
-                              ? issue.region.proposed
-                              : "[unresolved]"}
-                          </p>
-                        </div>
-                        <div className="min-w-0 rounded bg-slate-50 p-3">
-                          <p className="text-xs font-semibold">
-                            Raw extraction
-                          </p>
-                          <p className="whitespace-pre-wrap break-words">
-                            {issue.region.raw ?? "[no raw transcription]"}
-                          </p>
-                        </div>
-                      </div>
-                      {issue.region.note && (
-                        <p className="text-sm text-slate-600">
-                          {issue.region.note}
-                        </p>
-                      )}
-                      <div
-                        className="flex flex-wrap gap-2"
-                        aria-label="Result for this region"
-                      >
-                        {(
-                          Object.entries(checkLabels) as [CheckState, string][]
-                        ).map(([state, label]) => (
-                          <button
-                            key={state}
-                            disabled={busy}
-                            aria-pressed={
-                              checkByRegion.get(issue.region.id) === state
-                            }
-                            className={
-                              "rounded border px-3 py-2 text-sm " +
-                              (checkByRegion.get(issue.region.id) === state
-                                ? "border-emerald-600 bg-emerald-50"
-                                : "")
-                            }
-                            onClick={() => decide(state)}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-xs text-slate-600">
-                        Choose a result to move to the next unreviewed issue.
-                        Include the region ID in your notes if a correction is
-                        needed.
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-sm">
-                      No individual regions were flagged. Inspect the original
-                      and use the full source review to check the scope.
-                    </p>
-                  )}
-                </div>
-              )}
-              {showAll && (
-                <>
-                  <h2 className="font-semibold">Source-bound regions</h2>
-                  <p className="text-sm text-slate-600">
-                    Choose a region to see its position on the original. Record
-                    differences rather than guessing. Corrections must return
-                    through the validated extraction path.
-                  </p>
-                  <button
-                    disabled={busy}
-                    className="rounded border px-3 py-2"
-                    onClick={() =>
-                      update({
-                        checks: c.regions.map((r) => ({
-                          regionId: r.id,
-                          state: checkByRegion.get(r.id) ?? "checked",
-                        })),
-                      })
-                    }
-                  >
-                    I checked all remaining regions against the original
-                  </button>
-                  <div className="max-h-[32rem] space-y-3 overflow-auto">
-                    {c.regions.map((r) => (
-                      <article
-                        key={r.id}
-                        className={
-                          "rounded border p-3 " +
-                          (selected === r.id
-                            ? "border-emerald-600 bg-emerald-50"
-                            : "")
+              <div className="space-y-3 rounded border p-4">
+                <p aria-live="polite" className="text-sm text-slate-600">
+                  {decided} of {reviewRegions.length}{" "}
+                  {showAll ? "regions" : "flagged regions"} reviewed.
+                  {activeRegion &&
+                    ` Viewing ${activeRegion.id}, page ${activeRegion.page}.`}
+                </p>
+                <p role="status" className="min-h-5 text-sm text-slate-600">
+                  {lastResult ? `Recorded in draft: ${lastResult}` : ""}
+                </p>
+                {activeRegion ? (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        className="rounded border px-2 py-1.5 text-sm disabled:opacity-50"
+                        disabled={busy || activeIndex <= 0}
+                        onClick={() =>
+                          select(reviewRegions[activeIndex - 1].id)
                         }
                       >
-                        <button
-                          className="text-left text-sm font-semibold underline"
-                          onClick={() => select(r.id)}
-                        >
-                          {r.id} · page {r.page}
-                        </button>
-                        <p className="whitespace-pre-wrap">
-                          {r.state === "blank"
-                            ? "[confirmed blank]"
-                            : (r.proposed ?? "[unresolved]")}
-                        </p>
-                        {r.note && (
-                          <p className="text-xs text-slate-600">{r.note}</p>
-                        )}
-                        <details>
-                          <summary className="text-xs">
-                            Raw extracted text
-                          </summary>
-                          <p className="whitespace-pre-wrap text-sm">
-                            {r.raw ?? "[no raw transcription]"}
-                          </p>
-                        </details>
-                        <label className="mt-2 block text-sm">
-                          Source check for {r.id}
-                          <select
-                            disabled={busy}
-                            className="ml-2 rounded border p-1"
-                            value={
-                              fields.checks.find((x) => x.regionId === r.id)
-                                ?.state ?? ""
-                            }
-                            onChange={(e) =>
-                              check(r.id, e.target.value as CheckState | "")
-                            }
-                          >
-                            <option value="">Not checked</option>
-                            <option value="checked">Matches source</option>
-                            <option value="needs_changes">
-                              Needs correction
-                            </option>
-                            <option value="unreadable">Cannot verify</option>
-                          </select>
-                        </label>
-                      </article>
-                    ))}
-                  </div>
-                  <fieldset className="space-y-2 rounded border p-4">
-                    <legend>Whole-scope source checks</legend>
-                    {(
-                      [
-                        [
-                          "readingOrderChecked",
-                          "Reading order and heading relationships are correct",
-                        ],
-                        [
-                          "contextChecked",
-                          "Required qualifications, context and footnotes are included",
-                        ],
-                        [
-                          "criticalCharactersChecked",
-                          "Numbers, dates, names, identifiers and negations match",
-                        ],
-                      ] as const
-                    ).map(([key, label]) => (
-                      <label key={key} className="block">
-                        <input
+                        Previous
+                      </button>
+                      <button
+                        className="rounded border px-2 py-1.5 text-sm disabled:opacity-50"
+                        disabled={
+                          busy || activeIndex >= reviewRegions.length - 1
+                        }
+                        onClick={() =>
+                          select(reviewRegions[activeIndex + 1].id)
+                        }
+                      >
+                        Next
+                      </button>
+                      <label className="text-sm">
+                        Jump to{" "}
+                        <select
+                          className="rounded border p-1.5"
                           disabled={busy}
-                          type="checkbox"
-                          checked={fields[key]}
-                          onChange={(e) => update({ [key]: e.target.checked })}
-                        />{" "}
-                        {label}
+                          value={activeRegion.id}
+                          onChange={(e) => select(e.target.value)}
+                        >
+                          {reviewRegions.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.id} · page {item.page}
+                              {checkByRegion.has(item.id) ? " · reviewed" : ""}
+                            </option>
+                          ))}
+                        </select>
                       </label>
-                    ))}
-                  </fieldset>
-                </>
+                    </div>
+                    <div
+                      className="flex flex-wrap gap-2"
+                      role="group"
+                      aria-label={`Result for ${activeRegion.id}`}
+                    >
+                      {(
+                        Object.entries(checkLabels) as [CheckState, string][]
+                      ).map(([state, label]) => (
+                        <button
+                          key={state}
+                          disabled={busy || !sourceReady}
+                          aria-pressed={
+                            checkByRegion.get(activeRegion.id) === state
+                          }
+                          className={
+                            "rounded border px-3 py-2 text-sm disabled:opacity-50 " +
+                            (checkByRegion.get(activeRegion.id) === state
+                              ? "border-emerald-700 bg-emerald-50"
+                              : "hover:bg-slate-50")
+                          }
+                          onClick={() => decide(state)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                      {checkByRegion.has(activeRegion.id) && (
+                        <button
+                          type="button"
+                          className="px-2 py-2 text-sm underline disabled:opacity-50"
+                          disabled={busy}
+                          onClick={() => {
+                            check(activeRegion.id, null);
+                            setLastResult(
+                              `${activeRegion.id} · Result cleared`,
+                            );
+                          }}
+                        >
+                          Clear result
+                        </button>
+                      )}
+                    </div>
+                    {issue && (
+                      <p className="text-sm font-medium">
+                        {issueLabel[issue.kind]} · {issue.reason}
+                      </p>
+                    )}
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="min-w-0 rounded bg-slate-50 p-3">
+                        <p className="text-xs font-semibold">
+                          Proposed transcription
+                        </p>
+                        <p className="whitespace-pre-wrap break-words">
+                          {activeRegion.state === "blank"
+                            ? "[confirmed blank]"
+                            : activeRegion.proposed?.trim()
+                              ? activeRegion.proposed
+                              : "[unresolved]"}
+                        </p>
+                      </div>
+                      <div className="min-w-0 rounded bg-slate-50 p-3">
+                        <p className="text-xs font-semibold">Raw extraction</p>
+                        <p className="whitespace-pre-wrap break-words">
+                          {activeRegion.raw ?? "[no raw transcription]"}
+                        </p>
+                      </div>
+                    </div>
+                    {activeRegion.note && (
+                      <p className="text-sm text-slate-600">
+                        {activeRegion.note}
+                      </p>
+                    )}
+                    <p className="text-xs text-slate-600">
+                      A choice moves to the next unchecked region. Use Previous
+                      or Jump to to change a result. Include the region ID in
+                      your notes when a correction is needed.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm">
+                    No individual regions were flagged. Open full source review
+                    to check the scope.
+                  </p>
+                )}
+              </div>
+              {showAll && canAccept && (
+                <fieldset className="space-y-2 rounded border p-4">
+                  <legend>Whole-scope source checks</legend>
+                  {(
+                    [
+                      [
+                        "readingOrderChecked",
+                        "Reading order and heading relationships are correct",
+                      ],
+                      [
+                        "contextChecked",
+                        "Required qualifications, context and footnotes are included",
+                      ],
+                      [
+                        "criticalCharactersChecked",
+                        "Numbers, dates, names, identifiers and negations match",
+                      ],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <label key={key} className="block">
+                      <input
+                        disabled={busy}
+                        type="checkbox"
+                        checked={fields[key]}
+                        onChange={(e) => update({ [key]: e.target.checked })}
+                      />{" "}
+                      {label}
+                    </label>
+                  ))}
+                </fieldset>
               )}
               <label className="block">
                 Review notes / decision reason
@@ -1011,7 +1001,10 @@ export default function ExtractionPanel({
                 {showAll && (
                   <button
                     className="rounded bg-emerald-700 px-3 py-2 text-white disabled:opacity-40"
-                    disabled={busy || !ready}
+                    aria-describedby={
+                      acceptanceMessage ? "acceptance-requirements" : undefined
+                    }
+                    disabled={busy || acceptanceMessage !== null}
                     onClick={() => save("ACCEPT_EXTRACTION")}
                   >
                     {operation === "ACCEPT_EXTRACTION"
@@ -1030,6 +1023,14 @@ export default function ExtractionPanel({
                   Load latest saved review
                 </button>
               </div>
+              {showAll && acceptanceMessage && (
+                <p
+                  id="acceptance-requirements"
+                  className="rounded bg-amber-50 p-3 text-sm"
+                >
+                  {acceptanceMessage}
+                </p>
+              )}
               <p className="text-sm text-slate-600">
                 {dirty ? "Unsaved review fields. " : ""}
                 {showAll

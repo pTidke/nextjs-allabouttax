@@ -43,6 +43,7 @@ export function stagingRuntime() {
     connectionString: config.databaseUrl,
     max: 3,
     connectionTimeoutMillis: 5000,
+    query_timeout: 12000,
     idleTimeoutMillis: 10000,
   });
   pool.on("error", () => {
