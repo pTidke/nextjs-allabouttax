@@ -113,6 +113,7 @@ export default function ExtractionPanel({
     } | null>(null),
     [sourceAttempt, setSourceAttempt] = useState(0),
     [dirty, setDirty] = useState(false),
+    [confirmReload, setConfirmReload] = useState(false),
     [cacheOk, setCacheOk] = useState(true),
     [showAll, setShowAll] = useState(false),
     [showRow, setShowRow] = useState(false),
@@ -193,14 +194,7 @@ export default function ExtractionPanel({
       );
       return;
     }
-    if (
-      latest &&
-      dirty &&
-      !window.confirm(
-        "Load the saved review and replace the fields on screen? Export first if you need both versions.",
-      )
-    )
-      return;
+    setConfirmReload(false);
     setOpeningId(id);
     try {
       const next: Detail = await request(
@@ -1018,11 +1012,40 @@ export default function ExtractionPanel({
                 <button
                   className="rounded border px-3 py-2"
                   disabled={busy}
-                  onClick={() => load(c.id, true)}
+                  aria-expanded={confirmReload}
+                  onClick={() => {
+                    if (dirty) setConfirmReload(true);
+                    else void load(c.id, true);
+                  }}
                 >
                   Load latest saved review
                 </button>
               </div>
+              {confirmReload && (
+                <div className="space-y-2 rounded border border-amber-300 bg-amber-50 p-3">
+                  <p className="text-sm">
+                    Loading the saved review replaces your unsaved edits. Export
+                    your notes first if you need both versions.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded border bg-white px-3 py-2 text-sm"
+                      onClick={() => setConfirmReload(false)}
+                    >
+                      Keep editing
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded border bg-white px-3 py-2 text-sm"
+                      disabled={busy || !cacheOk}
+                      onClick={() => load(c.id, true)}
+                    >
+                      Replace edits with saved review
+                    </button>
+                  </div>
+                </div>
+              )}
               {showAll && acceptanceMessage && (
                 <p
                   id="acceptance-requirements"
