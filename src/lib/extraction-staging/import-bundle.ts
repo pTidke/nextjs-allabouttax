@@ -77,24 +77,23 @@ export async function candidateFromBundle(
   const pages = new Map<number, MapValue>(
     artifact.pages.map((p: MapValue) => [p.number, p]),
   );
-  let regions: Region[] = [];
-  if (revision.kind === "native_full_pages") {
-    const blocks = new Map<string, MapValue>();
-    for (const p of artifact.pages)
-      for (const b of p.blocks) blocks.set(b.id, { ...b, page: p.number });
-    regions = revision.text.map((p: MapValue) => {
-      const block = blocks.get(p.block_id as string)!;
-      return {
-        id: p.block_id,
-        page: block.page,
-        raw: block.raw_text,
-        proposed: p.text,
-        note: p.note,
-        state: "transcribed",
-        box: block.bbox,
-      };
-    });
-  } else {
+  const blocks = new Map<string, MapValue>();
+  for (const p of artifact.pages)
+    for (const b of p.blocks) blocks.set(b.id, { ...b, page: p.number });
+  const textRegions: Region[] = revision.text.map((p: MapValue) => {
+    const block = blocks.get(p.block_id as string)!;
+    return {
+      id: p.block_id,
+      page: block.page,
+      raw: block.raw_text,
+      proposed: p.text,
+      note: p.note,
+      state: "transcribed",
+      box: block.bbox,
+    };
+  });
+  let regions = textRegions;
+  if (revision.kind === "image_table_band") {
     const repair = revision.reconstruction,
       ref = run.raw_outputs.find(
         (r: ObjectRef) => r.sha256 === repair.binding.raw_sha256,
@@ -135,6 +134,7 @@ export async function candidateFromBundle(
         },
       }),
     );
+    regions.push(...textRegions);
   }
   return validateCandidate({
     id: receipt.import_key,

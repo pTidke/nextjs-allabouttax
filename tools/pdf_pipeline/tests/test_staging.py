@@ -485,6 +485,22 @@ def test_blank_zero_dash_and_unreadable_are_not_collapsed(table):
     ]
 
 
+def test_table_context_cannot_hide_unplaced_printed_text(table):
+    registry, envelope = table
+    revision = json.loads(registry.objects["revision"])
+    revision["table_context_spans"] = [{"cell": 0, "start": 0, "end": 14}]
+    update_revision(registry, envelope, revision)
+    with pytest.raises(ValueError, match="discarded as whitespace"):
+        validate_import(envelope, registry)
+
+    revision["required_context_regions"] = ["p1-b1"]
+    revision["text"] = [{"block_id": "p1-b1", "text": "A😀B"}]
+    revision["table_context_spans"][0]["block_id"] = "p1-b1"
+    update_revision(registry, envelope, revision)
+    with pytest.raises(ValueError, match="retain the literal raw fragment"):
+        validate_import(envelope, registry)
+
+
 def test_matching_table_binding_still_rejects_changed_raw_table(table):
     registry, envelope = table
     raw = json.loads(registry.objects["raw-ocr"])

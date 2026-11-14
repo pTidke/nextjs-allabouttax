@@ -16,7 +16,7 @@ from pydantic import Field
 
 from .models import Artifact, Model, assess
 from .review_store import checksum
-from .table_repair import RepairDraft, validate_layout
+from .table_repair import RepairDraft, SourceSpan, validate_layout
 from .table_review import SHA
 
 ID = r"^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$"
@@ -38,6 +38,10 @@ class TextProposal(Model):
     note: str = Field(default="", max_length=4000)
 
 
+class TableContextSpan(SourceSpan):
+    block_id: str | None = Field(default=None, min_length=1, max_length=100)
+
+
 class ScopeRevision(Model):
     schema_version: Literal["0.1.0"] = "0.1.0"
     state: Literal["STAGING_EXTRACTION_DRAFT"] = "STAGING_EXTRACTION_DRAFT"
@@ -55,6 +59,7 @@ class ScopeRevision(Model):
     context_objects: list[ObjectRef] = Field(default_factory=list, max_length=20)
     prior_feedback: list[ObjectRef] = Field(default_factory=list, max_length=20)
     required_context_regions: list[str] = Field(default_factory=list, max_length=1000)
+    table_context_spans: list[TableContextSpan] = Field(default_factory=list, max_length=1000)
 
 
 class ImportEnvelope(Model):
@@ -238,7 +243,11 @@ def validate_import(value, registry: Registry):
         raise ValueError("Foreign required context region")
     accounting = None
     if revision.kind == "native_full_pages":
-        if revision.reconstruction is not None or run.repair_binding is not None:
+        if (
+            revision.reconstruction is not None
+            or run.repair_binding is not None
+            or revision.table_context_spans
+        ):
             raise ValueError("Native text scope cannot substitute a reconstruction")
         expected = {b.id for p in artifact.pages if p.number in revision.pages for b in p.blocks}
         actual = [t.block_id for t in revision.text]
@@ -257,7 +266,7 @@ def validate_import(value, registry: Registry):
         if not set(revision.required_context_regions) <= set(actual):
             blockers.add("REQUIRED_CONTEXT_OUTSIDE_SCOPE")
     else:
-        if revision.text or revision.reconstruction is None or run.repair_binding is None:
+        if revision.reconstruction is None or run.repair_binding is None:
             raise ValueError("Image table scope needs its registered reconstruction")
         repair = revision.reconstruction
         bound = repair.binding
@@ -287,6 +296,56 @@ def validate_import(value, registry: Registry):
             raise ValueError("Invalid registered raw cell inventory")
         page = pages[bound.page]
         accounting = validate_layout(repair, page.width, page.height, raw_cells)
+        actual_context = [proposal.block_id for proposal in revision.text]
+        if len(set(actual_context)) != len(actual_context) or not set(actual_context) <= set(
+            revision.required_context_regions
+        ):
+            raise ValueError("Table context must match declared source regions")
+        for proposal in revision.text:
+            context_page, block = block_map[proposal.block_id]
+            if (
+                not context_page.render
+                or not proposal.text.strip()
+                or (proposal.text != block.raw_text and not proposal.note.strip())
+            ):
+                raise ValueError(
+                    "Table context needs a rendered region and a source note for edits"
+                )
+        unplaced = {(span["cell"], span["start"], span["end"]) for span in accounting["unplaced"]}
+        placed = set()
+        for span in revision.table_context_spans:
+            key = (span.cell, span.start, span.end)
+            if key not in unplaced or key in placed:
+                raise ValueError("Table context must account for an exact unplaced OCR span once")
+            if span.block_id is not None:
+                if (
+                    span.block_id not in actual_context
+                    or block_map[span.block_id][0].number != bound.page
+                ):
+                    raise ValueError("Unplaced OCR text needs a source region on the same page")
+                _, block = block_map[span.block_id]
+                if block.raw_text != raw_cells[span.cell]["text"][span.start : span.end]:
+                    raise ValueError("Relocated OCR text must retain the literal raw fragment")
+                if not (
+                    block.bbox.bottom <= repair.y[0]
+                    or block.bbox.top >= repair.y[-1]
+                    or block.bbox.x1 <= repair.x[0]
+                    or block.bbox.x0 >= repair.x[-1]
+                ):
+                    raise ValueError(
+                        "OCR relocated outside the table must point outside its bounds"
+                    )
+            elif raw_cells[span.cell]["text"][span.start : span.end].strip():
+                raise ValueError("Printed OCR text cannot be discarded as whitespace")
+            placed.add(key)
+        if placed:
+            accounting["context_characters"] = sum(end - start for _, start, end in placed)
+            accounting["unplaced_characters"] -= accounting["context_characters"]
+            accounting["unplaced"] = [
+                span
+                for span in accounting["unplaced"]
+                if (span["cell"], span["start"], span["end"]) not in placed
+            ]
         if accounting["unplaced_characters"]:
             blockers.add("TABLE_RAW_TEXT_UNPLACED")
         if accounting["unresolved_cells"] or any(c.state == "unreadable" for c in repair.cells):
