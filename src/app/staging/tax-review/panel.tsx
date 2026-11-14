@@ -105,7 +105,11 @@ export default function TaxReviewPanel({
       <div>
         <h2 className="text-xl font-semibold">{candidate.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Accepted extraction scope: {candidate.scopeNote}
+          Extraction accepted for{" "}
+          {candidate.renders.length === 1
+            ? "the page shown below"
+            : "the pages listed below"}
+          . Use the official PDF to check the full context.
         </p>
       </div>
       <div className="grid items-start gap-5 lg:grid-cols-2">
