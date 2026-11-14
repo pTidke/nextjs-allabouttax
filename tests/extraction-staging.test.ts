@@ -615,6 +615,114 @@ test("isolated extraction staging persists authenticated, immutable decisions in
       },
     );
     await t.test(
+      "a reported issue stays pending until a linked repair is ready to recheck",
+      async () => {
+        const original = fixture("reported");
+        await store.register(original);
+        const issue = {
+          page: 1,
+          regionId: "p1-b1",
+          description: "The date was transcribed incorrectly.",
+        };
+        const report = command(original, {
+          action: "REQUEST_CHANGES",
+          note: "",
+          issues: [issue],
+        });
+        await assert.rejects(
+          store.save("reviewer-a", {
+            ...report,
+            issues: [{ ...issue, page: 2 }],
+          }),
+          status(400),
+        );
+        const saved = await store.save("reviewer-a", report);
+        assert.equal(saved.summary.status, "blocked");
+        const draft = await store.save(
+          "reviewer-a",
+          command(original, {
+            parentRevision: saved.headRevision,
+            issues: [issue],
+          }),
+        );
+        await assert.rejects(
+          store.save(
+            "reviewer-a",
+            command(original, {
+              parentRevision: draft.headRevision,
+              action: "ACCEPT_EXTRACTION",
+              checks: [{ regionId: "p1-b1", state: "checked" }],
+              readingOrderChecked: true,
+              contextChecked: true,
+              criticalCharactersChecked: true,
+            }),
+          ),
+          status(409),
+        );
+        assert.equal(
+          (await store.list("reviewer-a")).find(
+            (item) => item.id === original.id,
+          )?.status,
+          "blocked",
+        );
+        const corrected = {
+          ...original,
+          id: hash("corrected"),
+          revisionHash: hash("corrected revision"),
+          regions: [{ ...original.regions[0], proposed: "19th" }],
+          repair: {
+            replacesCandidateId: original.id,
+            requestRevisionId: saved.revision.id,
+            description: "Corrected the date against the scan.",
+          },
+        };
+        await assert.rejects(
+          store.register({
+            ...corrected,
+            repair: {
+              ...corrected.repair,
+              requestRevisionId: draft.revision.id,
+            },
+          }),
+          status(409),
+        );
+        await assert.rejects(
+          store.register({ ...corrected, sourceId: "different" }),
+          status(409),
+        );
+        assert.equal(await store.register(corrected), corrected.id);
+        assert.equal(await store.register(corrected), corrected.id);
+        await assert.rejects(
+          store.register({ ...corrected, id: hash("competing repair") }),
+          status(409),
+        );
+        const inbox = await store.list("reviewer-a");
+        assert.ok(!inbox.some((item) => item.id === original.id));
+        assert.equal(
+          inbox.find((item) => item.id === corrected.id)?.status,
+          "recheck",
+        );
+        assert.equal(
+          (await store.get("reviewer-a", original.id)).replacementId,
+          corrected.id,
+        );
+        const detail = await store.get("reviewer-a", corrected.id);
+        assert.deepEqual(detail.repair?.reports, [issue]);
+        assert.deepEqual(detail.repair?.regionIds, ["p1-b1"]);
+        assert.equal(detail.repair?.previousRegions[0].text, "29th");
+        assert.equal(detail.history.headRevision, null);
+        await assert.rejects(
+          store.save(
+            "reviewer-a",
+            command(original, {
+              parentRevision: draft.headRevision,
+            }),
+          ),
+          status(409),
+        );
+      },
+    );
+    await t.test(
       "a restricted runtime database role can review but cannot import or assign capabilities",
       async () => {
         await pg.exec(`CREATE ROLE extraction_runtime;

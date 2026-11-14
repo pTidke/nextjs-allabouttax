@@ -29,6 +29,16 @@ export type Candidate = {
   evidence: ObjectRef[];
   original: ObjectRef;
   renders: { page: number; object: ObjectRef; width: number; height: number }[];
+  repair?: {
+    replacesCandidateId: string;
+    requestRevisionId: string;
+    description: string;
+  };
+};
+export type ReportedIssue = {
+  regionId: string | null;
+  page: number | null;
+  description: string;
 };
 export type Check = {
   regionId: string;
@@ -44,6 +54,7 @@ export type Command = {
   readingOrderChecked: boolean;
   contextChecked: boolean;
   criticalCharactersChecked: boolean;
+  issues?: ReportedIssue[];
 };
 export function canonical(value: unknown): string {
   if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
@@ -79,7 +90,7 @@ export function parseCommand(value: unknown): Command {
       "criticalCharactersChecked",
     ];
   if (
-    Object.keys(v).some((k) => !keys.includes(k)) ||
+    Object.keys(v).some((k) => k !== "issues" && !keys.includes(k)) ||
     keys.some((k) => !(k in v))
   )
     throw new HttpError(400, "Unexpected or missing review fields.");
@@ -118,6 +129,35 @@ export function parseCommand(value: unknown): Command {
   });
   if (new Set(checks.map((c) => c.regionId)).size !== checks.length)
     throw new HttpError(400, "Duplicate region findings.");
+  if ("issues" in v) {
+    if (!Array.isArray(v.issues) || v.issues.length > 50)
+      throw new HttpError(
+        400,
+        "A review can include at most 50 issue reports.",
+      );
+    for (const entry of v.issues) {
+      const issue = object(entry);
+      if (
+        Object.keys(issue).sort().join(",") !== "description,page,regionId" ||
+        (issue.regionId !== null &&
+          (typeof issue.regionId !== "string" ||
+            !issue.regionId ||
+            issue.regionId.length > 100)) ||
+        (issue.page !== null &&
+          (typeof issue.page !== "number" ||
+            !Number.isSafeInteger(issue.page) ||
+            issue.page < 1)) ||
+        (issue.regionId !== null && issue.page === null) ||
+        typeof issue.description !== "string" ||
+        !issue.description.trim() ||
+        issue.description.length > 500
+      )
+        throw new HttpError(
+          400,
+          "An issue report needs a valid location and description.",
+        );
+    }
+  }
   return { ...v, checks } as Command;
 }
 export function validateCandidate(value: Candidate) {
@@ -194,6 +234,19 @@ export function validateCandidate(value: Candidate) {
     value.blockingHolds.length
   )
     throw new Error("Conflicting review eligibility.");
+  if (
+    value.repair !== undefined &&
+    (!value.repair ||
+      Object.keys(value.repair).sort().join(",") !==
+        "description,replacesCandidateId,requestRevisionId" ||
+      !SHA.test(value.repair.replacesCandidateId) ||
+      value.repair.replacesCandidateId === value.id ||
+      !SHA.test(value.repair.requestRevisionId) ||
+      typeof value.repair.description !== "string" ||
+      !value.repair.description.trim() ||
+      value.repair.description.length > 1500)
+  )
+    throw new Error("Invalid repair link.");
   return value;
 }
 export function validateDecision(candidate: Candidate, command: Command) {
@@ -203,13 +256,32 @@ export function validateDecision(candidate: Candidate, command: Command) {
       400,
       "A finding belongs to a different source revision.",
     );
-  if (command.action !== "SAVE_DRAFT" && !command.note.trim())
+  for (const issue of command.issues ?? []) {
+    if (
+      issue.regionId !== null
+        ? !candidate.regions.some(
+            (r) => r.id === issue.regionId && r.page === issue.page,
+          )
+        : issue.page !== null &&
+          !candidate.renders.some((r) => r.page === issue.page)
+    )
+      throw new HttpError(
+        400,
+        "An issue location belongs to a different extraction.",
+      );
+  }
+  if (
+    command.action !== "SAVE_DRAFT" &&
+    !command.note.trim() &&
+    !(command.action === "REQUEST_CHANGES" && command.issues?.length)
+  )
     throw new HttpError(400, "Explain this review decision.");
   if (
     command.action === "ACCEPT_EXTRACTION" &&
     (candidate.state !== "AWAITING_EXTRACTION_REVIEW" ||
       candidate.kind !== "native_full_pages" ||
       candidate.blockingHolds.length ||
+      command.issues?.length ||
       command.checks.length !== ids.size ||
       command.checks.some((c) => c.state !== "checked") ||
       !command.readingOrderChecked ||

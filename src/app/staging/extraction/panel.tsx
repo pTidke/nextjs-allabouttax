@@ -1,10 +1,15 @@
 "use client";
 import Image from "next/image";
 import { useRef, useState, useSyncExternalStore } from "react";
-import type { Candidate, Command } from "@/lib/extraction-staging/contract";
+import type {
+  Candidate,
+  Command,
+  ReportedIssue,
+} from "@/lib/extraction-staging/contract";
 import {
   recordedTableRow,
   reviewQueue,
+  type repairReview,
   type summarizeReview,
 } from "@/lib/extraction-staging/review-queue";
 import type { SavedRevision } from "@/lib/extraction-staging/store";
@@ -12,6 +17,9 @@ type Summary = ReturnType<typeof summarizeReview>;
 type Detail = {
   candidate: Candidate;
   history: { headRevision: string | null; revisions: SavedRevision[] };
+  repair: ReturnType<typeof repairReview> | null;
+  replacementId: string | null;
+  summary: Summary;
 };
 type Fields = Pick<
   Command,
@@ -20,6 +28,7 @@ type Fields = Pick<
   | "readingOrderChecked"
   | "contextChecked"
   | "criticalCharactersChecked"
+  | "issues"
 >;
 const empty = (): Fields => ({
   note: "",
@@ -29,11 +38,12 @@ const empty = (): Fields => ({
   criticalCharactersChecked: false,
 });
 const statusLabel = {
-  blocked: "Incomplete extraction",
-  needs_review: "Needs a decision",
-  no_flags: "No issues flagged",
+  blocked: "Needs repair",
+  needs_review: "Ready to review",
+  recheck: "Ready to recheck",
+  accepted: "Extraction accepted",
 };
-const statusPriority = { needs_review: 0, no_flags: 1, blocked: 2 };
+const statusPriority = { recheck: 0, needs_review: 1, blocked: 2, accepted: 3 };
 const issueLabel = {
   unresolved: "Needs reading",
   changed: "Compare readings",
@@ -92,7 +102,9 @@ export default function ExtractionPanel({
   viewerId: string;
   drafts: Summary[];
 }) {
-  const items = [...drafts].sort(
+  const [inbox, setInbox] = useState(drafts);
+  const [refreshing, setRefreshing] = useState(false);
+  const items = [...inbox].sort(
     (a, b) => statusPriority[a.status] - statusPriority[b.status],
   );
   const [detail, setDetail] = useState<Detail | null>(null),
@@ -116,12 +128,17 @@ export default function ExtractionPanel({
     [confirmReload, setConfirmReload] = useState(false),
     [cacheOk, setCacheOk] = useState(true),
     [showAll, setShowAll] = useState(false),
+    [showChanges, setShowChanges] = useState(false),
+    [report, setReport] = useState<{
+      issue: ReportedIssue;
+      source: { page: number; regionId: string } | null;
+    } | null>(null),
     [showRow, setShowRow] = useState(false),
     [showPage, setShowPage] = useState(false),
     [filter, setFilter] = useState<Summary["status"] | "all">("all"),
     [lastOpened, setLastOpened] = useState<string | null>(null);
   const pending = useRef<{ signature: string; requestId: string } | null>(null);
-  const busy = operation !== null || openingId !== null;
+  const busy = operation !== null || openingId !== null || refreshing;
   const key = detail
     ? "extraction-review:" + viewerId + ":" + detail.candidate.id
     : null;
@@ -138,7 +155,7 @@ export default function ExtractionPanel({
     },
     () => null,
   );
-  const resumeId = drafts.find(
+  const resumeId = inbox.find(
     (item) => item.id === (lastOpened ?? rememberedId),
   )?.id;
   function remember(
@@ -188,6 +205,12 @@ export default function ExtractionPanel({
     }
   }
   async function load(id: string, latest = false) {
+    if (report?.issue.description.trim()) {
+      setMessage(
+        "Send the open issue report or close it before switching versions.",
+      );
+      return;
+    }
     if (dirty && !cacheOk) {
       setMessage(
         "Export your current notes before switching or loading a saved review.",
@@ -209,6 +232,7 @@ export default function ExtractionPanel({
             readingOrderChecked: saved.readingOrderChecked,
             contextChecked: saved.contextChecked,
             criticalCharactersChecked: saved.criticalCharactersChecked,
+            ...(saved.issues ? { issues: saved.issues } : {}),
           }
         : empty();
       let base = next.history.headRevision;
@@ -237,6 +261,17 @@ export default function ExtractionPanel({
                 saved.contextChecked === local.fields.contextChecked &&
                 saved.criticalCharactersChecked ===
                   local.fields.criticalCharactersChecked &&
+                (saved.issues?.length ?? 0) ===
+                  (local.fields.issues?.length ?? 0) &&
+                (saved.issues ?? []).every((issue, index) => {
+                  const other = local.fields.issues?.[index];
+                  return (
+                    !!other &&
+                    issue.page === other.page &&
+                    issue.regionId === other.regionId &&
+                    issue.description === other.description
+                  );
+                }) &&
                 saved.checks.length === local.fields.checks.length &&
                 saved.checks.every((entry, index) => {
                   const check = local.fields.checks[index];
@@ -271,6 +306,14 @@ export default function ExtractionPanel({
       }
       if (id !== detail?.candidate.id) setSourceStatus(null);
       setDetail(next);
+      setInbox((items) =>
+        next.replacementId
+          ? items.filter((item) => item.id !== id)
+          : items.some((item) => item.id === id)
+            ? items.map((item) => (item.id === id ? next.summary : item))
+            : [...items, next.summary],
+      );
+      setReport(null);
       setLastResult(null);
       setFields(form);
       setParent(base);
@@ -281,15 +324,22 @@ export default function ExtractionPanel({
         all?: unknown;
       } | null;
       const restore = position?.candidateId === id ? position : null;
-      const all = restore?.all === true;
+      const changedIds = new Set(next.repair?.regionIds ?? []);
+      const changes = changedIds.size > 0 && next.summary.status === "recheck";
+      const all = !changes && restore?.all === true;
       const restored = next.candidate.regions.find(
         (region) =>
           region.id === restore?.regionId &&
-          (all || queue.issues.some((issue) => issue.region.id === region.id)),
+          (changes
+            ? changedIds.has(region.id)
+            : all ||
+              queue.issues.some((issue) => issue.region.id === region.id)),
       );
-      const regions = all
-        ? next.candidate.regions
-        : queue.issues.map((issue) => issue.region);
+      const regions = changes
+        ? next.candidate.regions.filter((item) => changedIds.has(item.id))
+        : all
+          ? next.candidate.regions
+          : queue.issues.map((issue) => issue.region);
       const checked = new Set(form.checks.map((entry) => entry.regionId));
       const nextRegion =
         restored?.id ??
@@ -299,6 +349,7 @@ export default function ExtractionPanel({
         null;
       setSelected(nextRegion);
       setShowAll(all);
+      setShowChanges(changes);
       setShowRow(false);
       setShowPage(false);
       remember(id, nextRegion, all);
@@ -331,7 +382,7 @@ export default function ExtractionPanel({
       ],
     });
   }
-  async function save(action: Command["action"]) {
+  async function save(action: Command["action"], values = fields) {
     if (!detail) return;
     setOperation(action);
     setMessage(
@@ -343,7 +394,7 @@ export default function ExtractionPanel({
       candidateId: detail.candidate.id,
       parentRevision: parent,
       action,
-      ...fields,
+      ...values,
     };
     const signature = JSON.stringify(body);
     if (!pending.current || pending.current.signature !== signature)
@@ -352,7 +403,7 @@ export default function ExtractionPanel({
       try {
         localStorage.setItem(
           key!,
-          JSON.stringify({ fields, parent, pending: pending.current }),
+          JSON.stringify({ fields: values, parent, pending: pending.current }),
         );
       } catch {
         setCacheOk(false);
@@ -374,8 +425,14 @@ export default function ExtractionPanel({
           "A newer review exists. Your notes are kept; load the latest before making another save.",
         );
       setParent(result.revision.id);
+      setInbox((items) =>
+        items.map((item) =>
+          item.id === result.summary.id ? result.summary : item,
+        ),
+      );
       setDetail({
         ...detail,
+        summary: result.summary,
         history: {
           headRevision: result.revision.id,
           revisions: [
@@ -387,6 +444,7 @@ export default function ExtractionPanel({
         },
       });
       pending.current = null;
+      setReport(null);
       setDirty(false);
       try {
         localStorage.removeItem(key!);
@@ -394,7 +452,9 @@ export default function ExtractionPanel({
       setMessage(
         action === "ACCEPT_EXTRACTION"
           ? "Extraction review recorded for this exact scope. Tax approval is still pending."
-          : "Review revision saved with your signed-in identity.",
+          : action === "REQUEST_CHANGES"
+            ? "Issue report saved. The inbox will show Needs repair until a corrected version is available."
+            : "Review revision saved with your signed-in identity.",
       );
     } catch (e) {
       setMessage(
@@ -438,9 +498,21 @@ export default function ExtractionPanel({
     render = c?.renders.find((p) => p.page === region?.page),
     asset = (id: string) =>
       "/api/staging/extraction/" + c!.id + "/objects/" + id;
+  const historical = !!detail?.replacementId;
+  const editable = !historical && detail?.summary.status !== "accepted";
+  const latestRequest = detail?.history.revisions.find(
+    (entry) => entry.command.action === "REQUEST_CHANGES",
+  );
   const issue = queue?.issues.find((item) => item.region.id === selected);
   const flaggedRegions = queue?.issues.map((item) => item.region) ?? [];
-  const reviewRegions = showAll ? (c?.regions ?? []) : flaggedRegions;
+  const changedRegions =
+    c?.regions.filter((item) => detail?.repair?.regionIds.includes(item.id)) ??
+    [];
+  const reviewRegions = showChanges
+    ? changedRegions
+    : showAll
+      ? (c?.regions ?? [])
+      : flaggedRegions;
   const activeIndex = reviewRegions.findIndex((item) => item.id === selected);
   const activeRegion = reviewRegions[activeIndex];
   const sourceUrl = render ? asset(render.object.object_id) : null;
@@ -492,38 +564,96 @@ export default function ExtractionPanel({
       next?.id ?? current?.id ?? regions[0]?.id ?? c.regions[0]?.id ?? null,
       !showAll,
     );
+    setShowChanges(false);
+  }
+  function sendReport() {
+    if (!report?.issue.description.trim()) return;
+    const issue = {
+      ...report.issue,
+      description: report.issue.description.trim(),
+    };
+    const issues = fields.issues ?? [];
+    const values = {
+      ...fields,
+      issues: issues.some(
+        (entry) =>
+          entry.page === issue.page &&
+          entry.regionId === issue.regionId &&
+          entry.description === issue.description,
+      )
+        ? issues
+        : [...issues, issue],
+    };
+    update(values);
+    void save("REQUEST_CHANGES", values);
+  }
+  async function refreshInbox() {
+    setRefreshing(true);
+    try {
+      const result = await request("/api/staging/extraction");
+      setInbox(result.candidates);
+      if (c && !dirty && !report) await load(c.id);
+      else setMessage("Inbox refreshed.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Could not refresh the inbox.",
+      );
+    } finally {
+      setRefreshing(false);
+    }
   }
   const canAccept =
     c?.state === "AWAITING_EXTRACTION_REVIEW" &&
     c.kind === "native_full_pages" &&
-    !c.blockingHolds.length;
+    !c.blockingHolds.length &&
+    !detail?.replacementId;
   const acceptanceMessage = !canAccept
     ? c?.blockingHolds.length
       ? `Acceptance is blocked by ${c.blockingHolds.length} extraction holds. Save your findings or request corrections. A repaired extraction is needed.`
       : "This scope is available for review findings only."
-    : fields.checks.length !== c.regions.length ||
-        c.regions.some((item) => !checkByRegion.has(item.id))
-      ? "Review the remaining regions to continue."
-      : fields.checks.some((entry) => entry.state !== "checked")
-        ? "Acceptance requires every region to match the source. Request corrections for any differences."
-        : !fields.readingOrderChecked ||
-            !fields.contextChecked ||
-            !fields.criticalCharactersChecked
-          ? "Complete the whole-scope checks to continue."
-          : !fields.note.trim()
-            ? "Add a decision reason to continue."
-            : null;
+    : detail?.summary.status === "blocked" || fields.issues?.length
+      ? "The reported issues need to be resolved before acceptance."
+      : fields.checks.length !== c.regions.length ||
+          c.regions.some((item) => !checkByRegion.has(item.id))
+        ? "Review the remaining regions to continue."
+        : fields.checks.some((entry) => entry.state !== "checked")
+          ? "Acceptance requires every region to match the source. Request corrections for any differences."
+          : !fields.readingOrderChecked ||
+              !fields.contextChecked ||
+              !fields.criticalCharactersChecked
+            ? "Complete the whole-scope checks to continue."
+            : !fields.note.trim()
+              ? "Add a decision reason to continue."
+              : null;
   return (
     <main className="mx-auto max-w-7xl space-y-6 px-6 py-10 text-slate-900">
       <header>
-        <p className="text-sm font-semibold text-emerald-700">
-          Isolated extraction staging
-        </p>
         <h1 className="text-3xl font-semibold">Extraction review inbox</h1>
         <p className="mt-2 text-slate-600">
-          Start with flagged evidence, then open the full review when you need
-          it. Flags are suggestions; the original is the source of truth.
+          Compare the extraction with the PDF. Report any difference from the
+          page where you see it, then reopen the corrected version here.
         </p>
+        <details className="mt-3 max-w-prose text-sm text-slate-700">
+          <summary>How review works</summary>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>
+              Compare the original with the extraction. Start with the flagged
+              areas.
+            </li>
+            <li>
+              Use Report an issue for wrong text, missing content or a table
+              layout problem. Describe what you see in the PDF.
+            </li>
+            <li>
+              When the inbox says Ready to recheck, open the corrected version
+              and compare the changes with the original.
+            </li>
+            <li>
+              To accept an eligible extraction, finish the full source review
+              and the checks for the whole scope.
+            </li>
+          </ol>
+        </details>
       </header>
       <nav aria-label="Extraction drafts" className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -553,7 +683,14 @@ export default function ExtractionPanel({
               Resume last draft
             </button>
           )}
-          <span className="text-sm text-slate-600">{items.length} loaded</span>
+          <button
+            type="button"
+            className="rounded border px-3 py-2 text-sm"
+            disabled={busy}
+            onClick={refreshInbox}
+          >
+            {refreshing ? "Refreshing…" : "Refresh inbox"}
+          </button>
         </div>
         <div className="grid gap-2 lg:grid-cols-2">
           {items
@@ -575,12 +712,10 @@ export default function ExtractionPanel({
                   <span className="ml-2 text-sm">Opening…</span>
                 )}
                 <span className="block text-sm">
-                  {statusLabel[x.status]} · {x.issueCount} flagged regions
-                  {x.documentCheckCount
-                    ? ` · ${x.documentCheckCount} document checks`
-                    : ""}
-                  {x.holdCount ? ` · ${x.holdCount} holds` : ""}
-                  {" · Version " + x.revision}
+                  {statusLabel[x.status]}
+                  {x.status === "needs_review" &&
+                    x.issueCount > 0 &&
+                    ` · ${x.issueCount} flagged regions`}
                 </span>
               </button>
             ))}
@@ -597,11 +732,92 @@ export default function ExtractionPanel({
           Opening {items.find((item) => item.id === openingId)?.title}…
         </p>
       )}
-      {c && (
+      {c && detail && (
         <>
           <section className="rounded border bg-slate-50 p-4">
+            <p className="mb-1 text-sm font-medium text-emerald-800">
+              {historical
+                ? "Previous extraction"
+                : statusLabel[detail.summary.status]}
+            </p>
             <h2 className="font-semibold">{c.title}</h2>
-            <p>{c.scopeNote}</p>
+            {historical && (
+              <button
+                type="button"
+                disabled={busy}
+                className="mt-2 rounded bg-emerald-700 px-3 py-2 text-white"
+                onClick={() => load(detail.replacementId!)}
+              >
+                Open corrected version
+              </button>
+            )}
+            {detail.summary.status === "accepted" && (
+              <p className="mt-1 text-sm">
+                The extraction decision is saved. Tax applicability is reviewed
+                separately.
+              </p>
+            )}
+            {c.repair && detail.repair && (
+              <div className="mt-3 space-y-2 rounded border bg-white p-3 text-sm">
+                <p>
+                  <strong>What changed</strong> {c.repair.description}
+                </p>
+                <details>
+                  <summary>Original correction request</summary>
+                  {detail.repair.note && (
+                    <p className="whitespace-pre-wrap">{detail.repair.note}</p>
+                  )}
+                  <ul className="list-inside list-disc">
+                    {detail.repair.reports.map((item, index) => (
+                      <li key={index}>
+                        {item.page ? `Page ${item.page} · ` : ""}
+                        {item.description}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+                <button
+                  className="underline"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => load(c.repair!.replacesCandidateId)}
+                >
+                  Open previous extraction and history
+                </button>
+              </div>
+            )}
+            {detail.summary.status === "recheck" &&
+              c.blockingHolds.length > 0 && (
+                <p className="mt-2 text-sm">
+                  Check the corrected areas. The remaining extraction issues
+                  still block acceptance.
+                </p>
+              )}
+            {!historical && detail.summary.status === "blocked" && (
+              <p className="mt-2 text-sm">
+                {latestRequest
+                  ? "The correction request is saved. A new version will appear here after repair."
+                  : "This draft needs repair before it can be accepted. You can add a finding if you spot a specific issue."}
+              </p>
+            )}
+            {!historical &&
+              detail.summary.status === "blocked" &&
+              latestRequest && (
+                <details className="mt-2 text-sm">
+                  <summary>Saved correction request</summary>
+                  {latestRequest.command.note && (
+                    <p className="whitespace-pre-wrap">
+                      {latestRequest.command.note}
+                    </p>
+                  )}
+                  {(latestRequest.command.issues ?? []).map((item, index) => (
+                    <p className="mt-1" key={index}>
+                      {item.page ? `Page ${item.page} · ` : ""}
+                      {item.description}
+                    </p>
+                  ))}
+                </details>
+              )}
             <div className="mt-2 flex gap-5">
               <a
                 href={c.officialUrl}
@@ -616,14 +832,16 @@ export default function ExtractionPanel({
               </a>
             </div>
             {c.blockingHolds.length > 0 && (
-              <div className="mt-3 rounded bg-amber-50 p-3">
-                <strong>This scope cannot be accepted yet.</strong>
+              <details className="mt-3 rounded bg-amber-50 p-3 text-sm">
+                <summary>
+                  Why acceptance is blocked ({c.blockingHolds.length})
+                </summary>
                 <ul className="list-inside list-disc">
                   {c.blockingHolds.map((h) => (
                     <li key={h}>{readableFlag(h)}</li>
                   ))}
                 </ul>
-              </div>
+              </details>
             )}
             {!!queue?.documentChecks.length && (
               <details className="mt-3">
@@ -642,8 +860,11 @@ export default function ExtractionPanel({
               </details>
             )}
             <details className="mt-3">
-              <summary>Source and revision identifiers</summary>
+              <summary>Extraction scope and version</summary>
+              <p className="text-sm">{c.scopeNote}</p>
               <p className="break-all text-xs">
+                Candidate ID {c.id}
+                <br />
                 Original: {c.sourceHash}
                 <br />
                 Extraction: {c.revisionHash}
@@ -784,14 +1005,36 @@ export default function ExtractionPanel({
             <section className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-semibold">
-                  {showAll ? "Full source review" : "Flagged evidence"}
+                  {showChanges
+                    ? "Changes to recheck"
+                    : showAll
+                      ? "Full source review"
+                      : "Flagged evidence"}
                 </h2>
+                {!showChanges && changedRegions.length > 0 && (
+                  <button
+                    type="button"
+                    className="rounded border px-3 py-2 text-sm"
+                    disabled={busy}
+                    onClick={() => {
+                      select(
+                        changedRegions.find(
+                          (item) => !checkByRegion.has(item.id),
+                        )?.id ?? changedRegions[0].id,
+                        false,
+                      );
+                      setShowChanges(true);
+                    }}
+                  >
+                    Recheck changes
+                  </button>
+                )}
                 <button
                   className="rounded border px-3 py-2 text-sm"
                   disabled={busy}
                   onClick={toggleReviewMode}
                 >
-                  {showAll
+                  {showAll && !showChanges
                     ? "Show flagged evidence"
                     : "Open full source review"}
                 </button>
@@ -799,7 +1042,12 @@ export default function ExtractionPanel({
               <div className="space-y-3 rounded border p-4">
                 <p aria-live="polite" className="text-sm text-slate-600">
                   {decided} of {reviewRegions.length}{" "}
-                  {showAll ? "regions" : "flagged regions"} reviewed.
+                  {showChanges
+                    ? "changed regions"
+                    : showAll
+                      ? "regions"
+                      : "flagged regions"}{" "}
+                  reviewed.
                   {activeRegion &&
                     ` Viewing ${activeRegion.id}, page ${activeRegion.page}.`}
                 </p>
@@ -851,8 +1099,12 @@ export default function ExtractionPanel({
                       role="group"
                       aria-label={`Result for ${activeRegion.id}`}
                     >
-                      {(
-                        Object.entries(checkLabels) as [CheckState, string][]
+                      {(editable
+                        ? (Object.entries(checkLabels) as [
+                            CheckState,
+                            string,
+                          ][])
+                        : []
                       ).map(([state, label]) => (
                         <button
                           key={state}
@@ -871,7 +1123,7 @@ export default function ExtractionPanel({
                           {label}
                         </button>
                       ))}
-                      {checkByRegion.has(activeRegion.id) && (
+                      {editable && checkByRegion.has(activeRegion.id) && (
                         <button
                           type="button"
                           className="px-2 py-2 text-sm underline disabled:opacity-50"
@@ -892,6 +1144,24 @@ export default function ExtractionPanel({
                         {issueLabel[issue.kind]} · {issue.reason}
                       </p>
                     )}
+                    {showChanges &&
+                      detail.repair?.previousRegions
+                        .filter((item) => item.id === activeRegion.id)
+                        .map((item) => (
+                          <div
+                            className="rounded bg-amber-50 p-3"
+                            key={item.id}
+                          >
+                            <p className="text-xs font-semibold">
+                              Previous extraction
+                            </p>
+                            <p className="whitespace-pre-wrap break-words">
+                              {item.state === "blank"
+                                ? "[confirmed blank]"
+                                : (item.text ?? "[unresolved]")}
+                            </p>
+                          </div>
+                        ))}
                     <div className="grid gap-2 sm:grid-cols-2">
                       <div className="min-w-0 rounded bg-slate-50 p-3">
                         <p className="text-xs font-semibold">
@@ -905,23 +1175,26 @@ export default function ExtractionPanel({
                               : "[unresolved]"}
                         </p>
                       </div>
-                      <div className="min-w-0 rounded bg-slate-50 p-3">
-                        <p className="text-xs font-semibold">Raw extraction</p>
+                      <details className="min-w-0 rounded bg-slate-50 p-3">
+                        <summary className="text-xs font-semibold">
+                          Raw OCR
+                        </summary>
                         <p className="whitespace-pre-wrap break-words">
                           {activeRegion.raw ?? "[no raw transcription]"}
                         </p>
-                      </div>
+                      </details>
                     </div>
                     {activeRegion.note && (
                       <p className="text-sm text-slate-600">
                         {activeRegion.note}
                       </p>
                     )}
-                    <p className="text-xs text-slate-600">
-                      A choice moves to the next unchecked region. Use Previous
-                      or Jump to to change a result. Include the region ID in
-                      your notes when a correction is needed.
-                    </p>
+                    {editable && (
+                      <p className="text-xs text-slate-600">
+                        A choice moves to the next unchecked region. Use
+                        Previous or Jump to to change a result.
+                      </p>
+                    )}
                   </>
                 ) : (
                   <p className="text-sm">
@@ -930,136 +1203,286 @@ export default function ExtractionPanel({
                   </p>
                 )}
               </div>
-              {showAll && canAccept && (
-                <fieldset className="space-y-2 rounded border p-4">
-                  <legend>Whole-scope source checks</legend>
-                  {(
-                    [
-                      [
-                        "readingOrderChecked",
-                        "Reading order and heading relationships are correct",
-                      ],
-                      [
-                        "contextChecked",
-                        "Required qualifications, context and footnotes are included",
-                      ],
-                      [
-                        "criticalCharactersChecked",
-                        "Numbers, dates, names, identifiers and negations match",
-                      ],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <label key={key} className="block">
-                      <input
-                        disabled={busy}
-                        type="checkbox"
-                        checked={fields[key]}
-                        onChange={(e) => update({ [key]: e.target.checked })}
-                      />{" "}
-                      {label}
-                    </label>
-                  ))}
-                </fieldset>
-              )}
-              <label className="block">
-                Review notes / decision reason
-                <textarea
-                  aria-label="Review notes / decision reason"
-                  className="mt-1 w-full rounded border p-3"
-                  rows={4}
-                  maxLength={4000}
-                  value={fields.note}
-                  disabled={busy}
-                  onChange={(e) => update({ note: e.target.value })}
-                />
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  className="rounded border px-3 py-2"
-                  disabled={busy}
-                  onClick={() => save("SAVE_DRAFT")}
-                >
-                  {operation === "SAVE_DRAFT"
-                    ? "Saving draft…"
-                    : "Save review draft"}
-                </button>
-                <button
-                  className="rounded border px-3 py-2"
-                  disabled={busy || !fields.note.trim()}
-                  onClick={() => save("REQUEST_CHANGES")}
-                >
-                  {operation === "REQUEST_CHANGES"
-                    ? "Saving corrections…"
-                    : "Request corrections"}
-                </button>
-                {showAll && (
-                  <button
-                    className="rounded bg-emerald-700 px-3 py-2 text-white disabled:opacity-40"
-                    aria-describedby={
-                      acceptanceMessage ? "acceptance-requirements" : undefined
-                    }
-                    disabled={busy || acceptanceMessage !== null}
-                    onClick={() => save("ACCEPT_EXTRACTION")}
-                  >
-                    {operation === "ACCEPT_EXTRACTION"
-                      ? "Verifying evidence…"
-                      : "Accept extraction for this scope"}
-                  </button>
-                )}
-                <button className="rounded border px-3 py-2" onClick={download}>
-                  Export my notes
-                </button>
-                <button
-                  className="rounded border px-3 py-2"
-                  disabled={busy}
-                  aria-expanded={confirmReload}
-                  onClick={() => {
-                    if (dirty) setConfirmReload(true);
-                    else void load(c.id, true);
-                  }}
-                >
-                  Load latest saved review
-                </button>
-              </div>
-              {confirmReload && (
-                <div className="space-y-2 rounded border border-amber-300 bg-amber-50 p-3">
-                  <p className="text-sm">
-                    Loading the saved review replaces your unsaved edits. Export
-                    your notes first if you need both versions.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
+              {!historical && (
+                <div className="space-y-3 rounded border p-4">
+                  {!report ? (
                     <button
-                      type="button"
-                      className="rounded border bg-white px-3 py-2 text-sm"
-                      onClick={() => setConfirmReload(false)}
+                      className="rounded border px-3 py-2"
+                      disabled={busy || (fields.issues?.length ?? 0) >= 50}
+                      onClick={() =>
+                        setReport({
+                          source: region
+                            ? { page: region.page, regionId: region.id }
+                            : null,
+                          issue: {
+                            page: region?.page ?? null,
+                            regionId: region?.id ?? null,
+                            description: "",
+                          },
+                        })
+                      }
                     >
-                      Keep editing
+                      Report an issue
                     </button>
-                    <button
-                      type="button"
-                      className="rounded border bg-white px-3 py-2 text-sm"
-                      disabled={busy || !cacheOk}
-                      onClick={() => load(c.id, true)}
+                  ) : (
+                    <form
+                      className="space-y-3"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        sendReport();
+                      }}
                     >
-                      Replace edits with saved review
-                    </button>
-                  </div>
+                      <label className="block text-sm">
+                        Where is the issue?{" "}
+                        <select
+                          className="rounded border p-2"
+                          disabled={busy}
+                          value={
+                            report.issue.regionId
+                              ? "region"
+                              : report.issue.page
+                                ? "page"
+                                : "document"
+                          }
+                          onChange={(event) =>
+                            setReport({
+                              ...report,
+                              issue: {
+                                ...report.issue,
+                                page:
+                                  event.target.value === "document"
+                                    ? null
+                                    : (report.source?.page ?? null),
+                                regionId:
+                                  event.target.value === "region"
+                                    ? (report.source?.regionId ?? null)
+                                    : null,
+                              },
+                            })
+                          }
+                        >
+                          {report.source && (
+                            <option value="region">
+                              Area {report.source.regionId} on page{" "}
+                              {report.source.page}
+                            </option>
+                          )}
+                          {report.source && (
+                            <option value="page">
+                              Page {report.source.page}
+                            </option>
+                          )}
+                          <option value="document">Whole document</option>
+                        </select>
+                      </label>
+                      <label className="block text-sm">
+                        What needs to change?
+                        <textarea
+                          className="mt-1 block w-full rounded border p-2"
+                          rows={3}
+                          maxLength={500}
+                          disabled={busy}
+                          required
+                          value={report.issue.description}
+                          placeholder="Describe what the PDF shows and where the extraction differs."
+                          onChange={(event) =>
+                            setReport({
+                              ...report,
+                              issue: {
+                                ...report.issue,
+                                description: event.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="submit"
+                          className="rounded bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-50"
+                          disabled={busy || !report.issue.description.trim()}
+                        >
+                          {operation === "REQUEST_CHANGES"
+                            ? "Sending…"
+                            : "Send correction request"}
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded border px-3 py-2 text-sm"
+                          disabled={busy}
+                          onClick={() => setReport(null)}
+                        >
+                          Close report
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                  {!!fields.issues?.length && (
+                    <details>
+                      <summary className="text-sm">
+                        Reported issues ({fields.issues.length})
+                      </summary>
+                      <ul className="list-inside list-disc text-sm">
+                        {fields.issues.map((item, index) => (
+                          <li key={index}>
+                            {item.page ? `Page ${item.page} · ` : ""}
+                            {item.description}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                 </div>
               )}
-              {showAll && acceptanceMessage && (
-                <p
-                  id="acceptance-requirements"
-                  className="rounded bg-amber-50 p-3 text-sm"
-                >
-                  {acceptanceMessage}
-                </p>
+              {editable && (
+                <>
+                  {showAll && canAccept && (
+                    <fieldset className="space-y-2 rounded border p-4">
+                      <legend>Whole-scope source checks</legend>
+                      {(
+                        [
+                          [
+                            "readingOrderChecked",
+                            "Reading order and heading relationships are correct",
+                          ],
+                          [
+                            "contextChecked",
+                            "Required qualifications, context and footnotes are included",
+                          ],
+                          [
+                            "criticalCharactersChecked",
+                            "Numbers, dates, names, identifiers and negations match",
+                          ],
+                        ] as const
+                      ).map(([key, label]) => (
+                        <label key={key} className="block">
+                          <input
+                            disabled={busy}
+                            type="checkbox"
+                            checked={fields[key]}
+                            onChange={(e) =>
+                              update({ [key]: e.target.checked })
+                            }
+                          />{" "}
+                          {label}
+                        </label>
+                      ))}
+                    </fieldset>
+                  )}
+                  <label className="block">
+                    Review notes / decision reason
+                    <textarea
+                      aria-label="Review notes / decision reason"
+                      className="mt-1 w-full rounded border p-3"
+                      rows={4}
+                      maxLength={4000}
+                      value={fields.note}
+                      disabled={busy}
+                      onChange={(e) => update({ note: e.target.value })}
+                    />
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="rounded border px-3 py-2"
+                      disabled={busy}
+                      onClick={() => save("SAVE_DRAFT")}
+                    >
+                      {operation === "SAVE_DRAFT"
+                        ? "Saving draft…"
+                        : "Save review draft"}
+                    </button>
+                    {(fields.note.trim() || fields.issues?.length) &&
+                      fields.checks.some(
+                        (check) => check.state !== "checked",
+                      ) && (
+                        <button
+                          className="rounded border px-3 py-2"
+                          disabled={
+                            busy ||
+                            (!fields.note.trim() && !fields.issues?.length)
+                          }
+                          onClick={() => save("REQUEST_CHANGES")}
+                        >
+                          {operation === "REQUEST_CHANGES"
+                            ? "Saving corrections…"
+                            : "Request corrections"}
+                        </button>
+                      )}
+                    {showAll && canAccept && (
+                      <button
+                        className="rounded bg-emerald-700 px-3 py-2 text-white disabled:opacity-40"
+                        aria-describedby={
+                          acceptanceMessage
+                            ? "acceptance-requirements"
+                            : undefined
+                        }
+                        disabled={busy || acceptanceMessage !== null}
+                        onClick={() => save("ACCEPT_EXTRACTION")}
+                      >
+                        {operation === "ACCEPT_EXTRACTION"
+                          ? "Verifying evidence…"
+                          : "Accept extraction for this scope"}
+                      </button>
+                    )}
+                    <button
+                      className="rounded border px-3 py-2"
+                      onClick={download}
+                    >
+                      Export my notes
+                    </button>
+                    <button
+                      className="rounded border px-3 py-2"
+                      disabled={busy}
+                      aria-expanded={confirmReload}
+                      onClick={() => {
+                        if (dirty) setConfirmReload(true);
+                        else void load(c.id, true);
+                      }}
+                    >
+                      Load latest saved review
+                    </button>
+                  </div>
+                  {confirmReload && (
+                    <div className="space-y-2 rounded border border-amber-300 bg-amber-50 p-3">
+                      <p className="text-sm">
+                        Loading the saved review replaces your unsaved edits.
+                        Export your notes first if you need both versions.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="rounded border bg-white px-3 py-2 text-sm"
+                          onClick={() => setConfirmReload(false)}
+                        >
+                          Keep editing
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded border bg-white px-3 py-2 text-sm"
+                          disabled={busy || !cacheOk}
+                          onClick={() => load(c.id, true)}
+                        >
+                          Replace edits with saved review
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {showAll && canAccept && acceptanceMessage && (
+                    <p
+                      id="acceptance-requirements"
+                      className="rounded bg-amber-50 p-3 text-sm"
+                    >
+                      {acceptanceMessage}
+                    </p>
+                  )}
+                  <p className="text-sm text-slate-600">
+                    {dirty ? "Unsaved review fields. " : ""}
+                    {showAll
+                      ? "Acceptance checks extraction only; tax approval remains separate."
+                      : "Save a draft after reviewing the flags. A flag review does not certify the whole document."}
+                  </p>
+                </>
               )}
-              <p className="text-sm text-slate-600">
-                {dirty ? "Unsaved review fields. " : ""}
-                {showAll
-                  ? "Acceptance checks extraction only; tax approval remains separate."
-                  : "Save a draft after reviewing the flags. A flag review does not certify the whole document."}
-              </p>
               <p
                 role="status"
                 aria-live="polite"

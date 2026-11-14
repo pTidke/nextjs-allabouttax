@@ -1,4 +1,4 @@
-import type { Candidate, Region } from "./contract";
+import type { Candidate, Command, Region, ReportedIssue } from "./contract";
 
 type IssueKind = "unresolved" | "changed" | "key_text";
 const reasons: Record<IssueKind, string> = {
@@ -53,7 +53,10 @@ export function reviewQueue(candidate: Candidate) {
   return { issues, documentChecks, blockingHolds };
 }
 
-export function summarizeReview(candidate: Candidate) {
+export function summarizeReview(
+  candidate: Candidate,
+  action?: Command["action"],
+) {
   const queue = reviewQueue(candidate);
   const blocked =
     candidate.state === "BLOCKED" || queue.blockingHolds.length > 0;
@@ -63,14 +66,90 @@ export function summarizeReview(candidate: Candidate) {
     state: candidate.state,
     scopeNote: candidate.scopeNote,
     revision: candidate.revisionHash.slice(0, 8),
-    status: blocked
-      ? ("blocked" as const)
-      : queue.issues.length || queue.documentChecks.length
-        ? ("needs_review" as const)
-        : ("no_flags" as const),
+    status:
+      action === "ACCEPT_EXTRACTION"
+        ? ("accepted" as const)
+        : action === "REQUEST_CHANGES"
+          ? ("blocked" as const)
+          : candidate.repair
+            ? ("recheck" as const)
+            : blocked
+              ? ("blocked" as const)
+              : ("needs_review" as const),
     issueCount: queue.issues.length,
     documentCheckCount: queue.documentChecks.length,
     holdCount: queue.blockingHolds.length,
+  };
+}
+
+export function repairReview(
+  candidate: Candidate,
+  previous: Candidate,
+  request: Command,
+) {
+  const previousById = new Map(
+    previous.regions.map((region) => [region.id, region]),
+  );
+  const currentIds = new Set(candidate.regions.map((region) => region.id));
+  const changedPages = new Set(
+    previous.regions
+      .filter((region) => !currentIds.has(region.id))
+      .map((region) => region.page),
+  );
+  const reports: ReportedIssue[] = request.issues ?? [];
+  const reportedRegions = new Set([
+    ...reports.map((report) => report.regionId),
+    ...request.checks
+      .filter((check) => check.state !== "checked")
+      .map((check) => check.regionId),
+  ]);
+  for (const report of reports) {
+    if (
+      report.page !== null &&
+      (report.regionId === null || !currentIds.has(report.regionId))
+    )
+      changedPages.add(report.page);
+  }
+  for (const region of previous.regions) {
+    if (
+      reportedRegions.has(region.id) &&
+      (previous.kind === "image_table_band" || !currentIds.has(region.id))
+    )
+      changedPages.add(region.page);
+  }
+  const documentIssue =
+    reports.some((report) => report.page === null) ||
+    (reports.length === 0 && reportedRegions.size === 0);
+  const regionIds = candidate.regions
+    .filter((region) => {
+      const old = previousById.get(region.id);
+      return (
+        documentIssue ||
+        changedPages.has(region.page) ||
+        reportedRegions.has(region.id) ||
+        !old ||
+        old.page !== region.page ||
+        old.proposed !== region.proposed ||
+        old.state !== region.state ||
+        old.box.x0 !== region.box.x0 ||
+        old.box.x1 !== region.box.x1 ||
+        old.box.top !== region.box.top ||
+        old.box.bottom !== region.box.bottom
+      );
+    })
+    .map((region) => region.id);
+  return {
+    regionIds,
+    previousRegions: candidate.regions.flatMap((region) => {
+      const old = previousById.get(region.id);
+      return old &&
+        old.page === region.page &&
+        (old.proposed !== region.proposed || old.state !== region.state)
+        ? [{ id: old.id, text: old.proposed, state: old.state }]
+        : [];
+    }),
+    reports,
+    note: request.note,
   };
 }
 

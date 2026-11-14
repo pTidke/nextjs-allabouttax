@@ -143,14 +143,42 @@ async function main() {
       );
       if (!files.length || files.length > 20)
         throw new Error("Invalid staging envelope inventory.");
-      for (const file of files) {
+      const fileSelection = options.get("--envelope");
+      const replacesCandidateId = options.get("--replaces");
+      const requestRevisionId = options.get("--request-revision");
+      const description = options.get("--repair-summary");
+      const linked = Boolean(
+        replacesCandidateId || requestRevisionId || description,
+      );
+      if (fileSelection && !files.includes(fileSelection))
+        throw new Error("The selected envelope is missing.");
+      if (
+        linked &&
+        !(
+          fileSelection &&
+          replacesCandidateId &&
+          requestRevisionId &&
+          description
+        )
+      )
+        throw new Error(
+          "A repair needs an envelope, previous candidate, saved request and summary.",
+        );
+      for (const file of fileSelection ? [fileSelection] : files) {
         const c = await candidateFromBundle(
           bundle,
           file,
           process.env.EXTRACTION_STAGING_PYTHON ||
             path.resolve("tools/pdf_pipeline/.venv/bin/python"),
         );
-        await store.register(c);
+        await store.register(
+          replacesCandidateId && requestRevisionId && description
+            ? {
+                ...c,
+                repair: { replacesCandidateId, requestRevisionId, description },
+              }
+            : c,
+        );
         console.log(
           JSON.stringify({
             draft: c.id,

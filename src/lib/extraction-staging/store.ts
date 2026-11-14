@@ -1,5 +1,5 @@
 import { HttpError } from "../http";
-import { summarizeReview } from "./review-queue";
+import { repairReview, summarizeReview } from "./review-queue";
 import {
   digest,
   parseCommand,
@@ -60,6 +60,18 @@ function reviewHistory(head: string | null, rows: Row[]) {
   if (ordered.length !== records.length)
     throw new Error("Orphaned or rolled-back review history.");
   return { headRevision: head, revisions: ordered };
+}
+function inboxDecision(head?: Command["action"], decision?: Command["action"]) {
+  if (head === "SAVE_DRAFT")
+    return decision === "REQUEST_CHANGES" ? decision : undefined;
+  return head;
+}
+function latestDecision(revisions: SavedRevision[]) {
+  return inboxDecision(
+    revisions[0]?.command.action,
+    revisions.find((entry) => entry.command.action !== "SAVE_DRAFT")?.command
+      .action,
+  );
 }
 export class ExtractionStore {
   constructor(
@@ -144,6 +156,10 @@ export class ExtractionStore {
        )
        SELECT access.*, c.id, c.payload, c.payload_hash,
          CASE WHEN $3::boolean THEN (
+           SELECT id FROM extraction_staging.candidates next
+           WHERE next.payload->'repair'->>'replacesCandidateId'=c.id LIMIT 1
+         ) END AS replacement_id,
+         CASE WHEN $3::boolean THEN (
            SELECT revision_id FROM extraction_staging.heads WHERE candidate_id=c.id
          ) END AS head_revision,
          CASE WHEN $3::boolean THEN (
@@ -170,23 +186,73 @@ export class ExtractionStore {
     return this.db.transaction(async (sql) => {
       await this.reviewer(sql, userId);
       const r = await sql.query(
-        "SELECT * FROM extraction_staging.candidates ORDER BY created_at,id LIMIT 30",
+        `SELECT c.*, h.action AS head_action, d.action AS decision_action
+         FROM extraction_staging.candidates c
+         LEFT JOIN extraction_staging.heads head ON head.candidate_id=c.id
+         LEFT JOIN extraction_staging.revisions h ON h.id=head.revision_id
+         LEFT JOIN LATERAL (
+           WITH RECURSIVE trail AS (
+             SELECT id, parent_id, action, 1 AS depth FROM extraction_staging.revisions WHERE id=head.revision_id
+             UNION ALL
+             SELECT r.id, r.parent_id, r.action, t.depth + 1 FROM extraction_staging.revisions r
+             JOIN trail t ON r.id=t.parent_id
+             WHERE t.action='SAVE_DRAFT' AND t.depth < 100 AND r.candidate_id=c.id
+           )
+           SELECT action FROM trail WHERE action <> 'SAVE_DRAFT' LIMIT 1
+         ) d ON h.action='SAVE_DRAFT'
+         WHERE NOT EXISTS (
+           SELECT 1 FROM extraction_staging.candidates next
+           WHERE next.payload->'repair'->>'replacesCandidateId'=c.id
+         )
+         ORDER BY c.created_at DESC,c.id LIMIT 30`,
       );
-      return r.rows.map((row) => summarizeReview(candidate(row)));
+      return r.rows.map((row) =>
+        summarizeReview(
+          candidate(row),
+          inboxDecision(
+            (row.head_action ?? undefined) as Command["action"] | undefined,
+            (row.decision_action ?? undefined) as Command["action"] | undefined,
+          ),
+        ),
+      );
     });
   }
   async get(userId: string, id: string) {
     const row = await this.readCandidate(userId, id, true);
+    const c = candidate(row);
+    const history = reviewHistory(
+      row.head_revision as string | null,
+      row.revisions as Row[],
+    );
+    const replacementId = row.replacement_id as string | null;
+    const repair = c.repair ? await this.repairDetails(c) : null;
     return {
-      candidate: candidate(row),
-      history: reviewHistory(
-        row.head_revision as string | null,
-        row.revisions as Row[],
-      ),
+      candidate: c,
+      history,
+      replacementId,
+      repair,
+      summary: summarizeReview(c, latestDecision(history.revisions)),
       publicationEligible: false,
       taxApproved: false,
       retrievalItemsCreated: 0,
     };
+  }
+  private async repairDetails(c: Candidate) {
+    const link = c.repair!;
+    const {
+      rows: [row],
+    } = await this.db.query(
+      `SELECT c.*, to_jsonb(r) AS request FROM extraction_staging.candidates c
+       JOIN extraction_staging.revisions r ON r.candidate_id=c.id
+       WHERE c.id=$1 AND r.id=$2`,
+      [link.replacesCandidateId, link.requestRevisionId],
+    );
+    if (!row) throw new Error("Repair evidence is missing.");
+    return repairReview(
+      c,
+      candidate(row),
+      revision(row.request as Row).command,
+    );
   }
   async sourceObject(userId: string, id: string, objectId: string) {
     const c = candidate(await this.readCandidate(userId, id, false));
@@ -219,6 +285,7 @@ export class ExtractionStore {
           return {
             revision: old,
             headRevision: history.headRevision,
+            summary: summarizeReview(c, latestDecision(history.revisions)),
             publicationEligible: false,
             taxApproved: false,
             retrievalItemsCreated: 0,
@@ -229,6 +296,11 @@ export class ExtractionStore {
             409,
             "A newer review exists. Load it before saving.",
           );
+        if (await this.replacementId(sql, c.id))
+          throw new HttpError(
+            409,
+            "A repaired version is ready. Open it in the inbox.",
+          );
         if (history.revisions.length >= 100)
           throw new HttpError(
             409,
@@ -236,6 +308,11 @@ export class ExtractionStore {
           );
         validateDecision(c, command);
         if (command.action === "ACCEPT_EXTRACTION") {
+          if (latestDecision(history.revisions) === "REQUEST_CHANGES")
+            throw new HttpError(
+              409,
+              "This version has a pending correction request. Review the repaired extraction instead.",
+            );
           if (!verified) return { verify: c };
           if (digest(verified) !== digest(c))
             throw new HttpError(
@@ -275,6 +352,10 @@ export class ExtractionStore {
         return {
           revision: saved,
           headRevision: saved.id,
+          summary: summarizeReview(
+            c,
+            latestDecision([saved, ...history.revisions]),
+          ),
           publicationEligible: false,
           taxApproved: false,
           retrievalItemsCreated: 0,
@@ -290,12 +371,22 @@ export class ExtractionStore {
       throw new Error("Source verification was not applied.");
     return accepted;
   }
+  private async replacementId(sql: Sql, id: string) {
+    const {
+      rows: [row],
+    } = await sql.query(
+      "SELECT id FROM extraction_staging.candidates WHERE payload->'repair'->>'replacesCandidateId'=$1 LIMIT 1",
+      [id],
+    );
+    return row?.id;
+  }
   // Operator methods are never exposed by an HTTP handler.
   async register(value: Candidate) {
     const c = validateCandidate(value);
     await this.verifyEvidence(c);
     return this.db.transaction(async (sql) => {
       await this.environment(sql);
+      if (c.repair) await this.candidateLock(sql, c.repair.replacesCandidateId);
       await this.candidateLock(sql, c.id);
       const existing = await sql.query(
         "SELECT * FROM extraction_staging.candidates WHERE id=$1",
@@ -305,6 +396,39 @@ export class ExtractionStore {
         if (digest(candidate(existing.rows[0])) !== digest(c))
           throw new HttpError(409, "Existing import has different evidence.");
         return c.id;
+      }
+      if (c.repair) {
+        const previous = await this.bound(sql, c.repair.replacesCandidateId);
+        const history = await this.history(sql, previous.id);
+        const request = history.revisions.find(
+          (entry) => entry.command.action !== "SAVE_DRAFT",
+        );
+        if (
+          request?.id !== c.repair.requestRevisionId ||
+          request.command.action !== "REQUEST_CHANGES"
+        )
+          throw new HttpError(
+            409,
+            "The repair must answer the latest saved correction request.",
+          );
+        if (
+          c.sourceId !== previous.sourceId ||
+          c.sourceHash !== previous.sourceHash ||
+          c.kind !== previous.kind ||
+          c.revisionHash === previous.revisionHash ||
+          previous.regions.some(
+            (region) => !c.regions.some((next) => next.page === region.page),
+          )
+        )
+          throw new HttpError(
+            409,
+            "A repair needs a new extraction of the same source and reviewed pages.",
+          );
+        if (await this.replacementId(sql, previous.id))
+          throw new HttpError(
+            409,
+            "A repaired version already answers this request.",
+          );
       }
       await sql.query(
         "INSERT INTO extraction_staging.candidates(id,payload,payload_hash) VALUES($1,$2::jsonb,$3)",
