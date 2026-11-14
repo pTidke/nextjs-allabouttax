@@ -8,6 +8,7 @@ import type {
 } from "@/lib/extraction-staging/contract";
 import {
   recordedTableRow,
+  recordedTable,
   reviewQueue,
   type repairReview,
   type summarizeReview,
@@ -515,6 +516,14 @@ export default function ExtractionPanel({
       : flaggedRegions;
   const activeIndex = reviewRegions.findIndex((item) => item.id === selected);
   const activeRegion = reviewRegions[activeIndex];
+  function selectTableCell(cellId: string) {
+    if (reviewRegions.some((item) => item.id === cellId)) {
+      select(cellId);
+      return;
+    }
+    setShowChanges(false);
+    select(cellId, true);
+  }
   const sourceUrl = render ? asset(render.object.object_id) : null;
   const sourceReady = sourceStatus?.url === sourceUrl && sourceStatus?.loaded;
   const checkByRegion = new Map(
@@ -524,6 +533,7 @@ export default function ExtractionPanel({
     checkByRegion.has(item.id),
   ).length;
   const row = c && region ? recordedTableRow(c, region) : [];
+  const table = c && region ? recordedTable(c, region) : [];
   const boxes =
     showRow && row.length > 1
       ? row.map((cell) => cell.box)
@@ -1162,28 +1172,81 @@ export default function ExtractionPanel({
                             </p>
                           </div>
                         ))}
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <div className="min-w-0 rounded bg-slate-50 p-3">
-                        <p className="text-xs font-semibold">
-                          Proposed transcription
-                        </p>
-                        <p className="whitespace-pre-wrap break-words">
-                          {activeRegion.state === "blank"
-                            ? "[confirmed blank]"
-                            : activeRegion.proposed?.trim()
-                              ? activeRegion.proposed
-                              : "[unresolved]"}
-                        </p>
+                    {table.length > 0 ? (
+                      <div className="overflow-x-auto rounded border">
+                        <table className="w-full border-collapse text-sm">
+                          <caption className="bg-slate-50 p-2 text-left font-semibold">
+                            Proposed table
+                          </caption>
+                          <thead>
+                            <tr>
+                              {table[0].map((cell) => (
+                                <th
+                                  key={cell.id}
+                                  scope="col"
+                                  className="border p-2 text-left"
+                                >
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    onClick={() => selectTableCell(cell.id)}
+                                    aria-pressed={selected === cell.id}
+                                    className="w-full text-left aria-pressed:bg-emerald-100"
+                                  >
+                                    {cell.proposed}
+                                  </button>
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {table.slice(1).map((row) => (
+                              <tr key={row[0].id}>
+                                {row.map((cell) => (
+                                  <td
+                                    key={cell.id}
+                                    className="border p-2 align-top"
+                                  >
+                                    <button
+                                      type="button"
+                                      disabled={busy}
+                                      onClick={() => selectTableCell(cell.id)}
+                                      aria-pressed={selected === cell.id}
+                                      className="w-full text-left aria-pressed:bg-emerald-100"
+                                    >
+                                      {cell.proposed}
+                                    </button>
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                      <details className="min-w-0 rounded bg-slate-50 p-3">
-                        <summary className="text-xs font-semibold">
-                          Raw OCR
-                        </summary>
-                        <p className="whitespace-pre-wrap break-words">
-                          {activeRegion.raw ?? "[no raw transcription]"}
-                        </p>
-                      </details>
-                    </div>
+                    ) : (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="min-w-0 rounded bg-slate-50 p-3">
+                          <p className="text-xs font-semibold">
+                            Proposed transcription
+                          </p>
+                          <p className="whitespace-pre-wrap break-words">
+                            {activeRegion.state === "blank"
+                              ? "[confirmed blank]"
+                              : activeRegion.proposed?.trim()
+                                ? activeRegion.proposed
+                                : "[unresolved]"}
+                          </p>
+                        </div>
+                        <details className="min-w-0 rounded bg-slate-50 p-3">
+                          <summary className="text-xs font-semibold">
+                            Raw OCR
+                          </summary>
+                          <p className="whitespace-pre-wrap break-words">
+                            {activeRegion.raw ?? "[no raw transcription]"}
+                          </p>
+                        </details>
+                      </div>
+                    )}
                     {activeRegion.note && (
                       <p className="text-sm text-slate-600">
                         {activeRegion.note}

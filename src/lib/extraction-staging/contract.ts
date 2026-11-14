@@ -11,6 +11,7 @@ export type Region = {
   state: string;
   note: string;
   box: { x0: number; top: number; x1: number; bottom: number };
+  tableCell?: { tableId: string; row: number; column: number };
 };
 export type Candidate = {
   id: string;
@@ -229,6 +230,22 @@ export function validateCandidate(value: Candidate) {
     )
   )
     throw new Error("Invalid source-bound region.");
+  const positions = new Set<string>();
+  for (const region of value.regions) {
+    const cell = region.tableCell;
+    if (!cell) continue;
+    const position = `${region.page}:${cell.tableId}:${cell.row}:${cell.column}`;
+    if (
+      !identifier.test(cell.tableId) ||
+      !Number.isSafeInteger(cell.row) ||
+      cell.row < 0 ||
+      !Number.isSafeInteger(cell.column) ||
+      cell.column < 0 ||
+      positions.has(position)
+    )
+      throw new Error("Invalid table cell position.");
+    positions.add(position);
+  }
   if (
     value.state === "AWAITING_EXTRACTION_REVIEW" &&
     value.blockingHolds.length

@@ -10,6 +10,16 @@ import {
   type Region,
 } from "./contract";
 type MapValue = Record<string, unknown>;
+type ContextTable = {
+  id: string;
+  cells: {
+    id: string;
+    raw_text: string;
+    bbox: Region["box"];
+    row: number;
+    column: number;
+  }[];
+};
 async function json(file: string) {
   const stat = await lstat(file);
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 2 * 1024 * 1024)
@@ -135,6 +145,28 @@ export async function candidateFromBundle(
       }),
     );
     regions.push(...textRegions);
+    const includedTables = new Set<string>(revision.context_tables ?? []);
+    for (const [page, data] of pages) {
+      for (const table of data.tables as ContextTable[]) {
+        if (!includedTables.has(table.id)) continue;
+        for (const cell of table.cells) {
+          regions.push({
+            id: cell.id,
+            page,
+            raw: null,
+            proposed: cell.raw_text,
+            note: "Transcribed from the original table.",
+            state: "transcribed",
+            box: cell.bbox,
+            tableCell: {
+              tableId: table.id,
+              row: cell.row,
+              column: cell.column,
+            },
+          });
+        }
+      }
+    }
   }
   return validateCandidate({
     id: receipt.import_key,

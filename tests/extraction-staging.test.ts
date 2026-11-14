@@ -23,6 +23,7 @@ import { createAssetHandler } from "../src/lib/extraction-staging/assets";
 import { stagingConfig } from "../src/lib/extraction-staging/config";
 import { readObject } from "../src/lib/extraction-staging/evidence";
 import {
+  recordedTable,
   recordedTableRow,
   reviewQueue,
   summarizeReview,
@@ -139,6 +140,50 @@ test("a held table keeps confirmed blanks distinct and shows only source cells f
   );
   assert.equal(summarizeReview(c).status, "blocked");
   assert.equal(summarizeReview(c).holdCount, 1);
+});
+
+test("context tables preserve separate source cells and stay within their table", () => {
+  const candidate = fixture();
+  const base = candidate.regions[0];
+  const cell = (
+    tableId: string,
+    row: number,
+    column: number,
+    proposed: string,
+  ) => ({
+    ...base,
+    id: `${tableId}-${row}-${column}`,
+    proposed,
+    tableCell: { tableId, row, column },
+  });
+  const label = cell("investments", 1, 0, "Debt");
+  const code = cell("investments", 1, 1, "1");
+  candidate.regions = [
+    code,
+    cell("income", 1, 0, "Interest"),
+    label,
+    cell("investments", 0, 1, "Code"),
+    cell("investments", 0, 0, "Nature of Investment"),
+  ];
+  validateCandidate(candidate);
+  assert.deepEqual(recordedTableRow(candidate, code), [label, code]);
+  assert.deepEqual(
+    recordedTable(candidate, code).map((row) =>
+      row.map((item) => item.proposed),
+    ),
+    [
+      ["Nature of Investment", "Code"],
+      ["Debt", "1"],
+    ],
+  );
+  assert.throws(
+    () =>
+      validateCandidate({
+        ...candidate,
+        regions: [...candidate.regions, { ...code, id: "duplicate" }],
+      }),
+    /table cell position/,
+  );
 });
 
 test("isolated extraction staging persists authenticated, immutable decisions in Postgres", async (t) => {

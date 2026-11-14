@@ -131,6 +131,9 @@ export function repairReview(
         old.page !== region.page ||
         old.proposed !== region.proposed ||
         old.state !== region.state ||
+        old.tableCell?.tableId !== region.tableCell?.tableId ||
+        old.tableCell?.row !== region.tableCell?.row ||
+        old.tableCell?.column !== region.tableCell?.column ||
         old.box.x0 !== region.box.x0 ||
         old.box.x1 !== region.box.x1 ||
         old.box.top !== region.box.top ||
@@ -154,6 +157,16 @@ export function repairReview(
 }
 
 export function recordedTableRow(candidate: Candidate, selected: Region) {
+  const cell = selected.tableCell;
+  if (cell)
+    return candidate.regions
+      .filter(
+        (region) =>
+          region.page === selected.page &&
+          region.tableCell?.tableId === cell.tableId &&
+          region.tableCell.row === cell.row,
+      )
+      .sort((left, right) => left.tableCell!.column - right.tableCell!.column);
   const row = /^(r\d+)c\d+$/.exec(selected.id)?.[1];
   if (candidate.kind !== "image_table_band" || !row) return [];
   return candidate.regions.filter(
@@ -161,4 +174,27 @@ export function recordedTableRow(candidate: Candidate, selected: Region) {
       region.page === selected.page &&
       /^(r\d+)c\d+$/.exec(region.id)?.[1] === row,
   );
+}
+
+export function recordedTable(candidate: Candidate, selected: Region) {
+  const cell = selected.tableCell;
+  if (!cell) return [];
+  const rows = new Map<number, Region[]>();
+  for (const region of candidate.regions) {
+    if (
+      region.page !== selected.page ||
+      region.tableCell?.tableId !== cell.tableId
+    )
+      continue;
+    const row = rows.get(region.tableCell.row) ?? [];
+    row.push(region);
+    rows.set(region.tableCell.row, row);
+  }
+  return [...rows.entries()]
+    .sort(([left], [right]) => left - right)
+    .map(([, row]) =>
+      row.sort(
+        (left, right) => left.tableCell!.column - right.tableCell!.column,
+      ),
+    );
 }

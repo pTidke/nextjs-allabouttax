@@ -60,6 +60,7 @@ class ScopeRevision(Model):
     prior_feedback: list[ObjectRef] = Field(default_factory=list, max_length=20)
     required_context_regions: list[str] = Field(default_factory=list, max_length=1000)
     table_context_spans: list[TableContextSpan] = Field(default_factory=list, max_length=1000)
+    context_tables: list[str] = Field(default_factory=list, max_length=100)
 
 
 class ImportEnvelope(Model):
@@ -247,6 +248,7 @@ def validate_import(value, registry: Registry):
             revision.reconstruction is not None
             or run.repair_binding is not None
             or revision.table_context_spans
+            or revision.context_tables
         ):
             raise ValueError("Native text scope cannot substitute a reconstruction")
         expected = {b.id for p in artifact.pages if p.number in revision.pages for b in p.blocks}
@@ -296,6 +298,39 @@ def validate_import(value, registry: Registry):
             raise ValueError("Invalid registered raw cell inventory")
         page = pages[bound.page]
         accounting = validate_layout(repair, page.width, page.height, raw_cells)
+        context_tables = {table.id: (p, table) for p in pages.values() for table in p.tables}
+        if len(set(revision.context_tables)) != len(revision.context_tables):
+            raise ValueError("Duplicate context table")
+        for table_id in revision.context_tables:
+            if table_id not in context_tables:
+                raise ValueError("Foreign context table")
+            context_page, table = context_tables[table_id]
+            if not context_page.render or table.rows < 2 or table.columns < 2:
+                raise ValueError("A context table needs a rendered page, headers and data")
+            by_position = {(cell.row, cell.column): cell for cell in table.cells}
+            for (row, column), cell in by_position.items():
+                header = by_position[(0, column)]
+                if (
+                    not cell.bbox
+                    or not cell.raw_text
+                    or not cell.raw_text.strip()
+                    or cell.row_span not in (None, 1)
+                    or cell.column_span not in (None, 1)
+                    or cell.header_path != ([header.id] if row else [])
+                    or not (
+                        table.bbox.x0 <= cell.bbox.x0 < cell.bbox.x1 <= table.bbox.x1
+                        and table.bbox.top <= cell.bbox.top < cell.bbox.bottom <= table.bbox.bottom
+                    )
+                ):
+                    raise ValueError(
+                        "Context table cells must have text, bounds and column headers"
+                    )
+                left = by_position.get((row, column - 1))
+                above = by_position.get((row - 1, column))
+                if (left and left.bbox and left.bbox.x1 > cell.bbox.x0) or (
+                    above and above.bbox and above.bbox.bottom > cell.bbox.top
+                ):
+                    raise ValueError("Context table cell coordinates overlap")
         actual_context = [proposal.block_id for proposal in revision.text]
         if len(set(actual_context)) != len(actual_context) or not set(actual_context) <= set(
             revision.required_context_regions
@@ -352,7 +387,7 @@ def validate_import(value, registry: Registry):
             blockers.add("TABLE_CELLS_UNRESOLVED")
         # There is no accepted hierarchy/context contract for these partial bands yet.
         blockers.add("TABLE_CONTEXT_AND_STRUCTURE_UNREVIEWED")
-        if revision.required_context_regions:
+        if revision.required_context_regions or revision.context_tables:
             blockers.add("TABLE_CONTEXT_REGIONS_UNREVIEWED")
     canonical = envelope.model_dump()
     canonical["renders"] = sorted(canonical["renders"], key=lambda r: r["page"])
