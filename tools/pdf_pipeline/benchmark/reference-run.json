@@ -1,0 +1,290 @@
+{
+  "schema_version": "0.1.0",
+  "state": "DEVELOPMENT_ONLY_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "report_sha256": "74272e4b9c13558bba11ae53cecccb9d7cab0b187cab2dd6d404c4cf87c74d10",
+  "dataset_sha256": "ff9bcd2fb2918f994406deb390f73f71067d87f76d9d783af24e6aada82f6e26",
+  "scorer_sha256": "48e35b2f034d7101f5efddc80dc8fb75213b1bffb4812b8363599573d13cad65",
+  "adapter_sha256": "52c6ef19050da43e3b8bcc2449cae2badae972908974b0dc73650779757deb68",
+  "local_report": "work/pdf-lab/demo-v2/benchmarks/reference-development-v2/results-v2/report.json",
+  "reference_pages": 23,
+  "official_pages": 18,
+  "official_originals": 11,
+  "official_verified_pages": 0,
+  "synthetic_pages": 5,
+  "synthetic_originals": 4,
+  "attempts_by_kind": {
+    "official": {
+      "candidate_attempts": 32,
+      "scored_attempts": 0,
+      "unscored_attempts": 32,
+      "observed_empty_attempts": 2,
+      "accepted_extractions": 0
+    },
+    "synthetic": {
+      "candidate_attempts": 11,
+      "scored_attempts": 11,
+      "unscored_attempts": 0,
+      "observed_empty_attempts": 2,
+      "accepted_extractions": 0
+    }
+  },
+  "synthetic_variants": {
+    "synthetic/native/unchanged": {
+      "scored_attempts": 5,
+      "reference_characters": 936,
+      "character_edits": 360,
+      "cer": 0.38461538461538464,
+      "reference_words": 153,
+      "word_edits": 58,
+      "wer": 0.3790849673202614,
+      "missing_output_attempts": 2
+    },
+    "synthetic/tesseract-eng+hin-psm3/blurred": {
+      "scored_attempts": 1,
+      "reference_characters": 180,
+      "character_edits": 0,
+      "cer": 0.0,
+      "reference_words": 29,
+      "word_edits": 0,
+      "wer": 0.0,
+      "missing_output_attempts": 0
+    },
+    "synthetic/tesseract-eng+hin-psm3/rotated90": {
+      "scored_attempts": 1,
+      "reference_characters": 180,
+      "character_edits": 163,
+      "cer": 0.9055555555555556,
+      "reference_words": 29,
+      "word_edits": 31,
+      "wer": 1.0689655172413792,
+      "missing_output_attempts": 0
+    },
+    "synthetic/tesseract-eng+hin-psm3/unchanged": {
+      "scored_attempts": 1,
+      "reference_characters": 180,
+      "character_edits": 0,
+      "cer": 0.0,
+      "reference_words": 29,
+      "word_edits": 0,
+      "wer": 0.0,
+      "missing_output_attempts": 0
+    },
+    "synthetic/tesseract-eng-psm3/blurred": {
+      "scored_attempts": 1,
+      "reference_characters": 180,
+      "character_edits": 0,
+      "cer": 0.0,
+      "reference_words": 29,
+      "word_edits": 0,
+      "wer": 0.0,
+      "missing_output_attempts": 0
+    },
+    "synthetic/tesseract-eng-psm3/rotated90": {
+      "scored_attempts": 1,
+      "reference_characters": 180,
+      "character_edits": 162,
+      "cer": 0.9,
+      "reference_words": 29,
+      "word_edits": 30,
+      "wer": 1.0344827586206897,
+      "missing_output_attempts": 0
+    },
+    "synthetic/tesseract-eng-psm3/unchanged": {
+      "scored_attempts": 1,
+      "reference_characters": 180,
+      "character_edits": 0,
+      "cer": 0.0,
+      "reference_words": 29,
+      "word_edits": 0,
+      "wer": 0.0,
+      "missing_output_attempts": 0
+    }
+  },
+  "synthetic_table": {
+    "reference_tables": 1,
+    "observed_tables": 1,
+    "missing_tables": 0,
+    "extra_tables": 0,
+    "reference_cells": 15,
+    "reference_value_cells": 14,
+    "unresolved_covered_cells": 1,
+    "exact_cell_values": 14,
+    "reference_anchors": 14,
+    "exact_anchor_spans": 0,
+    "unmeasured_header_tables": 1
+  },
+  "reference_revisions": [
+    {
+      "id": "4859b7812f85-p1",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "notification-text",
+      "reference_sha256": "6e30d677cb3428bd5a04593e6671698e5ae048745c906748fb5aa9a24e5f59f9"
+    },
+    {
+      "id": "cc4238745db8-p1",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "circular-6-tuning",
+      "reference_sha256": "46756b7a61d0a08aa469ae1dbb827b44e3473ce877438f55ebfb153b85be1784"
+    },
+    {
+      "id": "cc4238745db8-p2",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "circular-6-tuning",
+      "reference_sha256": "30f4ea310f302c98f751ca8ee044ac220342f459bedb01a06488bd756c886fb7"
+    },
+    {
+      "id": "454ae8882a9e-p10",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "503aa760e6c54541ba113fb0169ec27006eb7b1bf14ae8ec4b2906a1f394cda5"
+    },
+    {
+      "id": "3756112e45b5-p1",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "530a7bf500902837b6ff10e28e359b0dd7d693259fee5ec8c4b9c5c56f1c13ae"
+    },
+    {
+      "id": "3756112e45b5-p3",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "20739f384f51f9e7dbda0303315ada0fa8ff84f5b93bd5696c85af714d70d0ac"
+    },
+    {
+      "id": "3756112e45b5-p4",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "7fab633d450a47ef18c9b53a0e09922cccc8f543c2d54bf8dcec16e834ed05cd"
+    },
+    {
+      "id": "6f99723750ec-p9",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "453cc1294f32a4f736035a45e5bc9dc362d315d200c200c3ddf02cf833f80b08"
+    },
+    {
+      "id": "e228528d7afc-p2",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "dd5d067ca63577568c718dd709279d7e491f9cdab586e1b998eaac1936ef16fc"
+    },
+    {
+      "id": "e228528d7afc-p6",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "30b10aa4cf1dbdff2a46f5eb9e6cd83897cf20ee8411af3dc72d4365f2bba942"
+    },
+    {
+      "id": "309139f3b8b1-p1",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "4f2066c25154dc0c11b35a7850a3ff8c160045153dc66b91dab3e4ea1b80532f"
+    },
+    {
+      "id": "309139f3b8b1-p2",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "forms-related-engineering",
+      "reference_sha256": "2674c5630e66c8581f0d3e5901a8a7d4faad3877915e3b6243bfbba80a302e77"
+    },
+    {
+      "id": "f565e0f5ff3b-p1",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "rules-large-stress",
+      "reference_sha256": "822612f2416b1914047e512af14ea2b677b800026eb6c1948c98d5d3fa202890"
+    },
+    {
+      "id": "f565e0f5ff3b-p2",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "rules-large-stress",
+      "reference_sha256": "2ba5e21b7db41c51db398c453bf4610fa02fa162e44d2e5b79d6372ee62c2f3f"
+    },
+    {
+      "id": "f9f2c1a621f7-p1",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "circulars-inspected-development",
+      "reference_sha256": "25474e83b12fe21beef2ecd239a151e8a7533951608514251a7464d7cb1c323f"
+    },
+    {
+      "id": "ffa0e21cd3db-p1",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "circulars-inspected-development",
+      "reference_sha256": "3aebe9db9ceb220e224ad79b8c55e227b73388ce5258e268e0f573525fcc5bbe"
+    },
+    {
+      "id": "ffa0e21cd3db-p2",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "circulars-inspected-development",
+      "reference_sha256": "39ab5d26881bde94b6f1b4465671dd2d10e37842ffe28300e3902455249bfea6"
+    },
+    {
+      "id": "62e34ef5e8c8-p1",
+      "kind": "official",
+      "status": "PROPOSED",
+      "template_group": "circulars-inspected-development",
+      "reference_sha256": "118dbee65fe844f44460ef62fef4cbd88ae15a64bf508bdf27cb4ffd1656c66b"
+    },
+    {
+      "id": "9167d2dcd425-p1",
+      "kind": "synthetic",
+      "status": "AUTHORED_SYNTHETIC",
+      "template_group": "synthetic-fixture-family",
+      "reference_sha256": "4ba20edca5d8c698ae238f868711188f78eef6219d8e574dedbf16bcef8c7658"
+    },
+    {
+      "id": "944d5d44b2c9-p1",
+      "kind": "synthetic",
+      "status": "AUTHORED_SYNTHETIC",
+      "template_group": "synthetic-fixture-family",
+      "reference_sha256": "f97f8619c5c34f5f4f47b5690437b14bf466b01a4f29a427a40bb9981678aa2a"
+    },
+    {
+      "id": "cb9c1baa174a-p1",
+      "kind": "synthetic",
+      "status": "AUTHORED_SYNTHETIC",
+      "template_group": "synthetic-fixture-family",
+      "reference_sha256": "21256b62cdb227bed5964e28db5a9dab6396b9db98595300ef69897a187ea82e"
+    },
+    {
+      "id": "cb9c1baa174a-p2",
+      "kind": "synthetic",
+      "status": "AUTHORED_SYNTHETIC",
+      "template_group": "synthetic-fixture-family",
+      "reference_sha256": "2abec7f3d3b26d6cd09546d300a139f822382fa62cc9aafaf07e75700931186c"
+    },
+    {
+      "id": "771a7f09a4f6-p1",
+      "kind": "synthetic",
+      "status": "AUTHORED_SYNTHETIC",
+      "template_group": "synthetic-fixture-family",
+      "reference_sha256": "146da2d29af529f132e450b2081b6d8351f6be68dbb8e6368808ba1e04f2d69e"
+    }
+  ],
+  "findings": [
+    "Both unchanged and blurred synthetic OCR variants matched the authored normalized text; this is one correlated simple fixture, not official-document accuracy.",
+    "Rotated synthetic OCR has 90.00% English / 90.56% bilingual character error despite returning text; orientation handling needs a separate measured increment.",
+    "Native-only baseline omitted two scanned synthetic pages; they remain in error denominators.",
+    "All fourteen synthetic table value cells matched; all fourteen anchor spans and the covered relation remain unresolved in raw candidate output.",
+    "Two default OCR attempts for official Circular 4 page 1 remain visibly empty; no official error rate is calculated without complete human-verified references.",
+    "The eighteen official pages are selected development reference templates, not completed gold labels. Partial user table choices and earlier qualitative feedback are not promoted to ground truth.",
+    "Previously inspected/tuned and related form documents are development only. Real image-only official documents and an unseen source/template evaluation cohort remain gaps.",
+    "No clean quality claims, accepted extractions, tax approvals, production updates or paid OCR calls occurred."
+  ]
+}

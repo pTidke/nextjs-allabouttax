@@ -1,0 +1,419 @@
+{
+  "purpose": "Previously inspected, source-bound raw OCR snapshots for engineering regression only; no accepted transcription, page, table or legal reference. Original source/render hashes are in each binding.",
+  "plan": {
+    "schema_version": "0.1.0",
+    "recorded_on": "2026-11-11",
+    "state": "AGENT_RECONSTRUCTION_EXAMPLES_NOT_ACCEPTED",
+    "publication_eligible": false,
+    "owner_verified": false,
+    "scope": "Two source-informed engineering examples, not automatic table recovery or owner-confirmed references. Coordinates were inspected using original/native grid aids; only the scoped bands are reconstructed. All original provider cells remain available.",
+    "examples": [
+      {
+        "case_id": "3756112e45b5-p5",
+        "raw_sha256": "89ae7e234ec1f953919636aaebaf5f3ac0034ca8210213b8f446f28f215aa070",
+        "title": "Scanned investment form — restore the Amount column",
+        "x": [
+          86.58,
+          130.74,
+          188.94,
+          243.3,
+          316.74,
+          369.64,
+          423.84,
+          464.76,
+          506.352
+        ],
+        "y": [
+          286.32,
+          298.56,
+          322.92,
+          370.74,
+          383.04,
+          395.4,
+          419.76,
+          432.12
+        ],
+        "scope_note": "Part C only. Part A/B, notes, verification, blank entry fields and the whole page remain unreviewed. Agent-prepared source geometry/transcriptions; not an automatic repair or approved extraction."
+      },
+      {
+        "case_id": "e228528d7afc-p6",
+        "raw_sha256": "be270890fcd25323f2cdab70bc80498c85f1e324a5732d53737c04909a56fbcf",
+        "title": "Complex form — restore Amount / Section under B and C",
+        "x": [
+          136.580005,
+          208.58,
+          257.44999,
+          302.090005,
+          345.410005,
+          395.810005,
+          489.55922,
+          597.56213,
+          712.77999,
+          813.45602
+        ],
+        "y": [
+          482.740005,
+          495.09602,
+          519.387446
+        ],
+        "scope_note": "Only the letter-label/subheading band. Long statutory headings, conditions, references, shaded entry cells and the rest of the page remain outside this scoped reconstruction and unreviewed. Agent proposal; no tax applicability approval."
+      }
+    ]
+  },
+  "contexts": [
+    {
+      "case_id": "3756112e45b5-p5",
+      "binding": {
+        "run_id": "3756112e45b5-1794261062684561000",
+        "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+        "artifact_sha256": "5134e0292623a379e81bc36f4b0770235b6ead2f346414983c4917679aa813d0",
+        "render_sha256": "a3af9bf67beead669bd91392e4e0a0a7aa1aa33b4cf7f4b284e3b0706dea8f57",
+        "trial_sha256": "6d2830ec884cb3de6075bf9aa06ba2ef2bb59c9c91e8e056f77a871e46b90959",
+        "raw_sha256": "89ae7e234ec1f953919636aaebaf5f3ac0034ca8210213b8f446f28f215aa070",
+        "table_sha256": "fd53d13c4b987e47d633f586e7af18661ffc91ac0f1be5b0e45052a7355cb8a6",
+        "page": 5,
+        "case_id": "3756112e45b5-p5",
+        "table_index": 0
+      },
+      "width": 595.2,
+      "height": 842.16,
+      "raw_cells": [
+        {
+          "text": "Part A: Particulars of the Sovereign Wealth Fund (SWF)",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "1。",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "Name:",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "(refer Note 1)",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "2.",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "Address:",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "(refer Note 2)",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "3.",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "Permanent Account Number (PAN):",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "4.",
+          "start_row_offset_idx": 4
+        },
+        {
+          "text": "E-mail Id:",
+          "start_row_offset_idx": 4
+        },
+        {
+          "text": "5.",
+          "start_row_offset_idx": 5
+        },
+        {
+          "text": "Contact Number:",
+          "start_row_offset_idx": 5
+        },
+        {
+          "text": "Country Code",
+          "start_row_offset_idx": 5
+        },
+        {
+          "text": "Number",
+          "start_row_offset_idx": 5
+        },
+        {
+          "text": "Part B: Other Details",
+          "start_row_offset_idx": 6
+        },
+        {
+          "text": "6.",
+          "start_row_offset_idx": 7
+        },
+        {
+          "text": "Notification Number:",
+          "start_row_offset_idx": 7
+        },
+        {
+          "text": "7。",
+          "start_row_offset_idx": 8
+        },
+        {
+          "text": "Notification Date:",
+          "start_row_offset_idx": 8
+        },
+        {
+          "text": "8.",
+          "start_row_offset_idx": 9
+        },
+        {
+          "text": "Financial Year:",
+          "start_row_offset_idx": 9
+        },
+        {
+          "text": "9.",
+          "start_row_offset_idx": 10
+        },
+        {
+          "text": "Quarter Ending:",
+          "start_row_offset_idx": 10
+        },
+        {
+          "text": "(refer Note 3)",
+          "start_row_offset_idx": 10
+        },
+        {
+          "text": "Part C: Particulars of Investment Amount",
+          "start_row_offset_idx": 11
+        },
+        {
+          "text": "Sl. No.",
+          "start_row_offset_idx": 12
+        },
+        {
+          "text": "Date of investment",
+          "start_row_offset_idx": 12
+        },
+        {
+          "text": "Nature of investment (refer Note 4)",
+          "start_row_offset_idx": 12
+        },
+        {
+          "text": "Nature Jo income (refer Note 5)",
+          "start_row_offset_idx": 12
+        },
+        {
+          "text": "Details of the entity in which Investment made",
+          "start_row_offset_idx": 12
+        },
+        {
+          "text": "Nature of entity (refer Note 6)",
+          "start_row_offset_idx": 13
+        },
+        {
+          "text": "Name",
+          "start_row_offset_idx": 13
+        },
+        {
+          "text": "PAN",
+          "start_row_offset_idx": 13
+        },
+        {
+          "text": "A",
+          "start_row_offset_idx": 14
+        },
+        {
+          "text": "B C",
+          "start_row_offset_idx": 14
+        },
+        {
+          "text": "D",
+          "start_row_offset_idx": 14
+        },
+        {
+          "text": "E",
+          "start_row_offset_idx": 14
+        },
+        {
+          "text": "F",
+          "start_row_offset_idx": 14
+        },
+        {
+          "text": "G",
+          "start_row_offset_idx": 14
+        },
+        {
+          "text": "H",
+          "start_row_offset_idx": 14
+        },
+        {
+          "text": "1.",
+          "start_row_offset_idx": 15
+        },
+        {
+          "text": "2.",
+          "start_row_offset_idx": 16
+        },
+        {
+          "text": "(Repeat, if required)",
+          "start_row_offset_idx": 16
+        },
+        {
+          "text": "Total",
+          "start_row_offset_idx": 17
+        }
+      ]
+    },
+    {
+      "case_id": "e228528d7afc-p6",
+      "binding": {
+        "run_id": "e228528d7afc-1794261104623104000",
+        "source_sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+        "artifact_sha256": "3000a490151a000b3347fddcc96b4eaa17b3b3ad6a490edf28fce42991e23a66",
+        "render_sha256": "c05ad45b2685c25bde4548dcd5da82bcc5fbe14d468636bbb354b8ff319128da",
+        "trial_sha256": "6d2830ec884cb3de6075bf9aa06ba2ef2bb59c9c91e8e056f77a871e46b90959",
+        "raw_sha256": "be270890fcd25323f2cdab70bc80498c85f1e324a5732d53737c04909a56fbcf",
+        "table_sha256": "e98284de64ea82526531aca3960a44435b1dd52589548a9822f3737122904952",
+        "page": 6,
+        "case_id": "e228528d7afc-p6",
+        "table_index": 0
+      },
+      "width": 841.91998,
+      "height": 595.32001,
+      "raw_cells": [
+        {
+          "text": "SI. No.",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "Tax Year comprising the block period",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "Undisclosed income declared for the year comprised in the block period",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "Total income determined u/s 143(1) or assessed u/s 143/ 144/ 147/ 153A/ 153C/ 158BC(1)(c)/ 245D of Income-tax Act, 1961 or Total income determined u/s 270(1) or assessed u/s 270/ 271/ 279/ 294(1)(c) of Income-tax Act, 2025 prior to the date of search or requisition (as applicable)",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "Total income declared in return of income filed u/s 139 or in response to notice u/s 142(1) of Income-tax Act, 1961 or Total income declared in return of income filed u/s 263 or in response to notice u/s 268(1) of Income-tax Act, 2025 prior to the date of initiation of search or requisition and not covered in [B](as applicable)",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "Total income referred to in section 115A(5) or section 115G or section 194P(1) of Income-tax Act, 1961 or Total income referred to in 207(8) or section 216 or 393(1) [Table: SI.No.8(iii)] of for Income-tax Act, 2025 comprised any in year the block period (as applicable)",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "Income of tax year which has ended and the due date for furnishing the return for such year has not expired prior to the date of initiation of the search or the date of requisition (on the basis of entries relating to such income or transactions as recorded in the books of account and in the normal course before other documents maintained the date of initiation of search or requisition)",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "Income of period commencing from 1st day of April of the tax year in which the search is initiated or requisition is made and ending on the day immediately preceding the date of initiation of search or requisition (on the basis of entries relating to such income or transactions as recorded in the books of account and other documents maintained in the normal course on or before the day immediately preceding the date of initiation of search or requisition)",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "Income of period commencing from the date of initiation of the search or requisition and ending on the date of the execution of the last of the search or requisition authorisations for (on the basis of entries relating to such income or transactions as recorded in the books of account and other documents maintained in the normal course for such period on or before the date of the execution of the last of the authorisations)",
+          "start_row_offset_idx": 0
+        },
+        {
+          "text": "(Rs.)",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "(Rs.)",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "(Rs.)",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "(Rs.)",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "(Rs.)",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "(Rs.)",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "(Rs.)",
+          "start_row_offset_idx": 1
+        },
+        {
+          "text": "{Refer section 158BB(1)(a) r.w.s. 158B(b) of Income-tax Act, 1961 or section 293(1)(a) r.w.s. 301(e) of Income-tax Act, 2025} (as applicable)",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "{Refer section 158BB(1A)(a) of Income-tax Act, 1961 or section 293(2)(a) of Income-tax Act, 2025} (as applicable)",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "{Refer section 158BB(1A)(b) of Income-tax Act, 1961 or section 293(2)(b) of Income-tax Act, 2025} (as applicable)",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "{Refer section 158BB(1A)(d) of Income-tax Act, 1961 or section 293(2)(d) of Income-tax Act, 2025} (as applicable)",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "{Refer section 158BB(1A)(c)(i) of Income- tax Act, 1961 or section 293(2)(c)(i) of Income-tax Act, 2025} (as applicable)",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "{Refer section 293(2)(c)(ii) of Income-tax Act, 2025} (as applicable)",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "{Refer section 293(2)(c)(iii) of Income- tax Act, 2025} (as applicable)",
+          "start_row_offset_idx": 2
+        },
+        {
+          "text": "[A]",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "[B]",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "[C] Amount Section",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "[D]",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "[E]",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "[F]",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "[G]",
+          "start_row_offset_idx": 3
+        },
+        {
+          "text": "Amount (Rs.)",
+          "start_row_offset_idx": 4
+        },
+        {
+          "text": "Section (Rs.)",
+          "start_row_offset_idx": 4
+        },
+        {
+          "text": "1",
+          "start_row_offset_idx": 4
+        },
+        {
+          "text": "Tax Year Y6",
+          "start_row_offset_idx": 4
+        }
+      ]
+    }
+  ]
+}

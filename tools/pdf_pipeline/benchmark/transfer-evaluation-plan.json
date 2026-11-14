@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1.0",
+  "frozen_on": "2026-11-06",
+  "state": "FROZEN_BEFORE_LOCAL_ACQUISITION_AND_EXTRACTION",
+  "purpose": "Source-transfer pilot on public official documents not used in local extraction tuning; no blind, representative or final held-out accuracy claim.",
+  "selection_policy": "Consecutive CBDT circulars 1–3/2024, historical Form 49A, Taxpayers Charter poster and ITR-2 validation rules AY 2024-25. Identifiers chosen before downloading or observing local extraction. Discovery search snippets may have been seen. Failed downloads remain and are never replaced based on extraction success.",
+  "documents": [
+    {"id": "circular-1-2024", "title": "CBDT Circular 1/2024", "family": "cbdt-circular-related", "prior_family_exposure": true},
+    {"id": "circular-2-2024", "title": "CBDT Circular 2/2024", "family": "cbdt-circular-related", "prior_family_exposure": true},
+    {"id": "circular-3-2024", "title": "CBDT Circular 3/2024", "family": "cbdt-circular-related", "prior_family_exposure": true},
+    {"id": "form-49a", "title": "Form 49A and instructions (historical specimen)", "family": "tax-form-related", "prior_family_exposure": true},
+    {"id": "taxpayer-charter", "title": "Taxpayers Charter poster", "family": "taxpayer-information-poster", "prior_family_exposure": false},
+    {"id": "itr2-validations-2024-25", "title": "ITR-2 validation rules AY 2024-25", "family": "efiling-validation-manual", "prior_family_exposure": false}
+  ],
+  "native_page_rule": "Unique first, ceiling-middle and last original page, determined only by independent source page count.",
+  "ocr_page_rule": "Unique first and last original page. Consecutive groups of three acquired sources are run separately within the existing ten-case scan limit. No input is chosen by OCR performance.",
+  "independent_ocr_page_rule": "First original page of each acquired document, unchanged pixels, local EasyOCR English only. Hindi coverage is not supplied by this engine.",
+  "ocr_settings": {"languages": ["eng", "eng+hin"], "psm": 3, "preprocessing": "unchanged", "empty_output_fallback_psm": 6},
+  "limits": {"sources": 6, "source_bytes_each": 26214400, "source_bytes_total": 83886080, "source_pages_each": 1000, "native_selected_pages": 18, "ocr_selected_pages": 12, "independent_selected_pages": 6},
+  "reference_policy": "Original-image source checks are drafted separately from engine outputs after the extraction settings are frozen. Agent drafts remain unverified until explicit reviewer confirmation. Discovery text, machine text and engine agreement are never ground truth. Complete-page CER/WER, semantic tables, reading order and false-clean rates are unavailable without verified labels and denominators.",
+  "report_requirements": ["All acquisition slots, failures, original-page denominators and prior source/family exposure", "Every native/OCR attempt including empty and failed results", "Source/page/render/raw evidence hashes", "Critical-field warning/disagreement hints separate from factual correctness", "Source-bound short verification queue and separate table/reading-order unknowns", "No engine selection, accepted extraction, legal applicability inference or RAG publication"],
+  "release_criteria": {"mandatory": ["Original/render/raw integrity and complete page accounting", "Verified source transcription and critical dates/rates/amounts/identifiers/negation within the declared scope", "Verified table relationships, exceptions, footnotes and reading order wherever present", "Separate extraction review and qualified tax applicability review"], "metric_thresholds": null, "threshold_note": "Not enough independently verified official references to justify numeric release thresholds. No release decision or production readiness claim is made in this pilot."},
+  "publication_eligible": false
+}

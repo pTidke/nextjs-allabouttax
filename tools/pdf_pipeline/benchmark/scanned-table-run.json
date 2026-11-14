@@ -1,0 +1,113 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-09",
+  "state": "IMAGE_TABLE_DEVELOPMENT_TRIAL_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "owner_verified": false,
+  "plan_frozen_at_commit": "5ac84bd",
+  "local_trial": "work/pdf-lab/demo-v2/benchmarks/scanned-tables-v1",
+  "local_review": "work/pdf-lab/demo-v2/comparisons/scanned-table-review-v3",
+  "plan_sha256": "525169d4eced817dde4cd88a3a4b71f3cb8dadb26dbdbf3299171310058c8b9c",
+  "trial_report_sha256": "6d2830ec884cb3de6075bf9aa06ba2ef2bb59c9c91e8e056f77a871e46b90959",
+  "trial_file_ledger_sha256": "4e45caff3d64a0bd4f46610b7aff9a773b44cc38eb5eb2d3bffc579badf5c323",
+  "trial_ledger_entries_verified": 58,
+  "review_report_sha256": "f2e7f9a5437c0fe2b8a50f1de2f609fc8c80b9eb3794efa22c07ae6e3216311c",
+  "review_file_ledger_sha256": "ac2927d27502f35bf45daddee4bd386ae23c63370631aaa7b9f9c29b6444d580",
+  "findings_sha256": "8d7cd7ed65dee2198780068f24f998f1642ce2109dada7bf5411986da9df4034",
+  "trial_code_sha256": {
+    "scan_tables.py": "5c74a099644a32a5899b96786a21d50039e9f8d76a286801c0b7a65a67482cf3",
+    "docling_probe.py": "27b514824ba3d0412f8ec0f31331ac39af7f9137592359cddfb39d2e921cceee",
+    "table_inventory.py": "8ac32880675295458520781fbf03bf001eb3b77b8d14730fe4e7a913a92b01a8",
+    "runner.py": "32a8fdc0bd4fc1495559a2bbbdcf87f93a6c98764f9a0316e89160626747f1c3",
+    "worker.py": "4c1242d5d2f08212cf2de00d1fc8b4b6bbaba57ebb9329cb99360a627c52165c"
+  },
+  "review_code_sha256": {
+    "scan_tables.py": "a7465c7887d91212aa94b9a7c25c80a0091ac2c1fca7e14321444f8b57717307",
+    "scan_table_view.py": "f352687a4845af3adb4212538a6b02ccdab9fe8aa1a34bb2bca6fbeb718a4299",
+    "table_inventory.py": "f50fbf53e428242b6701b2be4f20fe927921b6a7ef541f4489d1f36ab31d91df"
+  },
+  "tesseract_weights_manifest_sha256": "50b38feb1ddceadb8f445dfefa81489ab64cfbdbc68bb9fda46f2e221c1f389a",
+  "docling_weights_manifest_sha256": "b0c9199bdec164281915bf724b584ddf558cd1a23016ceae6644c0275a63c231",
+  "summary": {
+    "selected_pages": 4,
+    "genuine_scanned_pages": 3,
+    "rasterized_native_controls": 1,
+    "provider_attempts": 8,
+    "completed_attempts": 8,
+    "failed_attempts": 0,
+    "accepted_tables": 0
+  },
+  "original_pages": 38,
+  "provider_wall_seconds_sum": 54.912,
+  "docling_cells_retained": 202,
+  "uncovered_provider_grid_positions": 48,
+  "provider_table_grids": [
+    {
+      "case": "3756112e45b5-p3",
+      "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+      "page": 3,
+      "image_kind": "genuine_scan_with_embedded_ocr",
+      "rows": 11,
+      "columns": 4,
+      "cells": 28,
+      "docling_raw_sha256": "7e35568b0b1797a4ae563a8bb73811abf4059b59b0ba77fcaebefd922cc27080"
+    },
+    {
+      "case": "3756112e45b5-p5",
+      "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+      "page": 5,
+      "image_kind": "genuine_scan_with_embedded_ocr",
+      "rows": 18,
+      "columns": 8,
+      "cells": 45,
+      "docling_raw_sha256": "89ae7e234ec1f953919636aaebaf5f3ac0034ca8210213b8f446f28f215aa070"
+    },
+    {
+      "case": "454ae8882a9e-p10",
+      "source_sha256": "454ae8882a9e5a1d8999d0b08c7d36a62812b2e3de11c280c9057395395e2efe",
+      "page": 10,
+      "image_kind": "genuine_scan_with_embedded_ocr",
+      "rows": 19,
+      "columns": 5,
+      "cells": 95,
+      "docling_raw_sha256": "230e56c1b8c6bf009250f6bb6c1010c91bbb365c3fd926a24c6392f32ba67bca"
+    },
+    {
+      "case": "e228528d7afc-p6",
+      "source_sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+      "page": 6,
+      "image_kind": "rasterized_native_control_not_a_real_scan",
+      "rows": 5,
+      "columns": 9,
+      "cells": 34,
+      "docling_raw_sha256": "be270890fcd25323f2cdab70bc80498c85f1e324a5732d53737c04909a56fbcf"
+    }
+  ],
+  "coverage_gaps": [
+    "Real image-only source PDFs are absent; genuine scans contain an existing OCR layer, which is not passed to either image provider.",
+    "No Hindi or bilingual table page, handwritten table, broken/faint ruled grid or completed taxpayer return is in this fixed sample.",
+    "Docling weights currently support English only; the bilingual plain-OCR configuration does not establish Hindi table performance.",
+    "These reused pages and related forms are development examples, not independent test templates."
+  ],
+  "accuracy": {
+    "status": "UNMEASURED_NO_ACCEPTED_TABLE_REFERENCES",
+    "table_accuracy": null
+  },
+  "notes": [
+    "All three source artifacts are blocked and retain complete original-page inventories; only four pages are processed.",
+    "The fixed cohort reuses inspected forms; it is not held-out or representative accuracy evidence.",
+    "All eight attempts received only page PNGs/settings. Native text and machine/source grids are not OCR inputs.",
+    "Initial wrapper outputs remain unchanged. Later hardening validates dimensions, raw/source lineage, coordinate origins and span budgets; saved results are reinspected with no OCR rerun.",
+    "The final review shows illustrative provider grids. Not emitted markers are display-only unknown positions, not reconstructed canonical cells or confirmed blanks.",
+    "Agent findings are authored after source/output inspection and do not become owner-confirmed references, automatic detectors or corrections.",
+    "48 uncovered positions are provider-grid accounting diagnostics, not 48 missing printed cells or errors.",
+    "Prior v1/v2 saved-results views are retained. Final v3 collapses full pages, fixes vertical crop positioning and shows the source-bound agent findings.",
+    "54.912 seconds is the measured sum of eight local provider attempt wall times, not a production latency or cost per accepted page.",
+    "No model API, paid OCR, production database, chunk, embedding, engine selection or publication write occurs."
+  ],
+  "docling_pinned_library_table_defaults": {
+    "do_cell_matching": true,
+    "mode": "accurate"
+  },
+  "docling_default_note": "Inspected after execution in the same pinned Docling version; image-probe uses these defaults and full-page English RapidOCR. This is not a subsequently tuned setting."
+}

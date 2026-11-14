@@ -1,0 +1,42 @@
+{
+  "schema_version": "0.1.0",
+  "state": "BLOCKED",
+  "publication_eligible": false,
+  "created_at": "2026-11-05T19:04:11.370231+00:00",
+  "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+  "baseline_artifact_sha256": "264ecda9ae77bdec1abef2de0ea8aba9248314d6ce5684df6639673413b294b5",
+  "feedback_sha256": "2f1e3d63c288abb41ebce1b265cd08a33b854097cd6b9ffb5d6b8c14f491f2bc",
+  "weights_manifest_sha256": "50b38feb1ddceadb8f445dfefa81489ab64cfbdbc68bb9fda46f2e221c1f389a",
+  "comparison_code_sha256": "9356bcf97aac2bdbe269631cab7717520f9f191ac89e9ee8fdbd867b9aa422ee",
+  "review_code_sha256": "53c695218638a3e9103c761c39353b1ce12d908295990b6eff1d9002192c7ae1",
+  "worker_sha256": "13afb6b9f180e6d28b18a80a52c6b356c7f93ac7bc7ac3dafdf7a47267d0c064",
+  "ocr_lock_sha256": "6d6817fb8793c344befaf57193d25ec2fd003b6a1adb23672a486223289cdb88",
+  "renderer_versions": {
+    "pypdfium2": "5.14.0",
+    "pdfplumber": "0.11.9",
+    "Pillow": "13.0.0"
+  },
+  "config": {
+    "dpi": 300,
+    "ocr_seconds_per_job": 120,
+    "total_seconds": 600,
+    "render_pixel_limit": 16000000,
+    "network_sandbox_enforced": false
+  },
+  "elapsed_seconds": 11.54,
+  "comparison_sha256": "2011327e7a3ac6b4da5e556331ae2ddc239de7e50f997b926e5afcc8b108efec",
+  "pages": 2,
+  "reported_regions": 16,
+  "open_issue_groups": 6,
+  "engine_versions": {
+    "tesseract.js": "7.0.0",
+    "tesseract.js-core": "7.0.0",
+    "node": "v26.13.0"
+  },
+  "full_page_variants": [
+    "eng",
+    "eng+hin"
+  ],
+  "signature_handling": "Two reviewer-marked regions preserved as images; not automatic detection.",
+  "review_status": "Awaiting revised sample review; no accuracy score or accepted corrections."
+}

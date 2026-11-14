@@ -1,0 +1,675 @@
+{
+  "schema_version": "1.0",
+  "feedback": [
+    {
+      "recorded_date": "2026-11-05",
+      "reviewer_role": "product_owner",
+      "source_title": "Notification No.1/2026 [No. 500/PF6/S10(23FE)/FT&TR-II (2)]/SO 44(E)",
+      "source_sha256": "4859b7812f854f48cfb0458a67294027661ca0908bd8773ac0b1f5dc4c1db099",
+      "run_id": "4859b7812f85-1793867951113571000",
+      "artifact_sha256": "95530f0e0c3ee5e0b3e52e1aeba47aa159541221944df9e3e5a8f5f269c020a6",
+      "processing_fingerprint": "fda7d44a95395c220c87e6e355092cbb289e2955a8cf363e1c428c25fe7a5191",
+      "source_page_count": 1,
+      "feedback_type": "qualitative_visual_sample_feedback",
+      "outcome": "no_issues_reported",
+      "user_statement": "Looks good to me - the Notification No.1/2026 [No. 500/PF6/S10(23FE)/FT&TR-II (2)]/SO 44(E)",
+      "coverage": "Specific regions, scripts and token-by-token coverage were not enumerated.",
+      "ground_truth_labels_accepted": false,
+      "legal_review_completed": false,
+      "publication_authorized": false,
+      "limitations": [
+        "Not an OCR accuracy score or a completed benchmark.",
+        "Does not resolve unverified reading order or establish legal applicability."
+      ]
+    },
+    {
+      "recorded_date": "2026-11-05",
+      "reviewer_role": "product_owner",
+      "source_title": "Circular No. 6/2026 : Condonation of delay in filing Form No. 10AB electronically for approval under clause(ii) of the first proviso to section 80G(5) of the Income-tax Act, 1961",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "run_id": "cc4238745db8-1793867951687263000",
+      "artifact_sha256": "264ecda9ae77bdec1abef2de0ea8aba9248314d6ce5684df6639673413b294b5",
+      "processing_fingerprint": "7b17aba360ed928cc127fa10e47f1024ea49b150c4873c8f51f01819e3150442",
+      "source_page_count": 2,
+      "feedback_type": "region_defect_report",
+      "outcome": "issues_reported",
+      "findings": [
+        {
+          "region_ids": [
+            "p1-b1"
+          ],
+          "category": "handwritten_identifier",
+          "user_report": "p1b1 handwritten 06",
+          "proposed_value": "06",
+          "value_scope": "Handwritten circular-number token only; not a replacement for the entire line.",
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p1-b1",
+              "bbox": {
+                "x0": 398.368,
+                "top": 68.80700000000013,
+                "x1": 527.6835,
+                "bottom": 81.80700000000013
+              },
+              "extracted_text": "CIRCULAR NO.[)\u00a7 /2026"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p1-b3",
+            "p1-b4",
+            "p1-b5",
+            "p1-b6"
+          ],
+          "category": "hindi_transcription",
+          "user_report": "p1b3, b4, b5, b6 - hindi texts are bad",
+          "proposed_value": null,
+          "value_scope": null,
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p1-b3",
+              "bbox": {
+                "x0": 213.158,
+                "top": 109.64699999999993,
+                "x1": 383.2112999999999,
+                "bottom": 120.64699999999993
+              },
+              "extracted_text": "Government of India / HRd DR"
+            },
+            {
+              "id": "p1-b4",
+              "bbox": {
+                "x0": 220.26399999999992,
+                "top": 125.27899999999988,
+                "x1": 375.1600199999999,
+                "bottom": 136.27899999999988
+              },
+              "extracted_text": "Ministry of Finance /v"
+            },
+            {
+              "id": "p1-b5",
+              "bbox": {
+                "x0": 205.57899999999987,
+                "top": 141.3839999999999,
+                "x1": 389.84111999999993,
+                "bottom": 152.3839999999999
+              },
+              "extracted_text": "Department of Revenue / I[SI\u00a5d fqum"
+            },
+            {
+              "id": "p1-b6",
+              "bbox": {
+                "x0": 176.20999999999992,
+                "top": 155.543,
+                "x1": 419.68279999999993,
+                "bottom": 167.5429999999999
+              },
+              "extracted_text": "Central Board of Direct Taxes BaIT UTe] P &S"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p1-b34"
+          ],
+          "category": "signature_misclassified_as_text",
+          "user_report": "p1b34 - is a signature",
+          "proposed_value": "signature",
+          "value_scope": "Region classification only; no signatory identity inferred.",
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p1-b34",
+              "bbox": {
+                "x0": 36.474,
+                "top": 749.3720000000001,
+                "x1": 98.52663999999999,
+                "bottom": 801.3720000000001
+              },
+              "extracted_text": "Wi"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p2-b5"
+          ],
+          "category": "signature_misclassified_as_text",
+          "user_report": "p2b5 - signature again",
+          "proposed_value": "signature",
+          "value_scope": "Region classification only; no signatory identity inferred.",
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p2-b5",
+              "bbox": {
+                "x0": 514.895,
+                "top": 178.90800000000002,
+                "x1": 520.10555,
+                "bottom": 187.90800000000002
+              },
+              "extracted_text": "-"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p2-b6"
+          ],
+          "category": "person_name_transcription",
+          "user_report": "p2b6 - its Hardev Singh",
+          "proposed_value": "Hardev Singh",
+          "value_scope": "Printed name reported by reviewer; not an identity inferred from the signature.",
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p2-b6",
+              "bbox": {
+                "x0": 448.579,
+                "top": 191.75800000000015,
+                "x1": 521.05272,
+                "bottom": 208.75800000000015
+              },
+              "extracted_text": "(Hardev'S ingh)"
+            }
+          ]
+        },
+        {
+          "region_ids": [
+            "p2-b23",
+            "p2-b24",
+            "p2-b25",
+            "p2-b26",
+            "p2-b27",
+            "p2-b28",
+            "p2-b29",
+            "p2-b30"
+          ],
+          "category": "garbled_or_misordered_regions",
+          "user_report": "p2b23-b30 are all missed up",
+          "proposed_value": null,
+          "value_scope": null,
+          "verification_status": "reviewer_reported_pending_source_verification",
+          "regions": [
+            {
+              "id": "p2-b23",
+              "bbox": {
+                "x0": 512.527,
+                "top": 464.34200000000004,
+                "x1": 568.4245999999999,
+                "bottom": 486.34200000000004
+              },
+              "extracted_text": "q/\\\"\\\u201c\u2019\\/b"
+            },
+            {
+              "id": "p2-b24",
+              "bbox": {
+                "x0": 370.422,
+                "top": 478.12100000000004,
+                "x1": 518.21132,
+                "bottom": 490.12100000000004
+              },
+              "extracted_text": "Under Secretary fi"
+            },
+            {
+              "id": "p2-b25",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 264.63534000000016,
+                "x1": 85.74799999999999,
+                "bottom": 272.6880000000001
+              },
+              "extracted_text": "K"
+            },
+            {
+              "id": "p2-b26",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 281.2139300000001,
+                "x1": 85.74799999999999,
+                "bottom": 284.05600000000015
+              },
+              "extracted_text": "v"
+            },
+            {
+              "id": "p2-b27",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 287.3723100000001,
+                "x1": 85.74799999999999,
+                "bottom": 308.6880000000001
+              },
+              "extracted_text": "too"
+            },
+            {
+              "id": "p2-b28",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 313.42484,
+                "x1": 85.74799999999999,
+                "bottom": 325.26700000000005
+              },
+              "extracted_text": "ik"
+            },
+            {
+              "id": "p2-b29",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 334.74109000000004,
+                "x1": 85.74799999999999,
+                "bottom": 340.89900000000006
+              },
+              "extracted_text": ")"
+            },
+            {
+              "id": "p2-b30",
+              "bbox": {
+                "x0": 74.74799999999999,
+                "top": 351.32018000000005,
+                "x1": 85.74799999999999,
+                "bottom": 356.0570000000001
+              },
+              "extracted_text": "b"
+            }
+          ]
+        }
+      ],
+      "ground_truth_labels_accepted": false,
+      "legal_review_completed": false,
+      "publication_authorized": false,
+      "limitations": [
+        "Review observations are stored separately from immutable extraction output.",
+        "Unspecified Hindi text and garbled regions have no guessed replacement.",
+        "The entire sample remains blocked; no automated acceptance or publication is performed."
+      ]
+    },
+    {
+      "recorded_date": "2026-11-05",
+      "reviewer_role": "product_owner",
+      "feedback_type": "comparison_review",
+      "source_title": "Circular No. 6/2026 : Condonation of delay in filing Form No. 10AB electronically for approval under clause(ii) of the first proviso to section 80G(5) of the Income-tax Act, 1961",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "comparison_revision": "circular-6-bilingual-v4",
+      "comparison_sha256": "2011327e7a3ac6b4da5e556331ae2ddc239de7e50f997b926e5afcc8b108efec",
+      "baseline_artifact_sha256": "264ecda9ae77bdec1abef2de0ea8aba9248314d6ce5684df6639673413b294b5",
+      "observations": [
+        {
+          "region_ids": [
+            "p1-b1"
+          ],
+          "outcome": "still_incorrect",
+          "user_report": "p1b1 still says Q\u20ac instead of 06",
+          "proposed_value": "06",
+          "scope": "Handwritten number token only."
+        },
+        {
+          "region_ids": [
+            "p1-b3",
+            "p1-b4",
+            "p1-b5",
+            "p1-b6"
+          ],
+          "outcome": "looks_good_to_reviewer",
+          "user_report": "p1-b3, p1-b4, p1-b5, p1-b6 - look good",
+          "scope": "Qualitative feedback on the displayed group; not a token-by-token accuracy label.",
+          "known_unresolved_regression": "The bilingual candidate still corrupts the adjacent English Direct Taxes heading. Positive feedback does not automatically close that known defect."
+        },
+        {
+          "region_ids": [
+            "p1-b34",
+            "p2-b5"
+          ],
+          "outcome": "exclusion_requested",
+          "user_report": "p1-b34, p2-b5 we can actually ignore the signatures, they are irrelevant",
+          "exclusion_reason": "Reviewer-marked signature imagery is outside the requested extracted text."
+        },
+        {
+          "region_ids": [
+            "p2-b6"
+          ],
+          "outcome": "still_incorrect",
+          "user_report": "p2-b6 wrong extraction",
+          "proposed_value": "Hardev Singh",
+          "value_provenance": "Previously supplied by this reviewer; not an OCR result."
+        },
+        {
+          "region_ids": [
+            "p2-b23",
+            "p2-b24"
+          ],
+          "outcome": "exclusion_requested",
+          "user_report": "p2-b23, p2-b24 - can ignore signature and the thing below that would be anyway hard for any OCR to read so its okay",
+          "exclusion_reason": "Reviewer permits omission of these particular signature/overlapping footer regions; difficulty alone is not a general exclusion rule."
+        },
+        {
+          "region_ids": [
+            "p2-b25",
+            "p2-b26",
+            "p2-b27",
+            "p2-b28",
+            "p2-b29",
+            "p2-b30"
+          ],
+          "outcome": "still_incorrect",
+          "user_report": "p2-b25, p2-b26, p2-b27, p2-b28, p2-b29, p2-b30 - it should be 1 2 3 4 5 6 7 but 2 5 7 are wrong",
+          "proposed_sequence": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+          ],
+          "reported_incorrect_items": [
+            "2",
+            "5",
+            "7"
+          ],
+          "scope": "One ordered sequence spans six existing native blocks; no one-to-one block-to-number alignment has been established."
+        }
+      ],
+      "scoped_exclusion_policy": {
+        "requested_region_ids": [
+          "p1-b34",
+          "p2-b5",
+          "p2-b23",
+          "p2-b24"
+        ],
+        "source_preserved": true,
+        "raw_ocr_preserved": true,
+        "count_excluded_regions_as_correct": false,
+        "scope": "This source hash and comparison revision only; preserve traceability and show excluded coverage separately. Do not generalize to other footers, stamps, handwriting or legal text.",
+        "pipeline_applied": false
+      },
+      "ground_truth_labels_accepted": false,
+      "legal_review_completed": false,
+      "publication_authorized": false,
+      "document_state": "BLOCKED",
+      "known_remaining_targets": [
+        "Handwritten circular number 06",
+        "Printed name Hardev Singh",
+        "Margin list sequence 1\u20137, especially 2/5/7",
+        "Mixed-script corruption of the adjacent English Direct Taxes heading"
+      ]
+    },
+    {
+      "recorded_date": "2026-11-05",
+      "reviewer_role": "product_owner",
+      "feedback_type": "comparison_review",
+      "comparison_revision": "circular-6-easyocr-v3",
+      "comparison_sha256": "9f7e89db2fda3341160260ba699242c820d0902b2abd6eae5644820d4e30fa7f",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "baseline_artifact_sha256": "264ecda9ae77bdec1abef2de0ea8aba9248314d6ce5684df6639673413b294b5",
+      "observations": [
+        {
+          "region_ids": [
+            "p2-easyocr-eng-45",
+            "p2-easyocr-eng-46",
+            "p2-easyocr-eng-47",
+            "p2-easyocr-eng-48",
+            "p2-easyocr-eng-49",
+            "p2-easyocr-eng-50",
+            "p2-easyocr-eng-51",
+            "p2-easyocr-eng-52",
+            "p2-easyocr-eng-53",
+            "p2-easyocr-eng-54",
+            "p2-easyocr-eng-55",
+            "p2-easyocr-eng-56",
+            "p2-easyocr-eng-57",
+            "p2-easyocr-eng-58",
+            "p2-easyocr-eng-59",
+            "p2-easyocr-eng-60",
+            "p2-easyocr-eng-61",
+            "p2-easyocr-eng-62"
+          ],
+          "outcome": "exclusion_requested",
+          "reason": "reverse_side_bleed_through",
+          "user_report": "these ones which are artifacts seen from the back of the page need not be extracted as this is a scanned doc on thin sheet text from the back side of the text are visible.",
+          "identification_basis": "User screenshot lists p2-easyocr-eng-45 through p2-easyocr-eng-62.",
+          "regions": [
+            {
+              "id": "p2-easyocr-eng-45",
+              "bbox": {
+                "x0": 229.1376835236542,
+                "top": 497.73605080831413,
+                "x1": 295.5996084828712,
+                "bottom": 510.21545034642037
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-46",
+              "bbox": {
+                "x0": 298.9586949429038,
+                "top": 497.01608545034645,
+                "x1": 316.95380097879286,
+                "bottom": 509.2554965357968
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-47",
+              "bbox": {
+                "x0": 361.8215986949429,
+                "top": 496.05613163972293,
+                "x1": 410.04848287112566,
+                "bottom": 509.7354734411086
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-48",
+              "bbox": {
+                "x0": 204.18446982055468,
+                "top": 511.41539260969984,
+                "x1": 301.1181076672105,
+                "bottom": 526.0546882217091
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-49",
+              "bbox": {
+                "x0": 318.63334420880915,
+                "top": 514.7752309468823,
+                "x1": 361.10179445350735,
+                "bottom": 524.8547459584296
+              },
+              "extracted_text": " ."
+            },
+            {
+              "id": "p2-easyocr-eng-50",
+              "bbox": {
+                "x0": 220.50003262642744,
+                "top": 530.374480369515,
+                "x1": 244.01363784665583,
+                "bottom": 539.7340300230948
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-51",
+              "bbox": {
+                "x0": 252.41135399673738,
+                "top": 529.8945034642032,
+                "x1": 323.43203915171296,
+                "bottom": 540.2140069284064
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-52",
+              "bbox": {
+                "x0": 257.9298531810767,
+                "top": 547.6536489607391,
+                "x1": 265.8476998368679,
+                "bottom": 555.0932909930716
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-53",
+              "bbox": {
+                "x0": 280.00384991843396,
+                "top": 548.1336258660508,
+                "x1": 292.48045676998373,
+                "bottom": 555.0932909930716
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-54",
+              "bbox": {
+                "x0": 294.8798042414356,
+                "top": 544.0538221709007,
+                "x1": 337.82812398042415,
+                "bottom": 558.9331062355658
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-55",
+              "bbox": {
+                "x0": 224.5789233278956,
+                "top": 566.1327598152425,
+                "x1": 377.6572920065253,
+                "bottom": 581.4920207852194
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-56",
+              "bbox": {
+                "x0": 184.74975530179447,
+                "top": 584.6118706697459,
+                "x1": 211.6224469820555,
+                "bottom": 596.6112933025404
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-57",
+              "bbox": {
+                "x0": 330.3901468189233,
+                "top": 585.5718244803695,
+                "x1": 345.98590538336055,
+                "bottom": 595.411351039261
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-58",
+              "bbox": {
+                "x0": 283.1230016313214,
+                "top": 598.7711893764434,
+                "x1": 439.56045676998366,
+                "bottom": 614.6104272517321
+              },
+              "extracted_text": " '"
+            },
+            {
+              "id": "p2-easyocr-eng-59",
+              "bbox": {
+                "x0": 295.5996084828712,
+                "top": 618.4502424942264,
+                "x1": 351.7443393148451,
+                "bottom": 626.3698614318707
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-60",
+              "bbox": {
+                "x0": 391.5735073409462,
+                "top": 618.4502424942264,
+                "x1": 415.0871125611746,
+                "bottom": 628.2897690531179
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-61",
+              "bbox": {
+                "x0": 382.93585644371944,
+                "top": 633.0895381062356,
+                "x1": 451.31725938009794,
+                "bottom": 643.6490300230947
+              },
+              "extracted_text": ""
+            },
+            {
+              "id": "p2-easyocr-eng-62",
+              "bbox": {
+                "x0": 380.29657422512236,
+                "top": 647.9688221709007,
+                "x1": 435.7215008156607,
+                "bottom": 657.8083487297922
+              },
+              "extracted_text": ""
+            }
+          ]
+        }
+      ],
+      "scoped_exclusion_policy": {
+        "requested_region_ids": [
+          "p2-easyocr-eng-45",
+          "p2-easyocr-eng-46",
+          "p2-easyocr-eng-47",
+          "p2-easyocr-eng-48",
+          "p2-easyocr-eng-49",
+          "p2-easyocr-eng-50",
+          "p2-easyocr-eng-51",
+          "p2-easyocr-eng-52",
+          "p2-easyocr-eng-53",
+          "p2-easyocr-eng-54",
+          "p2-easyocr-eng-55",
+          "p2-easyocr-eng-56",
+          "p2-easyocr-eng-57",
+          "p2-easyocr-eng-58",
+          "p2-easyocr-eng-59",
+          "p2-easyocr-eng-60",
+          "p2-easyocr-eng-61",
+          "p2-easyocr-eng-62"
+        ],
+        "reason": "reverse_side_bleed_through",
+        "scope": "Exact EasyOCR regions on this source/comparison revision only. Do not infer exclusions from low confidence, blank recognition or faint appearance alone.",
+        "source_preserved": true,
+        "raw_ocr_preserved": true,
+        "count_excluded_regions_as_correct": false
+      },
+      "ground_truth_labels_accepted": false,
+      "legal_review_completed": false,
+      "publication_authorized": false
+    },
+    {
+      "feedback_type": "table_review_progress",
+      "reviewer_role": "product_owner",
+      "user_statement": "done",
+      "binding": {
+        "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+        "artifact_sha256": "ebe66d9614ec4bcac348e085fd5b335c715ff5df4e1b1fe4bcae74e3db42fd44",
+        "render_sha256": "b7e129ec756fd3436d87a461d26757903f5387dc49d4cc80f54e5dd820e9fb73",
+        "table_sha256": "ab71d87dbe2ef5170d45f0e58a0f8c36aba96c2d11e12d196df3b57bfe72c871",
+        "run_id": "3756112e45b5-1793917370538925000",
+        "fingerprint": "a9bf99dfde38ded0fb8b7425d3b94469af0293db48df410c7ccc11863f4b2221",
+        "page": 3,
+        "table_id": "p3-t1"
+      },
+      "region_id": "p3-t1",
+      "selections": {
+        "text_without_transcription": 28,
+        "covered_without_anchor": 14,
+        "blank": 6,
+        "total_cells": 48
+      },
+      "status": "UNFINISHED_TABLE_REVIEW",
+      "ground_truth_accepted": false,
+      "assistant_action": "Preserved original choices, restored them through the source-bound progress import and verified save/reload. No real-document text or merged relationships were filled automatically.",
+      "local_evidence_sha256": "ae1919e67e5ee78b3bfb771dffe9fc4d2b8bf84491106ff9b78196fbe3d87608"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+name: PDF processing laboratory checks
+on:
+  pull_request:
+    paths:
+      - "tools/pdf_pipeline/**"
+      - ".github/workflows/pdf-lab.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/pdf_pipeline/**"
+      - ".github/workflows/pdf-lab.yml"
+permissions:
+  contents: read
+jobs:
+  pdf-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: false
+      - name: Install locked local-test dependencies
+        run: |
+          uv venv .pdf-lab-venv
+          uv pip install --python .pdf-lab-venv/bin/python --require-hashes -r tools/pdf_pipeline/requirements-test.lock
+          uv pip install --python .pdf-lab-venv/bin/python --no-deps -e tools/pdf_pipeline
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Install isolated OCR runtime without model downloads
+        run: npm ci --prefix tools/pdf_pipeline/ocr --ignore-scripts --no-audit --no-fund
+      - name: Check local OCR worker syntax
+        run: |
+          node --check tools/pdf_pipeline/ocr/worker.mjs
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/workspace.js
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/history.js
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/repair.js
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/repair_ops.mjs
+          node --check tools/pdf_pipeline/src/tax_pdf/table_assets/repair_examples.mjs
+          node --test tools/pdf_pipeline/tests/*.test.mjs
+      - name: Check Python and canonical schema
+        run: |
+          .pdf-lab-venv/bin/ruff check tools/pdf_pipeline
+          .pdf-lab-venv/bin/ruff format --check tools/pdf_pipeline
+          .pdf-lab-venv/bin/tax-pdf schema --out /tmp/pdf-artifact.schema.json
+          diff tools/pdf_pipeline/schemas/artifact.schema.json /tmp/pdf-artifact.schema.json
+          .pdf-lab-venv/bin/tax-pdf reference-schema --out /tmp/pdf-reference.schema.json
+          diff tools/pdf_pipeline/schemas/reference.schema.json /tmp/pdf-reference.schema.json
+          .pdf-lab-venv/bin/tax-pdf staging-schema --out /tmp/pdf-staging-import.schema.json
+          diff tools/pdf_pipeline/schemas/staging-import.schema.json /tmp/pdf-staging-import.schema.json
+      - name: Test with synthetic local PDFs only
+        run: .pdf-lab-venv/bin/python -m pytest tools/pdf_pipeline/tests -q

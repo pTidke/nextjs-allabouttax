@@ -1,0 +1,603 @@
+{
+  "$defs": {
+    "Block": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "text_line",
+            "paragraph",
+            "heading",
+            "footnote",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "raw_text": {
+          "title": "Raw Text",
+          "type": "string"
+        },
+        "display_text": {
+          "title": "Display Text",
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/Box"
+        },
+        "order": {
+          "minimum": 0,
+          "title": "Order",
+          "type": "integer"
+        },
+        "order_verified": {
+          "const": false,
+          "default": false,
+          "title": "Order Verified",
+          "type": "boolean"
+        },
+        "source": {
+          "enum": [
+            "native",
+            "ocr",
+            "layout"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "glyphs": {
+          "items": {
+            "$ref": "#/$defs/Glyph"
+          },
+          "title": "Glyphs",
+          "type": "array"
+        },
+        "table_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Table Id"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "raw_text",
+        "display_text",
+        "bbox",
+        "order",
+        "source"
+      ],
+      "title": "Block",
+      "type": "object"
+    },
+    "Box": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "minimum": 0,
+          "title": "X0",
+          "type": "number"
+        },
+        "top": {
+          "minimum": 0,
+          "title": "Top",
+          "type": "number"
+        },
+        "x1": {
+          "minimum": 0,
+          "title": "X1",
+          "type": "number"
+        },
+        "bottom": {
+          "minimum": 0,
+          "title": "Bottom",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "top",
+        "x1",
+        "bottom"
+      ],
+      "title": "Box",
+      "type": "object"
+    },
+    "Cell": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "row": {
+          "minimum": 0,
+          "title": "Row",
+          "type": "integer"
+        },
+        "column": {
+          "minimum": 0,
+          "title": "Column",
+          "type": "integer"
+        },
+        "raw_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Raw Text"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Box"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row_span": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Row Span"
+        },
+        "column_span": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Column Span"
+        },
+        "header_path": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Header Path",
+          "type": "array"
+        },
+        "header_verified": {
+          "const": false,
+          "default": false,
+          "title": "Header Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "row",
+        "column",
+        "raw_text",
+        "bbox"
+      ],
+      "title": "Cell",
+      "type": "object"
+    },
+    "Glyph": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/Box"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "bbox"
+      ],
+      "title": "Glyph",
+      "type": "object"
+    },
+    "Issue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]{2,79}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "blocking",
+            "review",
+            "info"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "region_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Region Id"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "message"
+      ],
+      "title": "Issue",
+      "type": "object"
+    },
+    "Page": {
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Number",
+          "type": "integer"
+        },
+        "printed_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Printed Label"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "rotation": {
+          "default": 0,
+          "title": "Rotation",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "native_candidate",
+            "ocr_required",
+            "blank_candidate",
+            "failed",
+            "not_processed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "render": {
+          "anyOf": [
+            {
+              "pattern": "^pages/[0-9]{4}\\.png$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Render"
+        },
+        "render_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Render Sha256"
+        },
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/Block"
+          },
+          "title": "Blocks",
+          "type": "array"
+        },
+        "tables": {
+          "items": {
+            "$ref": "#/$defs/Table"
+          },
+          "title": "Tables",
+          "type": "array"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/Issue"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "metrics": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "title": "Metrics",
+          "type": "object"
+        },
+        "languages": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Languages",
+          "type": "array"
+        },
+        "languages_verified": {
+          "const": false,
+          "default": false,
+          "title": "Languages Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "number",
+        "width",
+        "height",
+        "status"
+      ],
+      "title": "Page",
+      "type": "object"
+    },
+    "Table": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/Box"
+        },
+        "rows": {
+          "minimum": 1,
+          "title": "Rows",
+          "type": "integer"
+        },
+        "columns": {
+          "minimum": 1,
+          "title": "Columns",
+          "type": "integer"
+        },
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/Cell"
+          },
+          "title": "Cells",
+          "type": "array"
+        },
+        "structure_verified": {
+          "const": false,
+          "default": false,
+          "title": "Structure Verified",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "bbox",
+        "rows",
+        "columns",
+        "cells"
+      ],
+      "title": "Table",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0",
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "pipeline_version": {
+      "title": "Pipeline Version",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "source_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "source_bytes": {
+      "minimum": 0,
+      "title": "Source Bytes",
+      "type": "integer"
+    },
+    "source_title": {
+      "title": "Source Title",
+      "type": "string"
+    },
+    "original": {
+      "const": "original.pdf",
+      "default": "original.pdf",
+      "title": "Original",
+      "type": "string"
+    },
+    "engine_versions": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Engine Versions",
+      "type": "object"
+    },
+    "config": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "title": "Config",
+      "type": "object"
+    },
+    "fingerprint": {
+      "title": "Fingerprint",
+      "type": "string"
+    },
+    "expected_pages": {
+      "anyOf": [
+        {
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expected Pages"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/Page"
+      },
+      "maxItems": 1000,
+      "title": "Pages",
+      "type": "array"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/Issue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "page_accounting_complete": {
+      "default": false,
+      "title": "Page Accounting Complete",
+      "type": "boolean"
+    },
+    "processed_pages_complete": {
+      "default": false,
+      "title": "Processed Pages Complete",
+      "type": "boolean"
+    },
+    "state": {
+      "default": "BLOCKED",
+      "enum": [
+        "BLOCKED",
+        "AWAITING_EXTRACTION_REVIEW"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "publication_eligible": {
+      "const": false,
+      "default": false,
+      "title": "Publication Eligible",
+      "type": "boolean"
+    },
+    "acceptance": {
+      "default": null,
+      "title": "Acceptance",
+      "type": "null"
+    }
+  },
+  "required": [
+    "pipeline_version",
+    "run_id",
+    "created_at",
+    "source_sha256",
+    "source_bytes",
+    "source_title",
+    "engine_versions",
+    "config",
+    "fingerprint"
+  ],
+  "title": "Artifact",
+  "type": "object"
+}

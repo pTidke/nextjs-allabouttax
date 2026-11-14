@@ -1,0 +1,46 @@
+{
+  "state": "BLOCKED",
+  "publication_eligible": false,
+  "comparison_sha256": "3821cfdc4aa5a94217c4cbb3fa0f598e844933fc2349ee01b7c9d34d924d31ce",
+  "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+  "scope_review": {
+    "parent_comparison_sha256": "9f7e89db2fda3341160260ba699242c820d0902b2abd6eae5644820d4e30fa7f",
+    "review_sha256": "c38e5c04bd3db4b8881346b4f38f9c442204eefcdaf3297c2004ebe2e50a0c8d",
+    "review_file": "reviews/c38e5c04bd3db4b8881346b4f38f9c442204eefcdaf3297c2004ebe2e50a0c8d.json",
+    "parent_comparison_file": "lineage/9f7e89db2fda3341160260ba699242c820d0902b2abd6eae5644820d4e30fa7f.json",
+    "excluded_region_ids": [
+      "p2-easyocr-eng-45",
+      "p2-easyocr-eng-46",
+      "p2-easyocr-eng-47",
+      "p2-easyocr-eng-48",
+      "p2-easyocr-eng-49",
+      "p2-easyocr-eng-50",
+      "p2-easyocr-eng-51",
+      "p2-easyocr-eng-52",
+      "p2-easyocr-eng-53",
+      "p2-easyocr-eng-54",
+      "p2-easyocr-eng-55",
+      "p2-easyocr-eng-56",
+      "p2-easyocr-eng-57",
+      "p2-easyocr-eng-58",
+      "p2-easyocr-eng-59",
+      "p2-easyocr-eng-60",
+      "p2-easyocr-eng-61",
+      "p2-easyocr-eng-62"
+    ],
+    "reason": "reverse_side_bleed_through",
+    "count_excluded_as_correct": false,
+    "ocr_rerun": false,
+    "code_sha256": "e9f6c359b20ec018f3b5e293acc76403a1288e5ea571054e0807269166dce379",
+    "review_code_sha256": "0bbbe1e5433d708730c264895a6c7289a61d049933f2d9ec109759412e9b5bd9"
+  },
+  "prior_signature_footer_exclusions": [
+    "p1-b34",
+    "p2-b23",
+    "p2-b24",
+    "p2-b5"
+  ],
+  "raw_ocr_sha256": "4cdcf7069d31980fc87adb4bfe4ed66e22813208ec8d44961f0c5110bb304db0",
+  "source_pages": 2,
+  "review_status": "Explicit reverse-side show-through exclusion only; other open issue groups remain unaccepted."
+}

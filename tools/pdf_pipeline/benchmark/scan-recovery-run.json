@@ -1,0 +1,178 @@
+{
+  "schema_version": "0.1.0",
+  "state": "EXPERIMENTAL_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "scan_report_sha256": "a8c2a223cb86cfb7253dc36544f47dff8f611f29e0f4eb0831d8567484c033ac",
+  "feedback_sha256": "95a35ed2139896dc09f3a81708c32d62553760eb4e7bf5e9b78bdc679c8b2899",
+  "recorded_findings": 25,
+  "full_page_references_newly_verified": 0,
+  "raw_report_modified": false,
+  "recovery_report_sha256": "435bcb2fff1ebe0c27c43bb19d3bc0a2a72d191a78bafbc76ebcdde2ede60a76",
+  "code_sha256": "b34744fa034dc664b1185a1f5edab194cff22c725869c09fbc687542da53e6ab",
+  "worker_sha256": "13afb6b9f180e6d28b18a80a52c6b356c7f93ac7bc7ac3dafdf7a47267d0c064",
+  "models_sha256": "50b38feb1ddceadb8f445dfefa81489ab64cfbdbc68bb9fda46f2e221c1f389a",
+  "local_review": "work/pdf-lab/demo-v2/comparisons/expanded-scan-review-v1/index.html",
+  "local_recovery_report": "work/pdf-lab/demo-v2/benchmarks/recovery-reviewed-scans-v1/recovery.json",
+  "engine_attempts": 24,
+  "columns": [
+    {
+      "finding_id": "c7-number-column",
+      "case_id": "62e34ef5e8c8-p1-unchanged",
+      "source_sha256": "62e34ef5e8c82fcd12342cfd0aa28ed723aa90a141620117dff7017962ab2cda",
+      "source_image_sha256": "a35f136e64fb9b027fed11a14fd2d62885aaf9ca3350ce8762814c09da74a292",
+      "row_candidates": 9,
+      "observed": [
+        "I.",
+        "2.",
+        "3.",
+        "4.",
+        "5.",
+        "6.",
+        "7.",
+        "8.",
+        "9."
+      ],
+      "reviewer_expected_sequence": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "raw_sequence_matches_review": false,
+      "discarded_short_ink_runs": [],
+      "holds": [
+        "ROW_GEOMETRY_AND_LIST_ASSOCIATION_UNVERIFIED",
+        "SEGMENTATION_MAY_MISS_FAINT_MARKS"
+      ]
+    },
+    {
+      "finding_id": "c6-number-column",
+      "case_id": "cc4238745db8-p2-unchanged",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "source_image_sha256": "1501b0645e239814bccdc33af9aedfa88411c132637e7abd630837bfea3958b3",
+      "row_candidates": 7,
+      "observed": [
+        "I.",
+        "a",
+        "3:",
+        "4.",
+        "Bi",
+        "6.",
+        "="
+      ],
+      "reviewer_expected_sequence": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "raw_sequence_matches_review": false,
+      "discarded_short_ink_runs": [],
+      "holds": [
+        "ROW_GEOMETRY_AND_LIST_ASSOCIATION_UNVERIFIED",
+        "SEGMENTATION_MAY_MISS_FAINT_MARKS"
+      ]
+    }
+  ],
+  "orientation_attempts": [
+    {
+      "ccw_rotation_from_supplied_image": 0,
+      "languages": "eng",
+      "state": "EXPERIMENTAL_NOT_ACCEPTED",
+      "character_edits": 162,
+      "reference_characters": 180,
+      "word_edits": 30,
+      "reference_words": 29,
+      "raw_sha256": "4c13c47cfed645b04872f2a1595bd709b4a32f5df30fa49101f43d286fb2fa49"
+    },
+    {
+      "ccw_rotation_from_supplied_image": 0,
+      "languages": "eng+hin",
+      "state": "EXPERIMENTAL_NOT_ACCEPTED",
+      "character_edits": 163,
+      "reference_characters": 180,
+      "word_edits": 31,
+      "reference_words": 29,
+      "raw_sha256": "cb4cb5c125142e31f2b459492b94afa928ab82e609af27839e300af59f1e26a7"
+    },
+    {
+      "ccw_rotation_from_supplied_image": 90,
+      "languages": "eng",
+      "state": "EXPERIMENTAL_NOT_ACCEPTED",
+      "character_edits": 162,
+      "reference_characters": 180,
+      "word_edits": 30,
+      "reference_words": 29,
+      "raw_sha256": "5117eac7bf9da653754f7f1661ce44e477750172785c8aff2bf9f954ff647427"
+    },
+    {
+      "ccw_rotation_from_supplied_image": 90,
+      "languages": "eng+hin",
+      "state": "EXPERIMENTAL_NOT_ACCEPTED",
+      "character_edits": 163,
+      "reference_characters": 180,
+      "word_edits": 31,
+      "reference_words": 29,
+      "raw_sha256": "3854ed9806c469cff87619597ae54970d6b7c9c6a3fd8fd5031fd6a199d95f7c"
+    },
+    {
+      "ccw_rotation_from_supplied_image": 180,
+      "languages": "eng",
+      "state": "EXPERIMENTAL_NOT_ACCEPTED",
+      "character_edits": 0,
+      "reference_characters": 180,
+      "word_edits": 0,
+      "reference_words": 29,
+      "raw_sha256": "1dbd1778e673997fc97c4eadfbd6063449f2e1ba706d6627f362dacc05daf915"
+    },
+    {
+      "ccw_rotation_from_supplied_image": 180,
+      "languages": "eng+hin",
+      "state": "EXPERIMENTAL_NOT_ACCEPTED",
+      "character_edits": 0,
+      "reference_characters": 180,
+      "word_edits": 0,
+      "reference_words": 29,
+      "raw_sha256": "cb7e4752c95baabb2bb97a4fb62356daa4e1c900eeb3a8d7b047a1e77b5fc5af"
+    },
+    {
+      "ccw_rotation_from_supplied_image": 270,
+      "languages": "eng",
+      "state": "EXPERIMENTAL_NOT_ACCEPTED",
+      "character_edits": 0,
+      "reference_characters": 180,
+      "word_edits": 0,
+      "reference_words": 29,
+      "raw_sha256": "6379aaff2684978975ee620690b844a49ce967503e990cb85ffad0975fc0c53f"
+    },
+    {
+      "ccw_rotation_from_supplied_image": 270,
+      "languages": "eng+hin",
+      "state": "EXPERIMENTAL_NOT_ACCEPTED",
+      "character_edits": 0,
+      "reference_characters": 180,
+      "word_edits": 0,
+      "reference_words": 29,
+      "raw_sha256": "5681403ccf5914f493cfd8529b98bfb6af951a0aa33bc4945b30cfa6ab60a112"
+    }
+  ],
+  "selected_orientation": null,
+  "limits": [
+    "Only local existing pinned OCR weights were used; no paid OCR or production service was called.",
+    "Reviewer spelling, date, signature and column notes are partial scoped findings, not new complete official references.",
+    "Both column row counts match the reported numbers of labels, but raw OCR still has I/a/Bi/= and punctuation errors. Nothing is filled from the expected sequences.",
+    "Some quarter-turn trials match the authored synthetic reference exactly. Angle selection on new documents is still unvalidated; none is automatically selected.",
+    "Circular 4 page 1 remains rejected. No automatic bleed-through mask or foreground deletion was added.",
+    "Mixed signature/text regions require a split; preserve printed names and substantive body text. Retain the th fragment with its date and the Devanagari digit ५.",
+    "The positive synthetic comment does not specify unchanged versus blurred. Existing authored scores remain separate; no new human verification is inferred.",
+    "All candidates remain blocked/unaccepted for publication and RAG."
+  ]
+}

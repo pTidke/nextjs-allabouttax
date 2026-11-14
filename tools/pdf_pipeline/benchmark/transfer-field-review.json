@@ -1,0 +1,805 @@
+{
+  "schema_version": "0.1.0",
+  "reviewed_on": "2026-11-06",
+  "reviewer_role": "product_owner",
+  "reviewer_authentication": "Conversation feedback; no authenticated production reviewer identity is claimed.",
+  "user_statement": "05th march, 2024\n01st april 2024\n\nand the circular number is 2/2024",
+  "report_sha256": "94d4c4d478e6fb5fb091fcfd82d7913fcb28c8c94247fbdc1ac8b36b12d135aa",
+  "local_report": "work/pdf-lab/demo-v2/benchmarks/source-transfer-v4/report.json",
+  "state": "THREE_FIELDS_OWNER_VERIFIED",
+  "publication_eligible": false,
+  "comparison_policy": "Case-fold and collapse whitespace only. Punctuation, leading zeros, digit identity and ordinal suffixes are preserved. Matching a field never selects an engine or approves its page.",
+  "fields": [
+    {
+      "id": "circular-2-2024-date",
+      "source_id": "circular-2-2024",
+      "title": "CBDT Circular 2/2024",
+      "field_type": "date",
+      "reference_text": "05th march, 2024",
+      "status": "OWNER_VERIFIED_FIELD_ONLY",
+      "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+      "page": 1,
+      "source_image": "packages/efc82c78e8f4-1793998191315948000/pages/0001.png",
+      "source_render_sha256": "877975b3eb55fb8549cdfc9286af93bae03823ddd05bc252b76aa3adcb1377c2",
+      "crop_pixels": [
+        1715,
+        690,
+        2227,
+        787
+      ],
+      "crop_sha256": "37ea2e609530864636ec9c43a98212d1af698c34dc6a066911bb9a7be0c0456e",
+      "local_crop": "work/pdf-lab/demo-v2/comparisons/transfer-field-review-v1/circular-2-2024-date.png",
+      "source_binding": "Owner identifies the field in the reviewed source; source region bound by agent comparison to the original page.",
+      "whole_page_verified": false,
+      "legal_date_role_verified": false,
+      "publication_eligible": false,
+      "comparisons": [
+        {
+          "candidate_id": "native",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": null,
+          "candidate_raw_sha256": null,
+          "native_artifact_sha256": "acb163623343fc4daf88ce18fc26dbe5c7496bd66352ad2d1fe6b9bfcd7d821d",
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-b8",
+                "text": "Dated osth March, 2024",
+                "bbox": {
+                  "x0": 416.35,
+                  "top": 170.56589999999994,
+                  "x1": 529.58388,
+                  "bottom": 184.2659
+                },
+                "image_bbox": {
+                  "x0": 1735.4749245109622,
+                  "top": 710.8915575676435,
+                  "x1": 2207.4685821189446,
+                  "bottom": 767.9909797773392
+                },
+                "confidence": null
+              },
+              "start": 6,
+              "end": 22,
+              "text": "osth March, 2024"
+            }
+          ],
+          "candidate_field_text": "osth March, 2024",
+          "comparison": "MISMATCH",
+          "date_warnings": [
+            {
+              "line_id": "p1-b8",
+              "start": 0,
+              "end": 22,
+              "raw": "Dated osth March, 2024",
+              "codes": [
+                "DATE_CUE_UNPARSED_REVIEW"
+              ]
+            }
+          ],
+          "field_warning_present": true,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "tesseract-eng-psm3",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/circular-2-2024-p1-tesseract-eng-psm3.json",
+          "candidate_raw_sha256": "53df0886ed3a0597c6c1ea561bb38b727dcacf3ddc2b137cc96463fae888e850",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-8",
+                "text": "Dated 05\" March, 2024\n\n",
+                "confidence": 81.0,
+                "low_confidence": false,
+                "bbox": {
+                  "x0": 417.1956850393701,
+                  "top": 171.55164835164834,
+                  "x1": 529.7113700787402,
+                  "bottom": 183.54826711749786
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 1739.0,
+                  "top": 715.0,
+                  "x1": 2208.0,
+                  "bottom": 765.0
+                }
+              },
+              "start": 6,
+              "end": 21,
+              "text": "05\" March, 2024"
+            }
+          ],
+          "candidate_field_text": "05\" March, 2024",
+          "comparison": "MISMATCH",
+          "date_warnings": [
+            {
+              "start": 6,
+              "end": 21,
+              "raw": "05\" March, 2024",
+              "codes": [
+                "DATE_SUFFIX_MARK_REVIEW"
+              ],
+              "id": "date-1",
+              "fragments": [
+                {
+                  "line_number": 8,
+                  "start": 6,
+                  "end": 21,
+                  "text": "05\" March, 2024",
+                  "line_text": "Dated 05\" March, 2024\n\n",
+                  "image_bbox": {
+                    "x0": 1870,
+                    "y0": 715,
+                    "x1": 2208,
+                    "y1": 765
+                  },
+                  "geometry_precision": "word",
+                  "line_confidence": 81.0
+                }
+              ],
+              "line_number": 8,
+              "line_text": "Dated 05\" March, 2024",
+              "line_confidence": 81.0,
+              "image_bbox": {
+                "x0": 1870,
+                "y0": 715,
+                "x1": 2208,
+                "y1": 765
+              },
+              "source_bbox": {
+                "x0": 448.62330708661415,
+                "top": 171.55164835164834,
+                "x1": 529.7113700787402,
+                "bottom": 183.54826711749786
+              },
+              "cross_line": false,
+              "search_view": "Dated 05\" March, 2024",
+              "search_separator": " ",
+              "reading_order_verified": false,
+              "action": "COMPARE_WITH_ORIGINAL",
+              "suggested_replacement": null
+            }
+          ],
+          "field_warning_present": true,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "tesseract-eng+hin-psm3",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/circular-2-2024-p1-tesseract-eng+hin-psm3.json",
+          "candidate_raw_sha256": "945f002c1ad4bda2237a209fd66b9d93c1dff99bc746769814edfcde03b6acad",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-hin-8",
+                "text": "Dated 05\" March, 2024\n\n",
+                "confidence": 87.0,
+                "low_confidence": false,
+                "bbox": {
+                  "x0": 417.1956850393701,
+                  "top": 171.55164835164834,
+                  "x1": 529.7113700787402,
+                  "bottom": 183.54826711749786
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 1739.0,
+                  "top": 715.0,
+                  "x1": 2208.0,
+                  "bottom": 765.0
+                }
+              },
+              "start": 6,
+              "end": 21,
+              "text": "05\" March, 2024"
+            }
+          ],
+          "candidate_field_text": "05\" March, 2024",
+          "comparison": "MISMATCH",
+          "date_warnings": [
+            {
+              "start": 6,
+              "end": 21,
+              "raw": "05\" March, 2024",
+              "codes": [
+                "DATE_SUFFIX_MARK_REVIEW"
+              ],
+              "id": "date-1",
+              "fragments": [
+                {
+                  "line_number": 8,
+                  "start": 6,
+                  "end": 21,
+                  "text": "05\" March, 2024",
+                  "line_text": "Dated 05\" March, 2024\n\n",
+                  "image_bbox": {
+                    "x0": 1870,
+                    "y0": 715,
+                    "x1": 2208,
+                    "y1": 765
+                  },
+                  "geometry_precision": "word",
+                  "line_confidence": 87.0
+                }
+              ],
+              "line_number": 8,
+              "line_text": "Dated 05\" March, 2024",
+              "line_confidence": 87.0,
+              "image_bbox": {
+                "x0": 1870,
+                "y0": 715,
+                "x1": 2208,
+                "y1": 765
+              },
+              "source_bbox": {
+                "x0": 448.62330708661415,
+                "top": 171.55164835164834,
+                "x1": 529.7113700787402,
+                "bottom": 183.54826711749786
+              },
+              "cross_line": false,
+              "search_view": "Dated 05\" March, 2024",
+              "search_separator": " ",
+              "reading_order_verified": false,
+              "action": "COMPARE_WITH_ORIGINAL",
+              "suggested_replacement": null
+            }
+          ],
+          "field_warning_present": true,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "easyocr-eng",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/circular-2-2024-easyocr.json",
+          "candidate_raw_sha256": "f189ef3f5c1dcf81ac73cf77da4aba390c149f90dd104457f6dff8a57143cad6",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-64",
+                "text": "0sth",
+                "confidence": 63.95278573036194,
+                "low_confidence": true,
+                "bbox": {
+                  "x0": 445.48441068693387,
+                  "top": 168.9745528531991,
+                  "x1": 469.75511687212133,
+                  "bottom": 185.88543024063014
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 1856.9161138650584,
+                  "top": 704.2590756247694,
+                  "x1": 1958.0838861349416,
+                  "bottom": 774.7409243752306
+                }
+              },
+              "start": 0,
+              "end": 4,
+              "text": "0sth"
+            },
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-9",
+                "text": "March, 2024",
+                "confidence": 92.15159156781472,
+                "low_confidence": false,
+                "bbox": {
+                  "x0": 467.57584251968507,
+                  "top": 172.27144547759931,
+                  "x1": 531.6306141732283,
+                  "bottom": 185.22779374471682
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 1949.0,
+                  "top": 718.0,
+                  "x1": 2216.0,
+                  "bottom": 772.0
+                }
+              },
+              "start": 0,
+              "end": 11,
+              "text": "March, 2024"
+            }
+          ],
+          "candidate_field_text": "0sth March, 2024",
+          "comparison": "MISMATCH",
+          "date_warnings": [],
+          "field_warning_present": false,
+          "association": "Agent source-region association of displaced day/month fragments; provider order unchanged.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        }
+      ]
+    },
+    {
+      "id": "itr2-validations-2024-25-date",
+      "source_id": "itr2-validations-2024-25",
+      "title": "ITR-2 validation rules AY 2024-25",
+      "field_type": "date",
+      "reference_text": "01st april 2024",
+      "status": "OWNER_VERIFIED_FIELD_ONLY",
+      "source_sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "page": 1,
+      "source_image": "packages/045b8b91e32c-1793998248409536000/pages/0001.png",
+      "source_render_sha256": "8685b92955a2383ac164a564b0efdaa4c1788431f0d52768a87f562b08c79faf",
+      "crop_pixels": [
+        280,
+        1428,
+        872,
+        1540
+      ],
+      "crop_sha256": "17c73c51eae0780a870276470145dbaf0ee8f2465f8ffee92ca1a8e6f2b3a529",
+      "local_crop": "work/pdf-lab/demo-v2/comparisons/transfer-field-review-v1/itr2-validations-2024-25-date.png",
+      "source_binding": "Owner identifies the field in the reviewed source; source region bound by agent comparison to the original page.",
+      "whole_page_verified": false,
+      "legal_date_role_verified": false,
+      "publication_eligible": false,
+      "comparisons": [
+        {
+          "candidate_id": "native",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": null,
+          "candidate_raw_sha256": null,
+          "native_artifact_sha256": "887943f9f448c3c033bffd4f3558e6fa5e84b8d4dd94fa080aa954d81a60a26c",
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-b6",
+                "text": "01st April 2024",
+                "bbox": {
+                  "x0": 72.024,
+                  "top": 347.59592000000004,
+                  "x1": 204.71756,
+                  "bottom": 364.79372
+                },
+                "image_bbox": {
+                  "x0": 300.1,
+                  "top": 1448.7552170707072,
+                  "x1": 852.9898333333333,
+                  "bottom": 1520.4344314646464
+                },
+                "confidence": null
+              },
+              "start": 0,
+              "end": 15,
+              "text": "01st April 2024"
+            }
+          ],
+          "candidate_field_text": "01st April 2024",
+          "comparison": "MATCH",
+          "date_warnings": [],
+          "field_warning_present": false,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "tesseract-eng-psm3",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/itr2-validations-2024-25-p1-tesseract-eng-psm3.json",
+          "candidate_raw_sha256": "a2d04d0725d7c4aa0c0802f898ed092dbbd1295c07af015defbf3652c3b4c5d1",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-9",
+                "text": "015 April 2024\n\n",
+                "confidence": 67.0,
+                "low_confidence": true,
+                "bbox": {
+                  "x0": 72.72,
+                  "top": 348.374431990306,
+                  "x1": 204.0,
+                  "bottom": 364.68948803392914
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 303.0,
+                  "top": 1452.0,
+                  "x1": 850.0,
+                  "bottom": 1520.0
+                }
+              },
+              "start": 0,
+              "end": 14,
+              "text": "015 April 2024"
+            }
+          ],
+          "candidate_field_text": "015 April 2024",
+          "comparison": "MISMATCH",
+          "date_warnings": [
+            {
+              "start": 0,
+              "end": 14,
+              "raw": "015 April 2024",
+              "codes": [
+                "DAY_DIGIT_COUNT_REVIEW"
+              ],
+              "id": "date-1",
+              "fragments": [
+                {
+                  "line_number": 9,
+                  "start": 0,
+                  "end": 14,
+                  "text": "015 April 2024",
+                  "line_text": "015 April 2024\n\n",
+                  "image_bbox": {
+                    "x0": 303,
+                    "y0": 1452,
+                    "x1": 850,
+                    "y1": 1520
+                  },
+                  "geometry_precision": "word",
+                  "line_confidence": 67.0
+                }
+              ],
+              "line_number": 9,
+              "line_text": "015 April 2024",
+              "line_confidence": 67.0,
+              "image_bbox": {
+                "x0": 303,
+                "y0": 1452,
+                "x1": 850,
+                "y1": 1520
+              },
+              "source_bbox": {
+                "x0": 72.72,
+                "top": 348.374431990306,
+                "x1": 204.0,
+                "bottom": 364.68948803392914
+              },
+              "cross_line": false,
+              "search_view": "015 April 2024",
+              "search_separator": " ",
+              "reading_order_verified": false,
+              "action": "COMPARE_WITH_ORIGINAL",
+              "suggested_replacement": null
+            }
+          ],
+          "field_warning_present": true,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "tesseract-eng+hin-psm3",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/itr2-validations-2024-25-p1-tesseract-eng+hin-psm3.json",
+          "candidate_raw_sha256": "34110d37b7b582d3c9a95971a486654228a07fca5cbd4a35599ec5d5bc70c8c1",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-hin-9",
+                "text": "015 April 2024\n\n",
+                "confidence": 92.0,
+                "low_confidence": false,
+                "bbox": {
+                  "x0": 72.72,
+                  "top": 348.374431990306,
+                  "x1": 204.0,
+                  "bottom": 364.68948803392914
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 303.0,
+                  "top": 1452.0,
+                  "x1": 850.0,
+                  "bottom": 1520.0
+                }
+              },
+              "start": 0,
+              "end": 14,
+              "text": "015 April 2024"
+            }
+          ],
+          "candidate_field_text": "015 April 2024",
+          "comparison": "MISMATCH",
+          "date_warnings": [
+            {
+              "start": 0,
+              "end": 14,
+              "raw": "015 April 2024",
+              "codes": [
+                "DAY_DIGIT_COUNT_REVIEW"
+              ],
+              "id": "date-1",
+              "fragments": [
+                {
+                  "line_number": 9,
+                  "start": 0,
+                  "end": 14,
+                  "text": "015 April 2024",
+                  "line_text": "015 April 2024\n\n",
+                  "image_bbox": {
+                    "x0": 303,
+                    "y0": 1452,
+                    "x1": 850,
+                    "y1": 1520
+                  },
+                  "geometry_precision": "word",
+                  "line_confidence": 92.0
+                }
+              ],
+              "line_number": 9,
+              "line_text": "015 April 2024",
+              "line_confidence": 92.0,
+              "image_bbox": {
+                "x0": 303,
+                "y0": 1452,
+                "x1": 850,
+                "y1": 1520
+              },
+              "source_bbox": {
+                "x0": 72.72,
+                "top": 348.374431990306,
+                "x1": 204.0,
+                "bottom": 364.68948803392914
+              },
+              "cross_line": false,
+              "search_view": "015 April 2024",
+              "search_separator": " ",
+              "reading_order_verified": false,
+              "action": "COMPARE_WITH_ORIGINAL",
+              "suggested_replacement": null
+            }
+          ],
+          "field_warning_present": true,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "easyocr-eng",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/itr2-validations-2024-25-easyocr.json",
+          "candidate_raw_sha256": "ad3bbedbfa45021212bf157882dd87903639fb8c67515801b0b236c75fe4a318",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-11",
+                "text": "01st April 2024",
+                "confidence": 94.37537464800107,
+                "low_confidence": false,
+                "bbox": {
+                  "x0": 70.08,
+                  "top": 345.73523174795514,
+                  "x1": 207.12,
+                  "bottom": 367.32868827627993
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 292.0,
+                  "top": 1441.0,
+                  "x1": 863.0,
+                  "bottom": 1531.0
+                }
+              },
+              "start": 0,
+              "end": 15,
+              "text": "01st April 2024"
+            }
+          ],
+          "candidate_field_text": "01st April 2024",
+          "comparison": "MATCH",
+          "date_warnings": [],
+          "field_warning_present": false,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        }
+      ]
+    },
+    {
+      "id": "circular-2-2024-number",
+      "source_id": "circular-2-2024",
+      "title": "CBDT Circular 2/2024",
+      "field_type": "circular_number",
+      "reference_text": "2/2024",
+      "status": "OWNER_VERIFIED_FIELD_ONLY",
+      "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+      "page": 1,
+      "source_image": "packages/efc82c78e8f4-1793998191315948000/pages/0001.png",
+      "source_render_sha256": "877975b3eb55fb8549cdfc9286af93bae03823ddd05bc252b76aa3adcb1377c2",
+      "crop_pixels": [
+        1764,
+        209,
+        2240,
+        304
+      ],
+      "crop_sha256": "292f737cde9b503aa65aa856b173998210c80338813fae65fd1e8f093e1c726f",
+      "local_crop": "work/pdf-lab/demo-v2/comparisons/transfer-field-review-v1/circular-2-2024-number.png",
+      "source_binding": "Owner identifies the field in the reviewed source; source region bound by agent comparison to the original page.",
+      "whole_page_verified": false,
+      "legal_date_role_verified": false,
+      "publication_eligible": false,
+      "comparisons": [
+        {
+          "candidate_id": "native",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": null,
+          "candidate_raw_sha256": null,
+          "native_artifact_sha256": "acb163623343fc4daf88ce18fc26dbe5c7496bd66352ad2d1fe6b9bfcd7d821d",
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-b1",
+                "text": "Circular No. ;2../2024",
+                "bbox": {
+                  "x0": 429.72,
+                  "top": 56.828700000000026,
+                  "x1": 529.5932399999999,
+                  "bottom": 67.92869999999994
+                },
+                "image_bbox": {
+                  "x0": 1791.2051988972037,
+                  "top": 236.85298795095838,
+                  "x1": 2207.507597479322,
+                  "bottom": 283.11602346392306
+                },
+                "confidence": null
+              },
+              "start": 13,
+              "end": 22,
+              "text": ";2../2024"
+            }
+          ],
+          "candidate_field_text": ";2../2024",
+          "comparison": "MISMATCH",
+          "date_warnings": [],
+          "field_warning_present": null,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "tesseract-eng-psm3",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/circular-2-2024-p1-tesseract-eng-psm3.json",
+          "candidate_raw_sha256": "53df0886ed3a0597c6c1ea561bb38b727dcacf3ddc2b137cc96463fae888e850",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-1",
+                "text": "Circular No, 2/2024\n\n",
+                "confidence": 69.0,
+                "low_confidence": true,
+                "bbox": {
+                  "x0": 429.9106771653544,
+                  "top": 57.58377007607776,
+                  "x1": 529.9512755905512,
+                  "bottom": 66.46126796280643
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 1792.0,
+                  "top": 240.0,
+                  "x1": 2209.0,
+                  "bottom": 277.0
+                }
+              },
+              "start": 13,
+              "end": 19,
+              "text": "2/2024"
+            }
+          ],
+          "candidate_field_text": "2/2024",
+          "comparison": "MATCH",
+          "date_warnings": [],
+          "field_warning_present": null,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "tesseract-eng+hin-psm3",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/circular-2-2024-p1-tesseract-eng+hin-psm3.json",
+          "candidate_raw_sha256": "945f002c1ad4bda2237a209fd66b9d93c1dff99bc746769814edfcde03b6acad",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-hin-1",
+                "text": "Circular No, 2/2024\n\n",
+                "confidence": 69.0,
+                "low_confidence": true,
+                "bbox": {
+                  "x0": 429.9106771653544,
+                  "top": 57.58377007607776,
+                  "x1": 529.9512755905512,
+                  "bottom": 66.46126796280643
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 1792.0,
+                  "top": 240.0,
+                  "x1": 2209.0,
+                  "bottom": 277.0
+                }
+              },
+              "start": 13,
+              "end": 19,
+              "text": "2/2024"
+            }
+          ],
+          "candidate_field_text": "2/2024",
+          "comparison": "MATCH",
+          "date_warnings": [],
+          "field_warning_present": null,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        },
+        {
+          "candidate_id": "easyocr-eng",
+          "candidate_state": "UNVERIFIED_CANDIDATE",
+          "candidate_raw": "raw/circular-2-2024-easyocr.json",
+          "candidate_raw_sha256": "f189ef3f5c1dcf81ac73cf77da4aba390c149f90dd104457f6dff8a57143cad6",
+          "native_artifact_sha256": null,
+          "fragments": [
+            {
+              "line_snapshot": {
+                "id": "p1-ocr-eng-1",
+                "text": "Circular No. 2/2024",
+                "confidence": 79.67955889997737,
+                "low_confidence": true,
+                "bbox": {
+                  "x0": 427.99143307086615,
+                  "top": 54.94451394759087,
+                  "x1": 532.5902362204724,
+                  "bottom": 68.14079459002535
+                },
+                "order_verified": false,
+                "image_bbox": {
+                  "x0": 1784.0,
+                  "top": 229.0,
+                  "x1": 2220.0,
+                  "bottom": 284.0
+                }
+              },
+              "start": 13,
+              "end": 19,
+              "text": "2/2024"
+            }
+          ],
+          "candidate_field_text": "2/2024",
+          "comparison": "MATCH",
+          "date_warnings": [],
+          "field_warning_present": null,
+          "association": "Single raw provider-line span.",
+          "provider_order_preserved": true,
+          "field_accepted_as_automatic_extraction": false
+        }
+      ]
+    }
+  ],
+  "full_page_references_verified": 0,
+  "accepted_extractions": 0,
+  "tax_review_completed": false,
+  "raw_ocr_modified": false,
+  "original_modified": false,
+  "selected_engine": null,
+  "limits": [
+    "Three explicitly supplied literal fields only. No other date, identifier, body text, table, condition or reading order is owner verified.",
+    "Date strings are not interpreted as effective dates, publication dates or filing periods.",
+    "Source regions and OCR alternatives were previously inspected; this is development feedback, not independent accuracy evaluation.",
+    "OCR date fragments are associated by agent source comparison. The owner did not verify the provider reading order or this association algorithm.",
+    "Date warning absence is not a clean verdict. No automatic repair or production acceptance is introduced."
+  ]
+}

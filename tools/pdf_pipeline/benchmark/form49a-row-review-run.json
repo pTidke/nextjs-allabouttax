@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-06",
+  "state": "SCOPED_ROW_COMPARISON_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "local_output": "work/pdf-lab/demo-v2/comparisons/form49a-row-review-v1",
+  "review_sha256": "6766ef3698f0c648e9617db828e321ce62cdc56455328022f6aa95a3bbd736ac",
+  "report_sha256": "e681b1df0823d829f2cc7a8155d011818ec2c84d5a16d25de60af10611d594e7",
+  "preview_sha256": "240a862b7e143c4bbe8f7481d2ec0f1a2f45d5adac68b4dd55feb6b462ff96ed",
+  "file_ledger_sha256": "e2e367f436379b9f2146564e6614970d3addf2f26e8d4134edbb6bcb68af6db6",
+  "code_sha256": "51125f541b8dd769bfe0876bdd6419cf5229ccdb3196717851e24690b211bc89",
+  "summary": {
+    "source_pages": 1,
+    "nested_grids": 4,
+    "projected_rows": 12,
+    "source_cells_preserved": 312,
+    "owner_verified_filled_rows": 9,
+    "matched_filled_rows": 9,
+    "unreviewed_blank_rows": 3,
+    "owner_verified_entity_names": 1,
+    "accepted_tables": 0,
+    "new_verified_full_page_references": 0
+  },
+  "source_sha256": "fbe3a013d4eae664403272dbb80f8cd11dcf0014667ca5d77a7be1e71a7c009f",
+  "artifact_sha256": "b9628f37e9b60dcf52bbacfd0a621cb034ff90eb86aea3369b8ffd267d6666e1",
+  "source_render_sha256": "8f8b64af974d257d0e7f672494dc1e9f8208672a4044cddf1796c2cec857f806",
+  "checks": {
+    "prior_pilot_files_unchanged": true,
+    "source_original_and_render_hashes_match": true,
+    "all_312_cells_retained": true,
+    "reviewed_company_join_is_explicit_and_scoped": true,
+    "all_four_crops_recreated_from_unchanged_source": true,
+    "all_twelve_projections_recomputed_from_exact_source_tables": true,
+    "browser_all_four_crops_loaded": true,
+    "browser_no_horizontal_overflow_or_logged_errors": true
+  },
+  "accuracy": null,
+  "tables_accepted": 0,
+  "tax_review_completed": false,
+  "rag_index_modified": false,
+  "production_ingestion_modified": false,
+  "limitations": [
+    "Feedback covers nine filled label/value associations and the stated company full name. Three unmentioned blank rows, individual character cells, spans, all prose, footnotes and whole-page reading order remain unverified.",
+    "These are four nested character grids on one previously inspected historical specimen page. This does not establish general table accuracy, scanned-table accuracy, merged headers, multi-page continuity or current form applicability.",
+    "The company continuation joins two reviewed layout rows without a separator only at this explicitly reviewed split inside INDIA. It is not a global last-name/first-name rule.",
+    "Projection is reference-independent and ASCII character-box only; ordinary prose, unknown/missing slots and ambiguous geometry stay held. Empty candidate cells remain unverified rather than becoming confirmed blanks."
+  ]
+}
