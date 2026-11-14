@@ -15,7 +15,7 @@ export function createAssetHandler(
       validAssetIds(candidateId, objectId);
       const { ref, pdf } = await deps
         .store()
-        .sourceObject(user.id, candidateId, objectId);
+        .sourceObject(user, candidateId, objectId);
       const bytes = await deps.readEvidence(ref);
       if (
         pdf

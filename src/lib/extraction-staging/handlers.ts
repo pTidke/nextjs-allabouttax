@@ -1,9 +1,9 @@
 import { HttpError, errorResponse, readJson, sameOrigin } from "../http";
 import { SHA, identifier } from "./contract";
-import type { ExtractionStore } from "./store";
+import type { ExtractionStore, Reviewer } from "./store";
 export type Dependencies = {
   enabled: () => boolean;
-  principal: () => Promise<{ id: string } | null>;
+  principal: () => Promise<Reviewer | null>;
   store: () => ExtractionStore;
 };
 const headers = {
@@ -16,7 +16,7 @@ export function createHandlers(deps: Dependencies) {
     if (!deps.enabled()) throw new HttpError(404, "Not found.");
     const u = await deps.principal();
     if (!u?.id) throw new HttpError(401, "Sign in first.");
-    return u.id;
+    return u;
   }
   async function respond(fn: () => Promise<unknown>) {
     try {

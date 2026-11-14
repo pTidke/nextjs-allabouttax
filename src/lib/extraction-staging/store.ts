@@ -15,6 +15,16 @@ export type Sql = {
 export type Database = Sql & {
   transaction<T>(fn: (sql: Sql) => Promise<T>): Promise<T>;
 };
+export type Reviewer = { id: string; email?: string | null };
+type Principal = string | Reviewer;
+export function reviewerEmail(actor: Principal) {
+  return typeof actor === "string"
+    ? null
+    : actor.email?.trim().toLowerCase() || null;
+}
+function actorId(actor: Principal) {
+  return typeof actor === "string" ? actor : actor.id;
+}
 export type SavedRevision = {
   id: string;
   candidateId: string;
@@ -86,16 +96,17 @@ export class ExtractionStore {
     if (r.rows.length !== 1 || r.rows[0].environment_id !== this.environmentId)
       throw new Error("Wrong staging environment.");
   }
-  private async reviewer(sql: Sql, userId: string) {
+  private async reviewer(sql: Sql, actor: Principal) {
+    const userId = actorId(actor);
     if (!userId || userId.length > 200)
       throw new HttpError(401, "Sign in first.");
     await this.environment(sql);
     await this.grantLock(sql, userId);
     const r = await sql.query(
-      "SELECT user_id FROM extraction_staging.capabilities WHERE user_id=$1 AND capability='EXTRACTION_REVIEW' AND revoked_at IS NULL AND expires_at>now()",
-      [userId],
+      "SELECT extraction_staging.can_review($1,$2) AS granted",
+      [userId, reviewerEmail(actor)],
     );
-    if (r.rows.length !== 1)
+    if (r.rows[0]?.granted !== true)
       throw new HttpError(
         403,
         "Extraction reviewer access has not been granted.",
@@ -135,10 +146,11 @@ export class ExtractionStore {
     );
   }
   private async readCandidate(
-    userId: string,
+    actor: Principal,
     id: string,
     includeHistory: boolean,
   ) {
+    const userId = actorId(actor);
     if (!userId || userId.length > 200)
       throw new HttpError(401, "Sign in first.");
     // One statement gives the grant, candidate, and review chain a consistent
@@ -147,11 +159,7 @@ export class ExtractionStore {
       rows: [row],
     } = await this.db.query(
       `WITH access AS (
-         SELECT environment_id, EXISTS (
-           SELECT 1 FROM extraction_staging.capabilities
-           WHERE user_id=$1 AND capability='EXTRACTION_REVIEW'
-             AND revoked_at IS NULL AND expires_at>now()
-         ) AS granted
+         SELECT environment_id, extraction_staging.can_review($1,$5) AS granted
          FROM extraction_staging.environment WHERE singleton=true
        )
        SELECT access.*, c.id, c.payload, c.payload_hash,
@@ -170,7 +178,7 @@ export class ExtractionStore {
          ) END AS revisions
        FROM access LEFT JOIN extraction_staging.candidates c
          ON c.id=$2 AND access.granted AND access.environment_id=$4`,
-      [userId, id, includeHistory, this.environmentId],
+      [userId, id, includeHistory, this.environmentId, reviewerEmail(actor)],
     );
     if (row?.environment_id !== this.environmentId)
       throw new Error("Wrong staging environment.");
@@ -182,9 +190,9 @@ export class ExtractionStore {
     if (!row.id) throw new HttpError(404, "Extraction draft not found.");
     return row;
   }
-  async list(userId: string) {
+  async list(actor: Principal) {
     return this.db.transaction(async (sql) => {
-      await this.reviewer(sql, userId);
+      await this.reviewer(sql, actor);
       const r = await sql.query(
         `SELECT c.*, h.action AS head_action, d.action AS decision_action
          FROM extraction_staging.candidates c
@@ -217,8 +225,8 @@ export class ExtractionStore {
       );
     });
   }
-  async get(userId: string, id: string) {
-    const row = await this.readCandidate(userId, id, true);
+  async get(actor: Principal, id: string) {
+    const row = await this.readCandidate(actor, id, true);
     const c = candidate(row);
     const history = reviewHistory(
       row.head_revision as string | null,
@@ -254,8 +262,8 @@ export class ExtractionStore {
       revision(row.request as Row).command,
     );
   }
-  async sourceObject(userId: string, id: string, objectId: string) {
-    const c = candidate(await this.readCandidate(userId, id, false));
+  async sourceObject(actor: Principal, id: string, objectId: string) {
+    const c = candidate(await this.readCandidate(actor, id, false));
     if (c.original.object_id === objectId)
       return { ref: c.original, pdf: true };
     const render = c.renders.find((page) => page.object.object_id === objectId);
@@ -263,11 +271,12 @@ export class ExtractionStore {
       throw new HttpError(404, "Evidence not available for this draft.");
     return { ref: render.object, pdf: false };
   }
-  async save(userId: string, input: unknown) {
+  async save(actor: Principal, input: unknown) {
+    const userId = actorId(actor);
     const command = parseCommand(input);
     const attempt = (verified?: Candidate) =>
       this.db.transaction(async (sql) => {
-        await this.reviewer(sql, userId);
+        await this.reviewer(sql, actor);
         const c = await this.bound(sql, command.candidateId, true);
         const history = await this.history(sql, c.id),
           requestHash = digest({ actorId: userId, command });

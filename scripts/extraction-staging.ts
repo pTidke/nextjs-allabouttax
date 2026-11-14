@@ -109,8 +109,13 @@ async function main() {
         "tools/extraction-staging/schema.sql",
         "utf8",
       );
+      const taxReviewSchema = await readFile(
+        "tools/extraction-staging/tax-review.sql",
+        "utf8",
+      );
       await db.transaction(async (sql) => {
         await sql.query(schema);
+        await sql.query(taxReviewSchema);
         await sql.query(
           "INSERT INTO extraction_staging.environment(singleton,environment_id) VALUES(true,$1) ON CONFLICT DO NOTHING",
           [config.environmentId],

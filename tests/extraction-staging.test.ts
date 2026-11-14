@@ -19,6 +19,10 @@ import {
   type Sql,
 } from "../src/lib/extraction-staging/store";
 import { createHandlers } from "../src/lib/extraction-staging/handlers";
+import {
+  loadTaxReview,
+  saveTaxReview,
+} from "../src/lib/extraction-staging/tax-review";
 import { createAssetHandler } from "../src/lib/extraction-staging/assets";
 import { stagingConfig } from "../src/lib/extraction-staging/config";
 import { readObject } from "../src/lib/extraction-staging/evidence";
@@ -191,6 +195,9 @@ test("isolated extraction staging persists authenticated, immutable decisions in
   try {
     await pg.exec(
       await readFile("tools/extraction-staging/schema.sql", "utf8"),
+    );
+    await pg.exec(
+      await readFile("tools/extraction-staging/tax-review.sql", "utf8"),
     );
     await pg.query(
       "INSERT INTO extraction_staging.environment(environment_id) VALUES($1)",
@@ -386,6 +393,81 @@ test("isolated extraction staging persists authenticated, immutable decisions in
     );
     const accepted = await store.save("reviewer-b", acceptedCommand);
     await t.test(
+      "staging tax reviewer access, evidence, and decisions stay tied to the accepted version",
+      async () => {
+        const ca = { id: "new-google-account", email: "Pilot.CA@example.test" };
+        await assert.rejects(loadTaxReview(store, ca), status(403));
+        await pg.query(
+          "INSERT INTO extraction_staging.tax_reviewers(email,reason,expires_at) VALUES($1,$2,$3)",
+          [ca.email.toLowerCase(), "Pilot", expires],
+        );
+        assert.equal(
+          (await store.list(ca)).some((doc) => doc.id === c.id),
+          true,
+        );
+        assert.deepEqual(
+          await store.sourceObject(ca, c.id, c.original.object_id),
+          { ref: c.original, pdf: true },
+        );
+        const inbox = await loadTaxReview(store, ca);
+        assert.deepEqual(
+          inbox.documents.map((doc) => doc.id),
+          [c.id],
+        );
+        assert.equal(inbox.canWrite, true);
+        assert.equal(inbox.review?.extractionRevision, accepted.revision.id);
+        const edit = {
+          candidateId: c.id,
+          extractionRevision: accepted.revision.id,
+          previousId: null,
+          decision: "ACCEPT",
+          classification: "Pilot instrument",
+          appliesTo: "Pilot group",
+          period: "Pilot period",
+          notes: "Checked against the official source.",
+          evidenceIds: ["p1-b1"],
+        };
+        const extractionReviewer = { id: "reviewer-a" };
+        assert.equal(
+          (await loadTaxReview(store, extractionReviewer)).canWrite,
+          false,
+        );
+        await assert.rejects(
+          saveTaxReview(store, extractionReviewer, edit),
+          status(403),
+        );
+        await assert.rejects(
+          saveTaxReview(store, ca, { ...edit, evidenceIds: ["wrong-line"] }),
+          status(400),
+        );
+        await assert.rejects(
+          saveTaxReview(store, ca, {
+            ...edit,
+            extractionRevision: hash("stale"),
+          }),
+          status(409),
+        );
+        const saved = await saveTaxReview(store, ca, edit);
+        assert.deepEqual(
+          (await loadTaxReview(store, ca)).review?.latest,
+          saved,
+        );
+        await assert.rejects(saveTaxReview(store, ca, edit), status(409));
+        await assert.rejects(
+          pg.query("DELETE FROM extraction_staging.tax_reviews"),
+          /immutable/,
+        );
+        await pg.query(
+          "UPDATE extraction_staging.tax_reviewers SET expires_at=now()",
+        );
+        await assert.rejects(store.list(ca), status(403));
+        await assert.rejects(
+          saveTaxReview(store, ca, { ...edit, previousId: saved.id }),
+          status(403),
+        );
+      },
+    );
+    await t.test(
       "a save during slow evidence verification makes the acceptance stale",
       async () => {
         const draft = fixture("review-during-verification");
@@ -435,6 +517,12 @@ test("isolated extraction staging persists authenticated, immutable decisions in
         assert.equal(retry.revision.id, accepted.revision.id);
         assert.equal(retry.headRevision, newer.revision.id);
         const current = await store.get("reviewer-a", c.id);
+        assert.equal(
+          (await loadTaxReview(store, { id: "reviewer-a" })).documents.some(
+            (doc) => doc.id === c.id,
+          ),
+          false,
+        );
         assert.equal(current.history.revisions[0].command.action, "SAVE_DRAFT");
         assert.equal(current.history.revisions.length, 3);
         await assert.rejects(
@@ -776,6 +864,8 @@ test("isolated extraction staging persists authenticated, immutable decisions in
           extraction_staging.candidates, extraction_staging.revisions, extraction_staging.heads TO extraction_runtime;
         GRANT INSERT ON extraction_staging.revisions TO extraction_runtime;
         GRANT INSERT, UPDATE ON extraction_staging.heads TO extraction_runtime;
+        GRANT SELECT ON extraction_staging.tax_reviewers TO extraction_runtime;
+        GRANT SELECT, INSERT ON extraction_staging.tax_reviews TO extraction_runtime;
         SET ROLE extraction_runtime;`);
         try {
           const current = await store.get("reviewer-a", c.id);
@@ -787,6 +877,15 @@ test("isolated extraction staging persists authenticated, immutable decisions in
             }),
           );
           assert.equal(saved.revision.actorId, "reviewer-a");
+          assert.equal((await loadTaxReview(store, { id: "reviewer-a" })).canWrite, false);
+          await assert.rejects(
+            pg.query("UPDATE extraction_staging.tax_reviewers SET expires_at=now()"),
+            /permission denied/,
+          );
+          await assert.rejects(
+            pg.query("DELETE FROM extraction_staging.tax_reviews"),
+            /permission denied/,
+          );
           await assert.rejects(
             store.capability(
               "self-appointed",

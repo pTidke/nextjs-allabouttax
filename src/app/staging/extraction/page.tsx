@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { stagingRuntime } from "@/lib/extraction-staging/runtime";
+import { stagingReviewer } from "@/lib/extraction-staging/principal";
 import ExtractionPanel from "./panel";
 import { HttpError } from "@/lib/http";
 import type { summarizeReview } from "@/lib/extraction-staging/review-queue";
@@ -12,12 +13,11 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 export default async function Page() {
   if (process.env.EXTRACTION_STAGING_ENABLED !== "true") notFound();
-  const { auth } = await import("@/auth"),
-    session = await auth();
-  if (!session?.user?.id) redirect("/");
+  const viewer = await stagingReviewer();
+  if (!viewer) redirect("/");
   let drafts: ReturnType<typeof summarizeReview>[];
   try {
-    drafts = await stagingRuntime().store.list(session.user.id);
+    drafts = await stagingRuntime().store.list(viewer);
   } catch (error) {
     if (!(error instanceof HttpError) || error.status !== 403) throw error;
     return (
@@ -30,5 +30,5 @@ export default async function Page() {
       </main>
     );
   }
-  return <ExtractionPanel viewerId={session.user.id} drafts={drafts} />;
+  return <ExtractionPanel viewerId={viewer.id} drafts={drafts} />;
 }
