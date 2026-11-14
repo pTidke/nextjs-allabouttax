@@ -13,15 +13,10 @@ export function createAssetHandler(
       const user = await deps.principal();
       if (!user?.id) throw new HttpError(401, "Sign in first.");
       validAssetIds(candidateId, objectId);
-      const { candidate } = await deps.store().get(user.id, candidateId);
-      const ref = [
-        candidate.original,
-        ...candidate.renders.map((r) => r.object),
-      ].find((o) => o.object_id === objectId);
-      if (!ref)
-        throw new HttpError(404, "Evidence not available for this draft.");
-      const bytes = await deps.readEvidence(ref),
-        pdf = ref.object_id === candidate.original.object_id;
+      const { ref, pdf } = await deps
+        .store()
+        .sourceObject(user.id, candidateId, objectId);
+      const bytes = await deps.readEvidence(ref);
       if (
         pdf
           ? !bytes.subarray(0, 5).equals(Buffer.from("%PDF-"))

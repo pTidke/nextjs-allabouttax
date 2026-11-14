@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import type { Candidate, Command } from "@/lib/extraction-staging/contract";
 import {
   recordedTableRow,
@@ -55,62 +55,92 @@ function readPosition(key: string): unknown {
     return null;
   }
 }
-async function request(url: string, options?: RequestInit) {
-  const response = await fetch(url, { ...options, cache: "no-store" });
-  const value = await response.json();
-  if (!response.ok)
-    throw new Error(value.error || "The review could not be loaded.");
-  return value;
+function subscribePosition(notify: () => void) {
+  window.addEventListener("storage", notify);
+  return () => window.removeEventListener("storage", notify);
 }
-export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
-  const [items, setItems] = useState<Summary[]>([]),
-    [detail, setDetail] = useState<Detail | null>(null),
+async function request(url: string, options?: RequestInit, timeout = 20000) {
+  const signal = AbortSignal.timeout(timeout);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      cache: "no-store",
+      signal,
+    });
+    if (!response.headers.get("content-type")?.includes("application/json"))
+      throw new Error(
+        "The review server did not respond as expected. Retry without clearing your notes.",
+      );
+    const value = await response.json();
+    if (!response.ok)
+      throw new Error(value.error || "The review could not be loaded.");
+    return value;
+  } catch (error) {
+    if (signal.aborted)
+      throw new Error(
+        options?.method === "POST"
+          ? "The server took too long to confirm. Your edits are still here; retry to confirm the same save."
+          : "The review took too long to load. Try opening it again.",
+      );
+    throw error;
+  }
+}
+export default function ExtractionPanel({
+  viewerId,
+  drafts,
+}: {
+  viewerId: string;
+  drafts: Summary[];
+}) {
+  const items = [...drafts].sort(
+    (a, b) => statusPriority[a.status] - statusPriority[b.status],
+  );
+  const [detail, setDetail] = useState<Detail | null>(null),
     [fields, setFields] = useState<Fields>(empty),
     [parent, setParent] = useState<string | null>(null),
     [selected, setSelected] = useState<string | null>(null),
-    [message, setMessage] = useState("Loading staging drafts…"),
-    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState(
+      drafts.length
+        ? "Choose a draft to review."
+        : "No drafts have been imported into staging.",
+    ),
+    [operation, setOperation] = useState<"opening" | Command["action"] | null>(
+      null,
+    ),
     [dirty, setDirty] = useState(false),
     [cacheOk, setCacheOk] = useState(true),
     [showAll, setShowAll] = useState(false),
     [showRow, setShowRow] = useState(false),
+    [showPage, setShowPage] = useState(false),
     [filter, setFilter] = useState<Summary["status"] | "all">("all"),
-    [resumeId, setResumeId] = useState<string | null>(null);
+    [lastOpened, setLastOpened] = useState<string | null>(null);
   const pending = useRef<{ signature: string; requestId: string } | null>(null);
+  const busy = operation !== null;
   const key = detail
     ? "extraction-review:" + viewerId + ":" + detail.candidate.id
     : null;
   const positionKey = "extraction-review-position:" + viewerId;
-  useEffect(() => {
-    request("/api/staging/extraction")
-      .then((v) => {
-        const candidates: Summary[] = v.candidates;
-        setItems(
-          candidates.sort(
-            (a, b) => statusPriority[a.status] - statusPriority[b.status],
-          ),
-        );
-        const position = readPosition(positionKey) as {
-          candidateId?: unknown;
-        } | null;
-        setResumeId(
-          candidates.find((item) => item.id === position?.candidateId)?.id ??
-            null,
-        );
-        setMessage(
-          v.candidates.length
-            ? "Choose a draft to review."
-            : "No drafts have been imported into staging.",
-        );
-      })
-      .catch((e) => setMessage(e.message));
-  }, [positionKey]);
+  const rememberedId = useSyncExternalStore(
+    subscribePosition,
+    () => {
+      const position = readPosition(positionKey) as {
+        candidateId?: unknown;
+      } | null;
+      return typeof position?.candidateId === "string"
+        ? position.candidateId
+        : null;
+    },
+    () => null,
+  );
+  const resumeId = drafts.find(
+    (item) => item.id === (lastOpened ?? rememberedId),
+  )?.id;
   function remember(
     candidateId: string,
     regionId: string | null,
     all: boolean,
   ) {
-    setResumeId(candidateId);
+    setLastOpened(candidateId);
     try {
       localStorage.setItem(
         positionKey,
@@ -160,12 +190,14 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
       )
     )
       return;
-    setBusy(true);
+    setOperation("opening");
+    setMessage("Opening review…");
     try {
       const next: Detail = await request(
         "/api/staging/extraction?candidateId=" + id,
       );
-      const saved = next.history.revisions[0]?.command;
+      const head = next.history.revisions[0];
+      const saved = head?.command;
       let form: Fields = saved
         ? {
             note: saved.note,
@@ -190,10 +222,35 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
               Array.isArray(local.fields.checks) &&
               typeof local.fields.note === "string"
             ) {
-              form = local.fields;
-              base = local.parent;
-              pending.current = local.pending ?? null;
-              backup = true;
+              const alreadySaved =
+                head?.actorId === viewerId &&
+                saved &&
+                head.requestId === local.pending?.requestId &&
+                head.parentRevision === local.parent &&
+                saved.note === local.fields.note &&
+                saved.readingOrderChecked ===
+                  local.fields.readingOrderChecked &&
+                saved.contextChecked === local.fields.contextChecked &&
+                saved.criticalCharactersChecked ===
+                  local.fields.criticalCharactersChecked &&
+                saved.checks.length === local.fields.checks.length &&
+                saved.checks.every((entry, index) => {
+                  const check = local.fields.checks[index];
+                  return (
+                    entry.regionId === check?.regionId &&
+                    entry.state === check?.state
+                  );
+                });
+              if (alreadySaved) {
+                localStorage.removeItem(
+                  "extraction-review:" + viewerId + ":" + id,
+                );
+              } else {
+                form = local.fields;
+                base = local.parent;
+                pending.current = local.pending ?? null;
+                backup = true;
+              }
             }
           }
         } catch {
@@ -236,6 +293,7 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
       setSelected(nextRegion);
       setShowAll(all);
       setShowRow(false);
+      setShowPage(false);
       remember(id, nextRegion, all);
       setDirty(backup);
       setCacheOk(true);
@@ -249,7 +307,7 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Could not load the draft.");
     } finally {
-      setBusy(false);
+      setOperation(null);
     }
   }
   function update(change: Partial<Fields>) {
@@ -268,7 +326,12 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
   }
   async function save(action: Command["action"]) {
     if (!detail) return;
-    setBusy(true);
+    setOperation(action);
+    setMessage(
+      action === "ACCEPT_EXTRACTION"
+        ? "Verifying source files before recording acceptance…"
+        : "Saving your review…",
+    );
     const body = {
       candidateId: detail.candidate.id,
       parentRevision: parent,
@@ -287,11 +350,18 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
       } catch {
         setCacheOk(false);
       }
-      const result = await request("/api/staging/extraction", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...body, requestId: pending.current.requestId }),
-      });
+      const result = await request(
+        "/api/staging/extraction",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...body,
+            requestId: pending.current.requestId,
+          }),
+        },
+        action === "ACCEPT_EXTRACTION" ? 65000 : 20000,
+      );
       if (result.headRevision !== result.revision.id)
         throw new Error(
           "A newer review exists. Your notes are kept; load the latest before making another save.",
@@ -326,7 +396,7 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
           : "The save failed. Your notes are kept; retry uses the same save identity.",
       );
     } finally {
-      setBusy(false);
+      setOperation(null);
     }
   }
   function download() {
@@ -613,7 +683,11 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
                 </>
               )}
               {render && (
-                <details className="mt-3">
+                <details
+                  className="mt-3"
+                  open={showPage}
+                  onToggle={(event) => setShowPage(event.currentTarget.open)}
+                >
                   <summary>Show complete page and context</summary>
                   {c.kind === "image_table_band" && (
                     <p className="text-sm text-slate-600">
@@ -621,35 +695,37 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
                       footnotes.
                     </p>
                   )}
-                  <div className="max-h-[75vh] overflow-auto">
-                    <div className="relative">
-                      <Image
-                        src={asset(render.object.object_id)}
-                        alt={"Original document page " + render.page}
-                        width={render.width}
-                        height={render.height}
-                        unoptimized
-                        className="h-auto w-full"
-                      />
-                      {region && (
-                        <div
-                          className="pointer-events-none absolute border-2 border-amber-600 bg-amber-200/20"
-                          style={{
-                            left: (100 * region.box.x0) / render.width + "%",
-                            top: (100 * region.box.top) / render.height + "%",
-                            width:
-                              (100 * (region.box.x1 - region.box.x0)) /
-                                render.width +
-                              "%",
-                            height:
-                              (100 * (region.box.bottom - region.box.top)) /
-                                render.height +
-                              "%",
-                          }}
+                  {showPage && (
+                    <div className="max-h-[75vh] overflow-auto">
+                      <div className="relative">
+                        <Image
+                          src={asset(render.object.object_id)}
+                          alt={"Original document page " + render.page}
+                          width={render.width}
+                          height={render.height}
+                          unoptimized
+                          className="h-auto w-full"
                         />
-                      )}
+                        {region && (
+                          <div
+                            className="pointer-events-none absolute border-2 border-amber-600 bg-amber-200/20"
+                            style={{
+                              left: (100 * region.box.x0) / render.width + "%",
+                              top: (100 * region.box.top) / render.height + "%",
+                              width:
+                                (100 * (region.box.x1 - region.box.x0)) /
+                                  render.width +
+                                "%",
+                              height:
+                                (100 * (region.box.bottom - region.box.top)) /
+                                  render.height +
+                                "%",
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </details>
               )}
             </section>
@@ -919,14 +995,18 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
                   disabled={busy}
                   onClick={() => save("SAVE_DRAFT")}
                 >
-                  Save review draft
+                  {operation === "SAVE_DRAFT"
+                    ? "Saving draft…"
+                    : "Save review draft"}
                 </button>
                 <button
                   className="rounded border px-3 py-2"
                   disabled={busy || !fields.note.trim()}
                   onClick={() => save("REQUEST_CHANGES")}
                 >
-                  Request corrections
+                  {operation === "REQUEST_CHANGES"
+                    ? "Saving corrections…"
+                    : "Request corrections"}
                 </button>
                 {showAll && (
                   <button
@@ -934,7 +1014,9 @@ export default function ExtractionPanel({ viewerId }: { viewerId: string }) {
                     disabled={busy || !ready}
                     onClick={() => save("ACCEPT_EXTRACTION")}
                   >
-                    Accept extraction for this scope
+                    {operation === "ACCEPT_EXTRACTION"
+                      ? "Verifying evidence…"
+                      : "Accept extraction for this scope"}
                   </button>
                 )}
                 <button className="rounded border px-3 py-2" onClick={download}>

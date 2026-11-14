@@ -157,10 +157,12 @@ test("isolated extraction staging persists authenticated, immutable decisions in
         pg.transaction((tx) => fn({ query: (q, p) => tx.query(q, p) } as Sql)),
     };
     let damaged = false,
-      verifications = 0;
+      verifications = 0,
+      afterVerification: (() => Promise<unknown>) | undefined;
     const store = new ExtractionStore(db, "test-stage", async () => {
       verifications++;
       if (damaged) throw new Error("Evidence hash changed");
+      await afterVerification?.();
     });
     const c = fixture();
     await store.register(c);
@@ -292,20 +294,6 @@ test("isolated extraction staging persists authenticated, immutable decisions in
           ),
           status(400),
         );
-        damaged = true;
-        await assert.rejects(store.get("reviewer-a", c.id), /Evidence hash/);
-        await assert.rejects(
-          store.save("reviewer-a", firstCommand),
-          /Evidence hash/,
-        );
-        await assert.rejects(
-          store.save(
-            "reviewer-a",
-            command(c, { parentRevision: first.revision.id }),
-          ),
-          /Evidence hash/,
-        );
-        damaged = false;
         assert.equal(
           (await store.get("reviewer-a", c.id)).history.revisions.length,
           1,
@@ -320,7 +308,68 @@ test("isolated extraction staging persists authenticated, immutable decisions in
       contextChecked: true,
       criticalCharactersChecked: true,
     });
+    await t.test(
+      "draft operations avoid whole-bundle reads, but acceptance requires fresh evidence",
+      async () => {
+        const before = verifications;
+        damaged = true;
+        try {
+          const draft = fixture("save-with-storage-unavailable");
+          damaged = false;
+          await store.register(draft);
+          damaged = true;
+          await store.get("reviewer-a", c.id);
+          await store.save("reviewer-a", firstCommand);
+          await store.save("reviewer-a", command(draft));
+          assert.equal(
+            verifications,
+            before + 1,
+            "only the import reads the bundle",
+          );
+          await assert.rejects(
+            store.save("reviewer-b", acceptedCommand),
+            /Evidence hash/,
+          );
+          assert.equal(
+            (await store.get("reviewer-a", c.id)).history.revisions.length,
+            1,
+          );
+        } finally {
+          damaged = false;
+        }
+      },
+    );
     const accepted = await store.save("reviewer-b", acceptedCommand);
+    await t.test(
+      "a save during slow evidence verification makes the acceptance stale",
+      async () => {
+        const draft = fixture("review-during-verification");
+        await store.register(draft);
+        afterVerification = () => store.save("reviewer-a", command(draft));
+        try {
+          await assert.rejects(
+            store.save(
+              "reviewer-a",
+              command(draft, {
+                action: "ACCEPT_EXTRACTION",
+                checks: [{ regionId: "p1-b1", state: "checked" }],
+                readingOrderChecked: true,
+                contextChecked: true,
+                criticalCharactersChecked: true,
+              }),
+            ),
+            status(409),
+          );
+          const { history } = await store.get("reviewer-a", draft.id);
+          assert.deepEqual(
+            history.revisions.map((row) => row.command.action),
+            ["SAVE_DRAFT"],
+          );
+        } finally {
+          afterVerification = undefined;
+        }
+      },
+    );
     await t.test(
       "complete source acceptance remains separate from legal approval and retrieval",
       async () => {
@@ -423,7 +472,6 @@ test("isolated extraction staging persists authenticated, immutable decisions in
           pg.query("DELETE FROM extraction_staging.capability_events"),
           /immutable/,
         );
-        assert.ok(verifications >= 10);
       },
     );
     await t.test(
@@ -528,6 +576,7 @@ test("isolated extraction staging persists authenticated, immutable decisions in
         assert.equal((await asset(c.id, "revision")).status, 404);
         assert.equal((await asset(hash("foreign"), "original")).status, 404);
         assert.equal(reads, 0);
+        const before = verifications;
         const pdf = await asset(c.id, "original");
         assert.equal(pdf.status, 200);
         assert.equal(pdf.headers.get("Content-Type"), "application/pdf");
@@ -536,6 +585,12 @@ test("isolated extraction staging persists authenticated, immutable decisions in
         assert.equal(png.status, 200);
         assert.equal(png.headers.get("Cache-Control"), "no-store");
         assert.match(png.headers.get("Content-Security-Policy")!, /sandbox/);
+        assert.equal(reads, 2);
+        assert.equal(
+          verifications,
+          before,
+          "assets do not re-read the entire bundle",
+        );
       },
     );
     await t.test(

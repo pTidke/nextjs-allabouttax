@@ -131,7 +131,6 @@ export class ExtractionStore {
     return this.db.transaction(async (sql) => {
       await this.reviewer(sql, userId);
       const c = await this.bound(sql, id, true);
-      await this.verifyEvidence(c);
       return {
         candidate: c,
         history: await this.history(sql, id),
@@ -141,81 +140,112 @@ export class ExtractionStore {
       };
     });
   }
-  async save(userId: string, input: unknown) {
-    const command = parseCommand(input);
+  async sourceObject(userId: string, id: string, objectId: string) {
     return this.db.transaction(async (sql) => {
       await this.reviewer(sql, userId);
-      const c = await this.bound(sql, command.candidateId, true);
-      await this.verifyEvidence(c);
-      const history = await this.history(sql, c.id),
-        requestHash = digest({ actorId: userId, command });
-      const previous = await sql.query(
-        "SELECT * FROM extraction_staging.revisions WHERE actor_id=$1 AND request_id=$2",
-        [userId, command.requestId],
+      const c = await this.bound(sql, id);
+      if (c.original.object_id === objectId)
+        return { ref: c.original, pdf: true };
+      const render = c.renders.find(
+        (page) => page.object.object_id === objectId,
       );
-      if (previous.rows[0]) {
-        const old = revision(previous.rows[0]);
-        if (old.requestHash !== requestHash)
+      if (!render)
+        throw new HttpError(404, "Evidence not available for this draft.");
+      return { ref: render.object, pdf: false };
+    });
+  }
+  async save(userId: string, input: unknown) {
+    const command = parseCommand(input);
+    const attempt = (verified?: Candidate) =>
+      this.db.transaction(async (sql) => {
+        await this.reviewer(sql, userId);
+        const c = await this.bound(sql, command.candidateId, true);
+        const history = await this.history(sql, c.id),
+          requestHash = digest({ actorId: userId, command });
+        const previous = await sql.query(
+          "SELECT * FROM extraction_staging.revisions WHERE actor_id=$1 AND request_id=$2",
+          [userId, command.requestId],
+        );
+        if (previous.rows[0]) {
+          const old = revision(previous.rows[0]);
+          if (old.requestHash !== requestHash)
+            throw new HttpError(
+              409,
+              "Retry identity was reused for another edit.",
+            );
+          return {
+            revision: old,
+            headRevision: history.headRevision,
+            publicationEligible: false,
+            taxApproved: false,
+            retrievalItemsCreated: 0,
+          };
+        }
+        if (command.parentRevision !== history.headRevision)
           throw new HttpError(
             409,
-            "Retry identity was reused for another edit.",
+            "A newer review exists. Load it before saving.",
           );
+        if (history.revisions.length >= 100)
+          throw new HttpError(
+            409,
+            "Review revision limit reached. Export your notes and contact the operator.",
+          );
+        validateDecision(c, command);
+        if (command.action === "ACCEPT_EXTRACTION") {
+          if (!verified) return { verify: c };
+          if (digest(verified) !== digest(c))
+            throw new HttpError(
+              409,
+              "The source revision changed. Reopen the draft.",
+            );
+        }
+        const at = await sql.query("SELECT now()::text AS stamp");
+        const body = {
+          candidateId: c.id,
+          parentRevision: history.headRevision,
+          actorId: userId,
+          requestId: command.requestId,
+          requestHash,
+          serverStamp: String(at.rows[0].stamp),
+          command,
+        };
+        const saved = { id: digest(body), ...body };
+        await sql.query(
+          "INSERT INTO extraction_staging.revisions(id,candidate_id,parent_id,actor_id,request_id,request_hash,action,server_stamp,payload) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)",
+          [
+            saved.id,
+            c.id,
+            saved.parentRevision,
+            userId,
+            command.requestId,
+            requestHash,
+            command.action,
+            saved.serverStamp,
+            JSON.stringify(command),
+          ],
+        );
+        await sql.query(
+          "INSERT INTO extraction_staging.heads(candidate_id,revision_id) VALUES($1,$2) ON CONFLICT(candidate_id) DO UPDATE SET revision_id=excluded.revision_id",
+          [c.id, saved.id],
+        );
         return {
-          revision: old,
-          headRevision: history.headRevision,
+          revision: saved,
+          headRevision: saved.id,
           publicationEligible: false,
           taxApproved: false,
           retrievalItemsCreated: 0,
         };
-      }
-      if (command.parentRevision !== history.headRevision)
-        throw new HttpError(
-          409,
-          "A newer review exists. Load it before saving.",
-        );
-      if (history.revisions.length >= 100)
-        throw new HttpError(
-          409,
-          "Review revision limit reached. Export your notes and contact the operator.",
-        );
-      validateDecision(c, command);
-      const at = await sql.query("SELECT now()::text AS stamp");
-      const body = {
-        candidateId: c.id,
-        parentRevision: history.headRevision,
-        actorId: userId,
-        requestId: command.requestId,
-        requestHash,
-        serverStamp: String(at.rows[0].stamp),
-        command,
-      };
-      const saved = { id: digest(body), ...body };
-      await sql.query(
-        "INSERT INTO extraction_staging.revisions(id,candidate_id,parent_id,actor_id,request_id,request_hash,action,server_stamp,payload) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)",
-        [
-          saved.id,
-          c.id,
-          saved.parentRevision,
-          userId,
-          command.requestId,
-          requestHash,
-          command.action,
-          saved.serverStamp,
-          JSON.stringify(command),
-        ],
-      );
-      await sql.query(
-        "INSERT INTO extraction_staging.heads(candidate_id,revision_id) VALUES($1,$2) ON CONFLICT(candidate_id) DO UPDATE SET revision_id=excluded.revision_id",
-        [c.id, saved.id],
-      );
-      return {
-        revision: saved,
-        headRevision: saved.id,
-        publicationEligible: false,
-        taxApproved: false,
-        retrievalItemsCreated: 0,
-      };
-    });
+      });
+    const result = await attempt();
+    if (!result.verify) return result;
+    // Check storage without holding review locks or occupying a DB connection.
+    // The final transaction checks the grant and expected parent again.
+    await this.verifyEvidence(result.verify);
+    const accepted = await attempt(result.verify);
+    if (accepted.verify)
+      throw new Error("Source verification was not applied.");
+    return accepted;
   }
   // Operator methods are never exposed by an HTTP handler.
   async register(value: Candidate) {

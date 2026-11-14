@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { stagingRuntime } from "@/lib/extraction-staging/runtime";
 import ExtractionPanel from "./panel";
 import { HttpError } from "@/lib/http";
+import type { summarizeReview } from "@/lib/extraction-staging/review-queue";
 import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Extraction review",
@@ -14,8 +15,9 @@ export default async function Page() {
   const { auth } = await import("@/auth"),
     session = await auth();
   if (!session?.user?.id) redirect("/");
+  let drafts: ReturnType<typeof summarizeReview>[];
   try {
-    await stagingRuntime().store.list(session.user.id);
+    drafts = await stagingRuntime().store.list(session.user.id);
   } catch (error) {
     if (!(error instanceof HttpError) || error.status !== 403) throw error;
     return (
@@ -28,5 +30,5 @@ export default async function Page() {
       </main>
     );
   }
-  return <ExtractionPanel viewerId={session.user.id} />;
+  return <ExtractionPanel viewerId={session.user.id} drafts={drafts} />;
 }
