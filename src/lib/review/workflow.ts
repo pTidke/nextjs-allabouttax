@@ -7,6 +7,7 @@ import { reviewVersion, validateReview, type ReviewInput } from "../tax/review";
 import { saveReviewDraft } from "../tax/review-drafts";
 import { requireReviewer } from "./roles";
 import { applyReviewedLines, lineReviewOverview } from "./line-reviews";
+import { STAGING_REVIEWER, STAGING_REVIEWER_NAME } from "./staging-carry-over";
 
 // Two gates before anything reaches the chatbot:
 //   1. text check: someone with EXTRACTION access confirms the extracted text
@@ -259,7 +260,7 @@ export async function reviewDocument(userId: string, versionId: string) {
     },
   });
   if (!version) throw new HttpError(404, "Document version not found.");
-  const [reviewers, engine, draft] = await Promise.all([
+  const [reviewers, engine, draft, carriedOver] = await Promise.all([
     prisma.user.findMany({
       where: { id: { in: version.extractionReviews.map((r) => r.reviewerId) } },
       select: { id: true, name: true, email: true },
@@ -271,10 +272,32 @@ export async function reviewDocument(userId: string, versionId: string) {
           select: { fields: true, revision: true, updatedAt: true },
         })
       : null,
+    // The table arrives with migration 202611150006, which runs from main after
+    // merging; until then the page shows no carried-over history.
+    prisma.stagingCarryOver
+      .findMany({
+        where: { versionId },
+        orderBy: { createdAt: "desc" },
+        select: {
+          candidateId: true,
+          title: true,
+          headAction: true,
+          history: true,
+          lineDecisions: true,
+          textAccepted: true,
+          taxDrafts: true,
+          createdAt: true,
+        },
+      })
+      .catch((error: unknown) => {
+        if ((error as { code?: string }).code === "P2021") return [];
+        throw error;
+      }),
   ]);
   return {
     access,
     engine,
+    carriedOver,
     version: {
       ...version,
       current: version.document.latestVersionId === version.id,
@@ -288,7 +311,9 @@ export async function reviewDocument(userId: string, versionId: string) {
         reviewer:
           reviewers.find((r) => r.id === reviewerId)?.name ??
           reviewers.find((r) => r.id === reviewerId)?.email ??
-          "Former reviewer",
+          (reviewerId === STAGING_REVIEWER
+            ? STAGING_REVIEWER_NAME
+            : "Former reviewer"),
       })),
     },
   };

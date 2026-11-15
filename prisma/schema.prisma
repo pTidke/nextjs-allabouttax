@@ -129,6 +129,7 @@ model TaxVersion {
   drafts            TaxReviewDraft[]
   chunks            TaxChunk[]
   extractionReviews ExtractionReview[]
+  stagingCarryOvers StagingCarryOver[]
   extractionRuns    ExtractionRun[]
   lineReviews       LineReview[]
 
@@ -347,4 +348,27 @@ model UploadPart {
   upload   PendingUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
 
   @@id([uploadId, index])
+}
+
+// A staging review candidate carried into the live review records (R3): its
+// revisions and tax reviews as history, and how many line decisions, text
+// acceptance and tax drafts it produced. One row per candidate and engine run
+// ('' when the engine had not read the document yet).
+model StagingCarryOver {
+  id            String     @id @default(cuid())
+  versionId     String
+  candidateId   String
+  runId         String     @default("")
+  title         String
+  kind          String
+  headAction    String?
+  history       Json
+  lineDecisions Int        @default(0)
+  textAccepted  Boolean    @default(false)
+  taxDrafts     Int        @default(0)
+  createdAt     DateTime   @default(now())
+  version       TaxVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, runId])
+  @@index([versionId])
 }

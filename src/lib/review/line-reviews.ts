@@ -11,6 +11,7 @@ import {
   type LineForReview,
 } from "./extraction-runs";
 import { requireReviewer } from "./roles";
+import { STAGING_REVIEWER, STAGING_REVIEWER_NAME } from "./staging-carry-over";
 
 // Line-by-line text check on top of an engine run.
 //
@@ -239,7 +240,11 @@ export async function pageForReview(
           ? {
               decision: decided.decision,
               text: decided.text,
-              reviewer: names.get(decided.reviewer) ?? "Former reviewer",
+              reviewer:
+                names.get(decided.reviewer) ??
+                (decided.reviewer === STAGING_REVIEWER
+                  ? STAGING_REVIEWER_NAME
+                  : "Former reviewer"),
               at: decided.at.toISOString(),
             }
           : null,

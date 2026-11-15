@@ -1,4 +1,5 @@
-import type { EngineDocument } from "./extraction-runs";
+import type { EngineDocument, EngineLine } from "./extraction-runs";
+import { validPeriod } from "../tax/registry";
 
 // R3: carrying the staging review work (the separate "Extraction Staging"
 // database) into the live review records. This file holds the parts that do not
@@ -7,7 +8,9 @@ import type { EngineDocument } from "./extraction-runs";
 // Staging keeps each document as a candidate: regions (lines, or table cells)
 // with a page, a box in the page render's pixels, the text read (raw) and any
 // repaired text (proposed). Each review step is an immutable revision whose
-// command lists a finding per region: checked, needs_changes or unreadable.
+// payload is the reviewer's command: an action, a note, and a finding per region
+// (checked, needs_changes or unreadable). A repair makes a new candidate that
+// replaces the old one, so a document's history runs across a lineage.
 
 export type StagingRegion = {
   id: string;
@@ -31,6 +34,12 @@ export type StagingCandidate = {
   renders: { page: number; width: number; height: number }[];
   repair?: { replacesCandidateId: string };
 };
+export type StagingCommand = {
+  action: string;
+  note?: string;
+  checks?: { regionId: string; state: string }[];
+  issues?: unknown[];
+};
 export type StagingRevision = {
   action: string;
   createdAt: Date;
@@ -38,6 +47,18 @@ export type StagingRevision = {
   issues: number;
   hasNote: boolean;
 };
+export type StagingTaxFields = {
+  classification?: string;
+  appliesTo?: string;
+  period?: string;
+  notes?: string;
+  evidenceIds?: string[];
+};
+
+// Who line decisions and text checks carried over from staging are recorded as.
+// Staging accounts are separate from live ones, so the reviewer is not named.
+export const STAGING_REVIEWER = "staging-review";
+export const STAGING_REVIEWER_NAME = "Staging review (carried over)";
 
 export const normalized = (text: string | null | undefined) =>
   (text ?? "").normalize("NFC").replace(/\s+/g, " ").trim();
@@ -58,13 +79,12 @@ const median = (values: number[]) => {
   );
 };
 
-// How the live engine's lines for the same PDF line up with the staging regions:
-// lines with the same text on the same page, and how far apart their boxes are
-// once the staging box is scaled from render pixels to page points. Counts only.
-export function compareWithEngine(
+// Pairs each engine line with the staging region on the same page that has the
+// same text: the settled text first, else the text staging first read. Each
+// region pairs once. Hindi evidence lines and empty lines are left out.
+export function matchLines(
   candidate: StagingCandidate,
   document: EngineDocument,
-  requiredIds: Set<string>,
 ) {
   const regionsByPage = new Map<number, StagingRegion[]>();
   for (const region of candidate.regions)
@@ -72,50 +92,139 @@ export function compareWithEngine(
       ...(regionsByPage.get(region.page) ?? []),
       region,
     ]);
-  const lines = document.pages.flatMap((page) =>
-    page.lines
-      .filter((line) => !line.excluded && normalized(line.text))
-      .map((line) => ({ line, page })),
-  );
-  let sameText = 0,
-    sameAsSettled = 0,
-    requiredMatched = 0;
-  const dx: number[] = [],
-    dy: number[] = [];
   const used = new Set<string>();
-  for (const { line, page } of lines) {
-    const text = normalized(line.text);
-    const candidates = (regionsByPage.get(line.page) ?? []).filter(
-      (region) => !used.has(region.id),
-    );
-    const match =
-      candidates.find((region) => settledText(region) === text) ??
-      candidates.find((region) => normalized(region.raw) === text);
-    if (!match) continue;
-    used.add(match.id);
-    sameText++;
-    if (settledText(match) === text) sameAsSettled++;
-    if (requiredIds.has(line.id)) requiredMatched++;
-    const render = candidate.renders.find((r) => r.page === line.page);
-    if (render) {
-      const scale = page.width / render.width;
-      dx.push(match.box.x0 * scale - line.box.x0);
-      dy.push(match.box.top * scale - line.box.top);
+  const pairs: { line: EngineLine; region: StagingRegion; scale: number }[] =
+    [];
+  let engineLines = 0;
+  for (const page of document.pages)
+    for (const line of page.lines) {
+      const text = normalized(line.text);
+      if (line.excluded || !text) continue;
+      engineLines++;
+      const open = (regionsByPage.get(line.page) ?? []).filter(
+        (region) => !used.has(region.id),
+      );
+      const region =
+        open.find((r) => settledText(r) === text) ??
+        open.find((r) => normalized(r.raw) === text);
+      if (!region) continue;
+      used.add(region.id);
+      const render = candidate.renders.find((r) => r.page === line.page);
+      pairs.push({
+        line,
+        region,
+        scale: render ? page.width / render.width : 0,
+      });
     }
-  }
   return {
-    engineLines: lines.length,
-    engineRequired: requiredIds.size,
-    regions: candidate.regions.length,
-    matchedByText: sameText,
-    matchedToSettledText: sameAsSettled,
-    requiredMatched,
-    regionsUnmatched: candidate.regions.length - used.size,
-    medianBoxOffsetPoints: { x: median(dx), y: median(dy) },
+    pairs,
+    engineLines,
+    unmatchedRegions: candidate.regions.length - used.size,
   };
 }
 
-// A revision's findings in counts, without notes or text.
+// How the live engine's lines for the same PDF line up with the staging regions.
+// Counts only.
+export function compareWithEngine(
+  candidate: StagingCandidate,
+  document: EngineDocument,
+  requiredIds: Set<string>,
+) {
+  const { pairs, engineLines, unmatchedRegions } = matchLines(
+    candidate,
+    document,
+  );
+  const scaled = pairs.filter((p) => p.scale);
+  return {
+    engineLines,
+    engineRequired: requiredIds.size,
+    regions: candidate.regions.length,
+    matchedByText: pairs.length,
+    matchedToSettledText: pairs.filter(
+      (p) => settledText(p.region) === normalized(p.line.text),
+    ).length,
+    requiredMatched: pairs.filter((p) => requiredIds.has(p.line.id)).length,
+    regionsUnmatched: unmatchedRegions,
+    medianBoxOffsetPoints: {
+      x: median(scaled.map((p) => p.region.box.x0 * p.scale - p.line.box.x0)),
+      y: median(scaled.map((p) => p.region.box.top * p.scale - p.line.box.top)),
+    },
+  };
+}
+
+export type PlannedDecision = {
+  lineId: string;
+  decision: "CONFIRMED" | "CORRECTED" | "UNREADABLE";
+  text: string | null;
+};
+
+// The live line decisions a staging review implies. A checked region confirms
+// its line when staging settled on the engine's text, and corrects it when
+// staging settled on other text; an unreadable region marks its line unreadable.
+// "Needs changes" and unchecked regions decide nothing. Confirmations are kept
+// only for lines live review asks about; corrections and unreadable lines are
+// kept for any line, because they change the passages or block acceptance.
+// Lines that already have a live decision are left alone.
+export function plannedDecisions(
+  pairs: ReturnType<typeof matchLines>["pairs"],
+  checks: { regionId: string; state: string }[],
+  required: Set<string>,
+  alreadyDecided: Set<string>,
+): PlannedDecision[] {
+  const finding = new Map(checks.map((c) => [c.regionId, c.state]));
+  const planned: PlannedDecision[] = [];
+  for (const { line, region } of pairs) {
+    if (alreadyDecided.has(line.id)) continue;
+    const state = finding.get(region.id);
+    if (state === "unreadable") {
+      planned.push({ lineId: line.id, decision: "UNREADABLE", text: null });
+      continue;
+    }
+    if (state !== "checked") continue;
+    const settled = settledText(region);
+    if (settled && settled !== normalized(line.text))
+      planned.push({ lineId: line.id, decision: "CORRECTED", text: settled });
+    else if (required.has(line.id))
+      planned.push({ lineId: line.id, decision: "CONFIRMED", text: null });
+  }
+  return planned;
+}
+
+// A live tax-review draft from a staging tax review. The live form takes fixed
+// values; a staging value fills a field only when it is one of them, and
+// everything staging recorded is also kept, word for word, in the draft's note.
+export function draftFromStaging(
+  fields: StagingTaxFields,
+  decision: string,
+  decidedAt: Date,
+) {
+  const text = (value: unknown) =>
+    typeof value === "string" ? value.trim() : "";
+  const type = text(fields.classification).toUpperCase();
+  const period = text(fields.period).toUpperCase().replace(/\s+/g, " ");
+  const lines = [
+    `Carried over from the staging tax review (${decision === "ACCEPT" ? "accepted" : "draft"}, ${decidedAt.toISOString().slice(0, 10)}). Check it against the source before approving.`,
+    text(fields.classification) &&
+      `Classification: ${text(fields.classification)}`,
+    text(fields.appliesTo) && `Applies to: ${text(fields.appliesTo)}`,
+    text(fields.period) && `Period: ${text(fields.period)}`,
+    text(fields.notes) && `Notes: ${text(fields.notes)}`,
+  ].filter(Boolean);
+  const draft: Record<string, string> = {
+    note: lines.join("\n").slice(0, 4000),
+  };
+  if (["ACT", "RULE", "NOTIFICATION", "CIRCULAR", "GUIDANCE"].includes(type))
+    draft.documentType = type;
+  if (validPeriod(period)) {
+    draft.periodMode = "SINGLE_PERIOD";
+    draft.period = period;
+  }
+  if (text(fields.appliesTo))
+    draft.applicabilityNote = text(fields.appliesTo).slice(0, 4000);
+  return draft;
+}
+
+// A revision's findings in counts, without notes or text: for the public log.
 export function revisionSummary(revision: StagingRevision) {
   const counts: Record<string, number> = {};
   for (const check of revision.checks)
