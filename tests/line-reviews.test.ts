@@ -168,9 +168,9 @@ test("every flagged line and the spot check must be decided before the text is a
   // The queue lists every line that needs a decision in reading order; the one
   // rule-accepted line is the spot check.
   assert.deepEqual(overview.queue, [
-    { id: "p1-l1", page: 1, spotCheck: false, decision: null },
-    { id: "p1-l2", page: 1, spotCheck: true, decision: null },
-    { id: "p2-l1", page: 2, spotCheck: false, decision: null },
+    { id: "p1-l1", page: 1, required: true, spotCheck: false, decision: null },
+    { id: "p1-l2", page: 1, required: true, spotCheck: true, decision: null },
+    { id: "p2-l1", page: 2, required: true, spotCheck: false, decision: null },
   ]);
   assert.equal(overview.sampleSize, 1);
   assert.deepEqual(overview.progress, {
@@ -270,4 +270,52 @@ test("accepting rebuilds the chatbot's passages from the reviewed lines", async 
   assert.equal(queue.items[0].versionId, versionId);
   // A newer engine does not reopen text that a person has accepted.
   assert.deepEqual(await runs.versionsToExtract("pdfanchor newer", 10), []);
+});
+
+test("lines checked after acceptance need the text accepted again before publishing", async () => {
+  await db.reviewerGrant.create({
+    data: { userId: reviewer, role: "TAX", grantedBy: reviewer },
+  });
+  const accepted = await workflow.latestTextCheck(versionId);
+  assert.equal(await workflow.linesChangedSince(versionId, accepted), 0);
+  // Any line can be checked, not only those the engine asked about, and the
+  // text check stays open for it.
+  await lines.recordLineDecision(reviewer, versionId, {
+    runId,
+    lineId: "p1-l2",
+    decision: "CORRECTED",
+    text: "NOTIFICATION No. 1",
+  });
+  assert.equal(await workflow.linesChangedSince(versionId, accepted), 1);
+  const review = {
+    versionId,
+    action: "approve" as const,
+    sectionIds: ["full-document"],
+    documentType: "NOTIFICATION",
+    legalStatus: "EFFECTIVE",
+    period: "TY 2026-27",
+    effectiveFrom: "2026-04-01",
+    note: "Synthetic reviewed test only.",
+  };
+  await assert.rejects(workflow.recordTaxDecision(reviewer, review), {
+    status: 409,
+    message: /Accept the text again/,
+  });
+  const page = await workflow.reviewDocument(reviewer, versionId);
+  assert.equal(page.changedSinceAcceptance, 1);
+
+  await workflow.recordTextCheck(reviewer, versionId, "ACCEPTED", "");
+  assert.equal(
+    await workflow.linesChangedSince(
+      versionId,
+      await workflow.latestTextCheck(versionId),
+    ),
+    0,
+  );
+  const chunks = await db.taxChunk.findMany({
+    where: { versionId },
+    orderBy: { anchor: "asc" },
+    select: { text: true },
+  });
+  assert.equal(chunks[0].text, "MINISTRY OF FINANCE NOTIFICATION No. 1");
 });

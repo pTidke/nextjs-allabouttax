@@ -169,11 +169,14 @@ export type ReviewLine = LineForReview & {
   } | null;
 };
 
-// One entry per line that needs a decision, in reading order. Kept small, because
-// a long scan can have thousands; the lines themselves load page by page.
+// One entry per line a person can check, in reading order: every line with text
+// except Hindi evidence. "required" marks those that need a decision before the
+// text can be accepted. Kept small, because a long scan can have thousands; the
+// lines themselves load page by page.
 export type QueueEntry = {
   id: string;
   page: number;
+  required: boolean;
   spotCheck: boolean;
   decision: LineDecision | null;
 };
@@ -204,10 +207,11 @@ export async function lineReviewOverview(versionId: string) {
     ...spot,
   ]);
   const queue: QueueEntry[] = lines(document)
-    .filter((line) => needed.has(line.id))
+    .filter((line) => !line.excluded && line.text.trim())
     .map((line) => ({
       id: line.id,
       page: line.page,
+      required: needed.has(line.id),
       spotCheck: spot.has(line.id),
       decision: decisions.get(line.id)?.decision ?? null,
     }));

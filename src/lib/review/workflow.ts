@@ -44,6 +44,19 @@ export async function latestTextCheck(versionId: string) {
   });
 }
 
+// Line decisions recorded after the text was last accepted. The passages the
+// chatbot uses were rebuilt at acceptance, so these are not in them until the
+// text is accepted again.
+export async function linesChangedSince(
+  versionId: string,
+  check: { decision: string; createdAt: Date } | null | undefined,
+) {
+  if (check?.decision !== "ACCEPTED") return 0;
+  return prisma.lineReview.count({
+    where: { versionId, createdAt: { gt: check.createdAt } },
+  });
+}
+
 export async function recordTextCheck(
   userId: string,
   versionId: string,
@@ -113,6 +126,11 @@ export async function recordTaxDecision(userId: string, input: ReviewInput) {
       throw new HttpError(
         409,
         "The extracted text has not been checked yet. A text check must accept it before it can be published.",
+      );
+    if (await linesChangedSince(input.versionId, check))
+      throw new HttpError(
+        409,
+        "Lines were checked after the text was accepted. Accept the text again, so the passages include them, before publishing.",
       );
   }
   try {
@@ -260,44 +278,49 @@ export async function reviewDocument(userId: string, versionId: string) {
     },
   });
   if (!version) throw new HttpError(404, "Document version not found.");
-  const [reviewers, engine, draft, carriedOver] = await Promise.all([
-    prisma.user.findMany({
-      where: { id: { in: version.extractionReviews.map((r) => r.reviewerId) } },
-      select: { id: true, name: true, email: true },
-    }),
-    lineReviewOverview(versionId),
-    access.tax
-      ? prisma.taxReviewDraft.findUnique({
-          where: { versionId_userId: { versionId, userId } },
-          select: { fields: true, revision: true, updatedAt: true },
-        })
-      : null,
-    // The table arrives with migration 202611150006, which runs from main after
-    // merging; until then the page shows no carried-over history.
-    prisma.stagingCarryOver
-      .findMany({
-        where: { versionId },
-        orderBy: { createdAt: "desc" },
-        select: {
-          candidateId: true,
-          title: true,
-          headAction: true,
-          history: true,
-          lineDecisions: true,
-          textAccepted: true,
-          taxDrafts: true,
-          createdAt: true,
+  const [reviewers, engine, draft, carriedOver, changedSinceAcceptance] =
+    await Promise.all([
+      prisma.user.findMany({
+        where: {
+          id: { in: version.extractionReviews.map((r) => r.reviewerId) },
         },
-      })
-      .catch((error: unknown) => {
-        if ((error as { code?: string }).code === "P2021") return [];
-        throw error;
+        select: { id: true, name: true, email: true },
       }),
-  ]);
+      lineReviewOverview(versionId),
+      access.tax
+        ? prisma.taxReviewDraft.findUnique({
+            where: { versionId_userId: { versionId, userId } },
+            select: { fields: true, revision: true, updatedAt: true },
+          })
+        : null,
+      // The table arrives with migration 202611150006, which runs from main after
+      // merging; until then the page shows no carried-over history.
+      prisma.stagingCarryOver
+        .findMany({
+          where: { versionId },
+          orderBy: { createdAt: "desc" },
+          select: {
+            candidateId: true,
+            title: true,
+            headAction: true,
+            history: true,
+            lineDecisions: true,
+            textAccepted: true,
+            taxDrafts: true,
+            createdAt: true,
+          },
+        })
+        .catch((error: unknown) => {
+          if ((error as { code?: string }).code === "P2021") return [];
+          throw error;
+        }),
+      linesChangedSince(versionId, version.extractionReviews[0]),
+    ]);
   return {
     access,
     engine,
     carriedOver,
+    changedSinceAcceptance,
     version: {
       ...version,
       current: version.document.latestVersionId === version.id,
