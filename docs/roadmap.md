@@ -81,7 +81,7 @@ Done when: a new CBDT document reaches the review inbox with no command typed by
 
 - [ ] Extraction revisions in the live schema; review decisions bound to them, not to chunk rows (C1)
 - [ ] One structured tax-review model, replacing both current forms (L10)
-- [ ] Rule-extracted metadata proposals with their source lines (D2)
+- [x] Rule-extracted metadata proposals with their source lines (D2): document type, number, Gazette number, authority, issue date and years, confirmed in the tax form
 - [ ] Release step with a dry-run manifest; withdraw and rollback (L9, D3)
 - [ ] Originals in object storage (C7)
 
@@ -98,7 +98,8 @@ Done when: a document accepted in staging can be cited by the chatbot, and withd
 
 ## M7. Knowledge store
 
-- [ ] Nodes and structure-aware chunks from `chunks.jsonl` (C3, A11)
+- [ ] Nodes and structure-aware chunks from `chunks.jsonl` (C3, A11). Started: reviewed passages carry a heading path, page and income years
+- [ ] Retrieval filters on passage years (`TaxChunk.incomeYears`, GIN-indexed)
 - [ ] Hybrid retrieval with a relevance floor (A4)
 - [ ] Relationships between documents; the 1961-to-2025 section mapping (C10)
 - [ ] Facts tables for slabs, limits and due dates (A12)

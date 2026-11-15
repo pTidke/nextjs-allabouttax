@@ -7,6 +7,7 @@ import TaxReviewForm, {
 import LineReviewer from "@/components/review/LineReviewer";
 import PageViewer from "@/components/review/PageViewer";
 import type { QueueEntry } from "@/lib/review/line-reviews";
+import type { DocumentFact } from "@/lib/review/document-facts";
 
 type Check = {
   id: string;
@@ -29,7 +30,14 @@ type Version = Omit<PendingReview, "document" | "draft" | "suggestion"> & {
     uploaded: boolean;
     sourceName: string;
   };
-  chunks: { id: string; anchor: string; text: string }[];
+  chunks: {
+    id: string;
+    anchor: string;
+    text: string;
+    page: number | null;
+    headings: string[];
+    incomeYears: string[];
+  }[];
   draft: PendingReview["draft"];
   suggestion: PendingReview["suggestion"];
   textChecks: Check[];
@@ -55,6 +63,7 @@ export type EngineOverview =
       queue: QueueEntry[];
       attentionTotal: number;
       sampleSize: number;
+      facts: DocumentFact[];
       progress: {
         required: number;
         decided: number;
@@ -296,6 +305,19 @@ export default function Workspace({
                   >
                     {chunk.anchor}
                   </button>
+                  {(!!chunk.headings.length || !!chunk.incomeYears.length) && (
+                    <p className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
+                      {chunk.headings.join(" › ")}
+                      {chunk.incomeYears.map((year) => (
+                        <span
+                          key={year}
+                          className="rounded bg-sky-50 px-1.5 py-0.5 text-sky-800"
+                        >
+                          {year}
+                        </span>
+                      ))}
+                    </p>
+                  )}
                   <p className="whitespace-pre-wrap">{chunk.text}</p>
                 </li>
               ))}
@@ -445,6 +467,7 @@ export default function Workspace({
               </p>
             ) : (
               <TaxReviewForm
+                proposals={engine?.status === "OK" ? engine.facts : []}
                 key={version.draft?.revision ?? 0}
                 version={version}
                 busy={busy}

@@ -11,6 +11,8 @@ import {
   type LineForReview,
 } from "./extraction-runs";
 import { requireReviewer } from "./roles";
+import { incomeYears } from "../tax/years";
+import { documentFacts } from "./document-facts";
 import { STAGING_REVIEWER, STAGING_REVIEWER_NAME } from "./staging-carry-over";
 
 // Line-by-line text check on top of an engine run.
@@ -220,6 +222,14 @@ export async function lineReviewOverview(versionId: string) {
     runId: run!.id,
     queue,
     sampleSize: required.sample.length,
+    facts: documentFacts(
+      document,
+      new Map(
+        [...decisions]
+          .filter(([, d]) => d.decision === "CORRECTED" && d.text)
+          .map(([id, d]) => [id, d.text!]),
+      ),
+    ),
     progress: progress(required, decisions),
   };
 }
@@ -259,17 +269,38 @@ export async function pageForReview(
 
 // ---- Rebuilding the chatbot's passages -------------------------------------
 
+export type Passage = {
+  anchor: string;
+  text: string;
+  page: number;
+  // The headings the passage sits under: the document's opening heading block,
+  // then the latest heading after it (a schedule, chapter, annexure...).
+  headings: string[];
+  // Income years named in the passage or its headings ("2026-27").
+  incomeYears: string[];
+};
+
 // Lines become paragraphs (joined with spaces), tables stay together (one row per
 // line), and paragraphs are packed into passages of up to 2,000 characters on one
-// page without ever splitting a paragraph. Hindi evidence lines are left out.
+// page, under one heading path, without ever splitting a paragraph. Hindi
+// evidence lines are left out. Headings are the lines the engine marked as such
+// (larger or bold short lines, or CHAPTER, SCHEDULE, ANNEXURE...); consecutive
+// heading lines form one heading.
 export function passagesFrom(
   document: EngineDocument,
   decisions: Map<string, Decided>,
-) {
-  const passages: { anchor: string; text: string }[] = [];
+): Passage[] {
+  const passages: Passage[] = [];
+  let header: string | null = null;
+  let current: string | null = null;
   for (const page of document.pages) {
-    const units: string[] = [];
-    let current: { key: string; parts: string[]; table: boolean } | null = null;
+    const units: { text: string; heading: boolean }[] = [];
+    let unit: {
+      key: string;
+      parts: string[];
+      table: boolean;
+      heading: boolean;
+    } | null = null;
     for (const line of page.lines) {
       if (line.excluded) continue;
       const decided = decisions.get(line.id);
@@ -278,25 +309,55 @@ export function passagesFrom(
       ).trim();
       if (!text) continue;
       const key = line.table_id ? `t:${line.table_id}` : `p:${line.paragraph}`;
-      if (!current || current.key !== key) {
-        if (current) units.push(current.parts.join(current.table ? "\n" : " "));
-        current = { key, parts: [], table: !!line.table_id };
+      if (!unit || unit.key !== key) {
+        if (unit)
+          units.push({
+            text: unit.parts.join(unit.table ? "\n" : " "),
+            heading: unit.heading,
+          });
+        unit = {
+          key,
+          parts: [],
+          table: !!line.table_id,
+          heading: line.role === "heading" && !line.table_id,
+        };
       }
-      current.parts.push(text);
+      unit.parts.push(text);
     }
-    if (current) units.push(current.parts.join(current.table ? "\n" : " "));
+    if (unit)
+      units.push({
+        text: unit.parts.join(unit.table ? "\n" : " "),
+        heading: unit.heading,
+      });
+
     let packed = "";
+    let packedPath: string[] = [];
     const flush = () => {
       if (packed)
         passages.push({
           anchor: `Page ${page.number}, passage ${passages.filter((p) => p.anchor.startsWith(`Page ${page.number},`)).length + 1}`,
           text: packed,
+          page: page.number,
+          headings: packedPath,
+          incomeYears: incomeYears(`${packedPath.join("\n")}\n${packed}`),
         });
       packed = "";
     };
-    for (const unit of units) {
-      for (let i = 0; i < unit.length; i += MAX_PASSAGE_CHARS) {
-        const part = unit.slice(i, i + MAX_PASSAGE_CHARS);
+    for (let i = 0; i < units.length; i++) {
+      const { text, heading } = units[i];
+      // A run of heading lines is one heading: set it once, at the run's start.
+      if (heading && !units[i - 1]?.heading) {
+        let block = text;
+        for (let j = i + 1; j < units.length && units[j].heading; j++)
+          block = `${block} ${units[j].text}`;
+        if (header === null) header = block;
+        else current = block;
+      }
+      const path = [header, current].filter((h): h is string => !!h);
+      if (packed && path.join("\n") !== packedPath.join("\n")) flush();
+      packedPath = path;
+      for (let k = 0; k < text.length; k += MAX_PASSAGE_CHARS) {
+        const part = text.slice(k, k + MAX_PASSAGE_CHARS);
         if (packed && packed.length + part.length + 2 > MAX_PASSAGE_CHARS)
           flush();
         packed = packed ? `${packed}\n\n${part}` : part;

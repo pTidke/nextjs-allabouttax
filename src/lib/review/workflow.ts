@@ -263,7 +263,16 @@ export async function reviewDocument(userId: string, versionId: string) {
           source: { select: { kind: true, name: true } },
         },
       },
-      chunks: { select: { id: true, anchor: true, text: true } },
+      chunks: {
+        select: {
+          id: true,
+          anchor: true,
+          text: true,
+          page: true,
+          headings: true,
+          incomeYears: true,
+        },
+      },
       extractionReviews: {
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         take: 20,
