@@ -9,7 +9,8 @@ export async function generateAnswer({
   evidence,
 }: {
   question: string;
-  period: string;
+  // The tax year the user named, or null when they named none.
+  period: string | null;
   history?: { role: string; content: string }[];
   evidence: Evidence[];
 }) {

@@ -6,7 +6,7 @@ This milestone replaces the retired Assistants flow and adds a reviewable offici
 
 - Responses API with strict structured output, evidence ID validation, explicit model configuration and `store: false`.
 - Server-owned conversations, authenticated user checks, atomic daily quotas with India-time boundaries, error handling and bounded request bodies.
-- Explicit FY/AY/TY selection. Answers use only a reviewed release and matching central-income-tax period. Empty, stale, failed, changed or unsupported evidence yields a limitation, never a model-memory fallback.
+- Tax year taken from the question (or the chat); with none named, all years are searched and each passage carries its year. Answers use only a reviewed release and, when a year is named, the matching central-income-tax period. Empty, stale, failed, changed or unsupported evidence yields a limitation, never a model-memory fallback.
 - Immutable original document bytes, hashes, extracted passages, reviewed type/status/date metadata, and monotonically numbered release manifests.
 - HTML and text-PDF extraction. Scanned PDFs without usable text fail for manual handling; OCR is not implemented.
 - Review and source-health interface at `/admin/knowledge`, restricted to existing ADMIN users with a fresh database role check on every API request.

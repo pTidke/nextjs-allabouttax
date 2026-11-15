@@ -68,3 +68,51 @@ export function periodRange(period: string) {
     end: new Date(Date.UTC(year + 1, 3, 1)),
   };
 }
+
+// The tax year named in a question, as a canonical period, or null. Only labelled
+// forms count ("FY 2025-26", "AY 2026-27", "tax year 2026-27", "financial year
+// 2025-2026"); a bare "2025-26" is left to the model, because people use it for
+// both the income year and the assessment year. Two different years: null.
+const LABELS: Record<string, "FY" | "AY" | "TY"> = {
+  fy: "FY",
+  ay: "AY",
+  ty: "TY",
+  "financial year": "FY",
+  "previous year": "FY",
+  "assessment year": "AY",
+  "tax year": "TY",
+};
+const NAMED =
+  /\b(fy|ay|ty|financial\s+year|previous\s+year|assessment\s+year|tax\s+year)\s*[:.]?\s*'?(\d{4}|\d{2})\s*[-–/]\s*(\d{4}|\d{2})\b/gi;
+export function detectPeriod(text: string): string | null {
+  const found = new Set<string>();
+  for (const match of text.matchAll(NAMED)) {
+    const label = LABELS[match[1].toLowerCase().replace(/\s+/g, " ")];
+    const start = Number(match[2].length === 2 ? `20${match[2]}` : match[2]);
+    const end = Number(match[3].length === 2 ? `20${match[3]}` : match[3]);
+    const period = `${label} ${start}-${String(end % 100).padStart(2, "0")}`;
+    if (end !== start + 1 || !validPeriod(period)) continue;
+    // FY 2026-27, TY 2026-27 and AY 2027-28 are one year: compare by income year.
+    found.add(equivalentPeriods(period)[0]);
+  }
+  return found.size === 1 ? [...found][0] : null;
+}
+
+// Which tax year a question is about: one chosen explicitly, else one named in
+// the question, else the most recent one named earlier in the chat (newest
+// first), else null for "not stated".
+export function resolvePeriod(
+  stated: string | undefined,
+  question: string,
+  earlier: string[],
+): string | null {
+  return (
+    stated ??
+    detectPeriod(question) ??
+    earlier.map(detectPeriod).find((period) => period !== null) ??
+    null
+  );
+}
+
+// Stored as a conversation's period when it is not tied to one tax year.
+export const ANY_PERIOD = "AUTO";

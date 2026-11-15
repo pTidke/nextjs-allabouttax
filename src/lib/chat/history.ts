@@ -69,6 +69,7 @@ export async function conversationHistory(id: string, userId: string) {
       content: true,
       citations: true,
       releaseId: true,
+      outcome: true,
       createdAt: true,
     },
   });

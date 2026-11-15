@@ -18,6 +18,7 @@ export type ChatMessage = {
   content: string;
   citations?: Citation[];
   releaseId?: string | null;
+  outcome?: string | null;
 };
 type ChatState = {
   status: "in_progress" | "awaiting_message";
@@ -26,8 +27,6 @@ type ChatState = {
   setInput: React.Dispatch<React.SetStateAction<string>>;
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  period: string;
-  changePeriod: (period: string) => void;
   suggestions: string[];
   user: Session["user"] | undefined;
   handleSubmit: (event?: React.FormEvent) => Promise<void>;
@@ -49,7 +48,6 @@ function ChatStateProvider({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [period, setPeriod] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
@@ -91,7 +89,6 @@ function ChatStateProvider({
       if (!response.ok) throw new Error(body.error);
       if (current !== generation.current) return;
       conversationId.current = body.id;
-      setPeriod(body.period);
       setMessages(body.messages);
       if (body.truncated)
         setError(
@@ -116,10 +113,6 @@ function ChatStateProvider({
       setError("Please sign in to ask a question.");
       return;
     }
-    if (!period) {
-      setError("Choose the tax period before asking your question.");
-      return;
-    }
     const current = generation.current;
     const message = input.trim();
     const pendingId = crypto.randomUUID();
@@ -140,7 +133,6 @@ function ChatStateProvider({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message,
-          period,
           ...(conversationId.current
             ? { conversationId: conversationId.current }
             : {}),
@@ -181,11 +173,6 @@ function ChatStateProvider({
         setInput,
         isOpen,
         setIsOpen,
-        period,
-        changePeriod: (next) => {
-          clearChat();
-          setPeriod(next);
-        },
         suggestions,
         user,
         handleSubmit,

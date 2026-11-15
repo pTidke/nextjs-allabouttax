@@ -197,17 +197,12 @@ test("conversation ownership and atomic quota boundaries are enforced", async ()
   const conversation = await db.taxConversation.create({
     data: { userId: alice.id, period: "AY 2026-27" },
   });
-  await assert.rejects(
-    access.ownedConversation(conversation.id, bob.id, "AY 2026-27"),
-    { status: 404 },
-  );
-  await assert.rejects(
-    access.ownedConversation(conversation.id, alice.id, "TY 2026-27"),
-    { status: 400 },
-  );
+  await assert.rejects(access.ownedConversation(conversation.id, bob.id), {
+    status: 404,
+  });
+  // A conversation is no longer tied to one tax year.
   assert.equal(
-    (await access.ownedConversation(conversation.id, alice.id, "AY 2026-27"))
-      ?.id,
+    (await access.ownedConversation(conversation.id, alice.id))?.id,
     conversation.id,
   );
   const attempts = await Promise.allSettled(

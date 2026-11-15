@@ -90,7 +90,8 @@ export default function HistoryPanel() {
       {rows.map((row) => (
         <article key={row.id} className="border rounded-xl p-5 space-y-3">
           <h2 className="font-semibold">
-            {row.period} · {new Date(row.createdAt).toLocaleDateString()}
+            {row.period === "AUTO" ? "" : `${row.period} · `}
+            {new Date(row.createdAt).toLocaleDateString()}
           </h2>
           <p className="text-sm text-slate-500">
             {row._count.messages} messages

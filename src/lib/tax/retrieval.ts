@@ -51,9 +51,13 @@ export function searchTerms(question: string, exclude = "") {
 // `earlier` holds the previous questions of the same chat, newest first. A short
 // follow-up such as "and how long is it?" has no subject of its own, so their
 // terms also match, at half the weight of the current question.
+//
+// `period` null means the user named no tax year: every year is searched, and each
+// passage carries the period it applies to so the model can say which year its
+// answer is for.
 export async function retrieveEvidence(
   question: string,
-  period: string,
+  period: string | null,
   earlier: string[] = [],
 ) {
   const release = await prisma.knowledgeRelease.findFirst({
@@ -76,27 +80,34 @@ export async function retrieveEvidence(
     current && context
       ? Prisma.sql`2 * ts_rank_cd(${text}, ${now}) + ts_rank_cd(${text}, ${before})`
       : Prisma.sql`ts_rank_cd(${text}, ${match})`;
-  const periodDates = periodRange(period);
+  const periodDates = period ? periodRange(period) : null;
+  const scope = period
+    ? Prisma.sql`((v."periodMode" = 'SINGLE_PERIOD' AND v.period IN (${Prisma.join(equivalentPeriods(period))}))
+        OR (v."periodMode" = 'MULTI_PERIOD' AND v.period IS NULL AND length(trim(v."applicabilityNote")) > 0))
+      AND v."effectiveFrom" < ${periodDates!.end} AND (v."effectiveTo" IS NULL OR v."effectiveTo" > ${periodDates!.start})`
+    : Prisma.sql`((v."periodMode" = 'SINGLE_PERIOD' AND v.period IS NOT NULL)
+        OR (v."periodMode" = 'MULTI_PERIOD' AND v.period IS NULL AND length(trim(v."applicabilityNote")) > 0))`;
+  const shownPeriod = period
+    ? Prisma.sql`${period}::text`
+    : Prisma.sql`COALESCE(v.period, 'Across tax years')`;
   const freshSince = new Date(Date.now() - MAX_FRESHNESS_MS);
   const evidence = await prisma.$queryRaw<Evidence[]>(Prisma.sql`
     SELECT c.id, v.id AS "versionId", d.title, d.url, c.anchor, c.text,
-      d."verifiedAt" AS "checkedAt", v."effectiveFrom", v."effectiveTo", v."documentType", v."legalStatus", ${period}::text AS period,
+      d."verifiedAt" AS "checkedAt", v."effectiveFrom", v."effectiveTo", v."documentType", v."legalStatus", ${shownPeriod} AS period,
       v."periodMode", v."applicabilityNote", v."entityName", v."investmentFrom", v."investmentThrough"
     FROM "TaxChunk" c JOIN "TaxVersion" v ON v.id = c."versionId"
     JOIN "TaxDocument" d ON d.id = v."documentId" JOIN "TaxSource" s ON s.id = d."sourceId"
     WHERE v.id IN (${Prisma.join(release.versionIds)}) AND v.status = 'APPROVED' AND v."legalStatus" IN ('EFFECTIVE', 'GUIDANCE')
-      AND ((v."periodMode" = 'SINGLE_PERIOD' AND v.period IN (${Prisma.join(equivalentPeriods(period))}))
-        OR (v."periodMode" = 'MULTI_PERIOD' AND v.period IS NULL AND length(trim(v."applicabilityNote")) > 0))
+      AND ${scope}
       AND (v."entityName" IS NULL OR position(
         ' ' || trim(regexp_replace(lower(v."entityName"), '[^a-z0-9]+', ' ', 'g')) || ' '
         in ${` ${normalizeEntity(question)} `}
       ) > 0)
       AND v.jurisdiction = 'IN-CENTRAL' 
-      AND v."effectiveFrom" < ${periodDates.end} AND (v."effectiveTo" IS NULL OR v."effectiveTo" > ${periodDates.start})
       AND d."latestVersionId" = v.id AND d."verifiedAt" >= ${freshSince}
       AND d."lastError" IS NULL
       AND s.enabled = true AND s."lastError" IS NULL
       AND ${text} @@ ${match}
-    ORDER BY ${rank} DESC, c.id LIMIT 6`);
+    ORDER BY ${rank} DESC, v."effectiveFrom" DESC, c.id LIMIT 6`);
   return { releaseId: release.id, evidence };
 }

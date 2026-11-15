@@ -31,8 +31,6 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
     setInput,
     isOpen,
     setIsOpen,
-    period,
-    changePeriod,
     suggestions,
     handleSubmit,
     clearChat,
@@ -48,10 +46,6 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
       behavior: "smooth",
     });
   }, [messages, busy, isOpen]);
-  const years = Array.from(
-    { length: 5 },
-    (_, i) => new Date().getFullYear() - 3 + i,
-  );
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -60,8 +54,8 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
         className="[&>button]:hidden w-full h-[100dvh] md:max-w-[100dvw] p-0 border-none bg-white flex flex-col rounded-none"
       >
         <DialogDescription id="tax-chat-description" className="sr-only">
-          Ask income-tax questions using reviewed official evidence for your
-          selected period.
+          Ask income-tax questions answered from reviewed official sources.
+          Mention the tax year if your question is about a particular one.
         </DialogDescription>
         <header className="flex items-center justify-between p-4 md:px-8 border-b border-slate-100">
           <div className="flex items-center gap-3">
@@ -97,48 +91,7 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
             </button>
           </div>
         </header>
-        <div className="px-4 md:px-8 py-3 bg-slate-50 flex flex-wrap items-center gap-3">
-          <label htmlFor="tax-period" className="text-sm font-medium">
-            Tax period
-          </label>
-          <select
-            id="tax-period"
-            value={period}
-            onChange={(e) => changePeriod(e.target.value)}
-            className="border rounded-lg px-3 py-2 bg-white text-sm"
-          >
-            <option value="">Choose FY, AY, or Tax Year</option>
-            {["FY", "AY", "TY"].map((kind) => (
-              <optgroup
-                key={kind}
-                label={
-                  kind === "FY"
-                    ? "Financial year"
-                    : kind === "AY"
-                      ? "Assessment year"
-                      : "Tax year"
-                }
-              >
-                {/* "Tax year" exists only from 1 April 2026. */}
-                {years
-                  .filter((year) => kind !== "TY" || year >= 2026)
-                  .map((year) => {
-                    const value = `${kind} ${year}-${String((year + 1) % 100).padStart(2, "0")}`;
-                    return (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    );
-                  })}
-              </optgroup>
-            ))}
-          </select>
-          <span className="text-xs text-slate-500">
-            FY 2026-27, TY 2026-27 and AY 2027-28 are the same income year.
-            Changing the period starts a new chat.
-          </span>
-        </div>
-        <CoverageNotice period={period} />
+        <CoverageNotice />
         <div ref={scroll} className="flex-1 overflow-y-auto px-4 py-6 md:p-8">
           <div className="max-w-3xl mx-auto space-y-5">
             {error && (
@@ -153,7 +106,7 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
               <div className="py-12 text-center">
                 <Sparkles className="mx-auto text-emerald-600 mb-4" size={36} />
                 <h2 className="text-2xl font-semibold mb-3">
-                  Ask with the right tax period in view.
+                  Ask an income-tax question.
                 </h2>
                 <p className="text-slate-500 max-w-md mx-auto">
                   I can explain material in our reviewed income-tax library and
@@ -179,6 +132,12 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
                     {message.content}
                   </ReactMarkdown>
                 </div>
+                {(message.outcome === "NO_EVIDENCE" ||
+                  message.outcome === "UNSUPPORTED") && (
+                  <p className="mt-3 text-xs text-slate-500">
+                    This question did not count toward your daily limit.
+                  </p>
+                )}
                 {!!message.citations?.length && (
                   <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
                     <p className="text-xs font-semibold text-slate-600">
@@ -282,7 +241,7 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
               <button
                 aria-label="Send question"
                 type="submit"
-                disabled={busy || !input.trim() || !period}
+                disabled={busy || !input.trim()}
                 className="self-end rounded-full p-3 bg-emerald-600 text-white disabled:opacity-40"
               >
                 <Send size={20} />
@@ -290,7 +249,7 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
             </div>
             <p className="text-center text-[11px] text-slate-400 mt-3">
               {remaining !== null &&
-                `${remaining} ${remaining === 1 ? "question" : "questions"} left today. Questions the library cannot answer are not counted. `}
+                `${remaining} ${remaining === 1 ? "question" : "questions"} left today. `}
               Check the cited sources before acting. New chat clears this view;
               it does not delete server records.
             </p>

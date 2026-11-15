@@ -4,6 +4,8 @@
   {"id":"same-year-financial-label","period":"FY 2026-27","question":"What is the definition and length of a Tax Year?","supported":true,"mustMatch":"12|twelve"},
   {"id":"same-year-assessment-label","period":"AY 2027-28","question":"What is the definition and length of a Tax Year?","supported":true,"mustMatch":"12|twelve"},
   {"id":"follow-up-without-subject","period":"TY 2026-27","context":["What is the definition of a Tax Year?"],"question":"And how long is it?","supported":true,"mustMatch":"12|twelve"},
+  {"id":"no-year-named","question":"What is the definition and length of a Tax Year?","supported":true,"mustMatch":"12|twelve"},
+  {"id":"year-named-in-question","question":"In AY 2027-28, what is the length of a Tax Year?","supported":true,"mustMatch":"12|twelve"},
   {"id":"wrong-assessment-period","period":"AY 2024-25","question":"What is the definition and length of a Tax Year?","supported":false},
   {"id":"unsupported-gst","period":"TY 2026-27","question":"What GST rate applies to software subscriptions?","supported":false},
   {"id":"unsupported-calculation","period":"TY 2026-27","question":"Calculate my income tax on a salary of 2000000 rupees.","supported":false},

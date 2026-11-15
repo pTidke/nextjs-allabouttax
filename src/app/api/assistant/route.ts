@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { HttpError, errorResponse, readJson, sameOrigin } from "@/lib/http";
 import { ownedConversation, reserveQuestion } from "@/lib/chat/access";
 import { generateAnswer } from "@/lib/chat/generate";
-import { validPeriod } from "@/lib/tax/registry";
+import { ANY_PERIOD, resolvePeriod, validPeriod } from "@/lib/tax/registry";
 import { retrieveEvidence } from "@/lib/tax/retrieval";
 import { NO_EVIDENCE_MESSAGE, PROMPT_VERSION } from "@/lib/chat/answer";
 import { DAILY_LIMIT, indiaDay, saveTurn } from "@/lib/chat/turn";
@@ -22,12 +22,9 @@ export async function POST(req: Request) {
       typeof input.message !== "string" ||
       !input.message.trim() ||
       input.message.length > 6000 ||
-      !validPeriod(input.period)
+      (input.period !== undefined && !validPeriod(input.period))
     )
-      throw new HttpError(
-        400,
-        "Enter a question (up to 6,000 characters) and select its tax period.",
-      );
+      throw new HttpError(400, "Enter a question of up to 6,000 characters.");
     if (
       input.conversationId !== undefined &&
       (typeof input.conversationId !== "string" ||
@@ -46,11 +43,9 @@ export async function POST(req: Request) {
     });
     if (!user) throw new HttpError(401, "Please sign in again.");
     const question = input.message.trim();
-    const period = input.period;
     const existing = await ownedConversation(
       input.conversationId as string | undefined,
       user.id,
-      period,
     );
     // Earlier questions give a short follow-up something to search with.
     const earlier = existing
@@ -61,17 +56,25 @@ export async function POST(req: Request) {
           select: { content: true },
         })
       : [];
+    const previous = earlier.map((message) => message.content);
+    // The year comes from the question, else from earlier in the chat. With none
+    // named, every year is searched and the answer must say which year it is for.
+    const period = resolvePeriod(
+      input.period as string | undefined,
+      question,
+      previous,
+    );
     const { evidence, releaseId } = await retrieveEvidence(
       question,
       period,
-      earlier.map((message) => message.content),
+      previous,
     );
     const day = indiaDay();
     const limit = DAILY_LIMIT[user.role];
     const turn = {
       userId: user.id,
       conversationId: existing?.id ?? null,
-      period,
+      period: period ?? ANY_PERIOD,
       question,
       releaseId,
       day,

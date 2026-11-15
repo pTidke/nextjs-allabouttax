@@ -7,16 +7,15 @@ type Coverage = {
   entitySpecificDocuments: number;
   unavailableDocuments: number;
 };
-export default function CoverageNotice({ period }: { period: string }) {
+// What the assistant can currently answer from, across all tax years.
+export default function CoverageNotice() {
   const [state, setState] = useState<{
-    period: string;
     coverage?: Coverage;
     error?: boolean;
   } | null>(null);
   useEffect(() => {
-    if (!period) return;
     const abort = new AbortController();
-    void fetch(`/api/knowledge/coverage?period=${encodeURIComponent(period)}`, {
+    void fetch("/api/knowledge/coverage", {
       cache: "no-store",
       signal: abort.signal,
     })
@@ -25,31 +24,26 @@ export default function CoverageNotice({ period }: { period: string }) {
         return response.json();
       })
       .then((coverage) => {
-        if (!abort.signal.aborted) setState({ period, coverage });
+        if (!abort.signal.aborted) setState({ coverage });
       })
       .catch(() => {
-        if (!abort.signal.aborted) setState({ period, error: true });
+        if (!abort.signal.aborted) setState({ error: true });
       });
     return () => abort.abort();
-  }, [period]);
-  if (!period) return null;
-  const current = state?.period === period ? state : null;
+  }, []);
   return (
     <div
       role="status"
       className="px-4 md:px-8 py-2 bg-amber-50 text-xs text-slate-700 border-b border-amber-100"
     >
-      {!current
+      {!state
         ? "Checking reviewed coverage…"
-        : current.error
+        : state.error
           ? "Coverage could not be checked. Answers still require fresh approved sources."
-          : current.coverage!.availableDocuments === 0
-            ? `No fresh approved sources are available for ${period}. Questions may receive an evidence limitation.`
-            : `${current.coverage!.generalDocuments} general and ${current.coverage!.entitySpecificDocuments} entity-specific reviewed documents available for ${period}. Coverage is limited to those documents.`}{" "}
-      <Link
-        href={`/library?period=${encodeURIComponent(period)}`}
-        className="underline"
-      >
+          : state.coverage!.availableDocuments === 0
+            ? "No fresh approved sources are available yet. Questions may receive an evidence limitation."
+            : `Answers come from ${state.coverage!.generalDocuments} general and ${state.coverage!.entitySpecificDocuments} entity-specific reviewed documents. Name the tax year if your question is about a particular one.`}{" "}
+      <Link href="/library" className="underline">
         View source coverage
       </Link>
     </div>
