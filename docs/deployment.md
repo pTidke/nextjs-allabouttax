@@ -38,7 +38,7 @@ Apply a migration before merging code that uses it: Vercel deploys `main` straig
 
 `202611150004_line_reviews` is additive: a new `LineReview` table. Until it is applied, line decisions and accepting a text check on a document with an engine run fail; the rest of the site is unaffected.
 
-`202611150005_upload_parts` is additive: two new tables, `PendingUpload` and `UploadPart`, for PDFs uploaded in parts. Apply it before deploying the code that uses it; until then uploads fail with a database error. Large uploads count against `TAX_MAX_ORIGINAL_BYTES` (default 128 MiB) and Neon's free 0.5 GB; raise the budget only with storage to spare.
+`202611150005_upload_parts` is additive: two new tables, `PendingUpload` and `UploadPart`, for PDFs uploaded in parts. The migrate workflow runs only from `main`, so run it right after merging: until it has run, uploads fail with a database error, and everything else works as before. Large uploads count against `TAX_MAX_ORIGINAL_BYTES` (default 128 MiB) and Neon's free 0.5 GB; raise the budget only with storage to spare.
 
 `202611150003_extraction_runs` is additive: a new `ExtractionRun` table for the engine's results. Until it is applied, the extract workflow fails and document pages show no line boxes.
 
