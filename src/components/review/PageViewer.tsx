@@ -1,15 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type {
-  PDFDocumentLoadingTask,
-  PDFDocumentProxy,
-  RenderTask,
-} from "pdfjs-dist";
+import type { RenderTask } from "pdfjs-dist";
 import type { LineForReview } from "@/lib/review/extraction-runs";
+import { Spinner, usePdf } from "./pdf";
 
-// Draws one page of the original with pdf.js and lays the engine's line boxes
-// over it. Boxes are in PDF points from the top-left of the page, as the engine
-// reports them, so they are scaled by (drawn width / page width).
+// Draws one page of the original with pdf.js. The line being checked is outlined;
+// every other line can be outlined on request. Boxes are in PDF points from the
+// top-left of the page's visible area, as the engine reports them, so they are
+// scaled by (drawn width / page width).
 
 type PageSize = {
   number: number;
@@ -17,19 +15,6 @@ type PageSize = {
   height: number;
   rotation: number;
 };
-
-let workerReady = false;
-async function loadPdfJs() {
-  const pdfjs = await import("pdfjs-dist");
-  if (!workerReady) {
-    pdfjs.GlobalWorkerOptions.workerPort = new Worker(
-      new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url),
-      { type: "module" },
-    );
-    workerReady = true;
-  }
-  return pdfjs;
-}
 
 const tone: Record<string, string> = {
   flagged: "bg-amber-300/35 border-amber-500",
@@ -45,7 +30,7 @@ export default function PageViewer({
   pages,
   page,
   onPage,
-  selected,
+  current,
   onSelect,
 }: {
   src: string;
@@ -54,49 +39,25 @@ export default function PageViewer({
   pages: PageSize[] | null;
   page: number;
   onPage: (page: number) => void;
-  selected: string | null;
+  // The line being checked, outlined when it is on this page.
+  current: LineForReview | null;
   onSelect: (line: LineForReview) => void;
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
-  // State, not a ref: drawing must run again once the document has loaded.
-  const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
-  const [pageCount, setPageCount] = useState(pages?.length ?? 0);
+  const { doc, error: loadFailed } = usePdf(src);
+  const pageCount = doc?.numPages ?? pages?.length ?? 0;
   const [width, setWidth] = useState(0);
   const [zoom, setZoom] = useState(1);
-  const [drawn, setDrawn] = useState<{ width: number; height: number } | null>(
-    null,
-  );
+  const [drawn, setDrawn] = useState<{
+    key: string;
+    width: number;
+    height: number;
+  } | null>(null);
   const [lines, setLines] = useState<LineForReview[]>([]);
   const [error, setError] = useState("");
   const [showAll, setShowAll] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    let loading: PDFDocumentLoadingTask | null = null;
-    void loadPdfJs()
-      .then((pdfjs) => {
-        if (cancelled) return null;
-        loading = pdfjs.getDocument({ url: src, withCredentials: true });
-        return loading.promise;
-      })
-      .then((doc) => {
-        if (!doc || cancelled) return;
-        setDoc(doc);
-        setPageCount(doc.numPages);
-      })
-      .catch(() => {
-        if (!cancelled)
-          setError(
-            "The original could not be displayed here. Open it in a new tab instead.",
-          );
-      });
-    return () => {
-      cancelled = true;
-      setDoc(null);
-      void (loading as PDFDocumentLoadingTask | null)?.destroy();
-    };
-  }, [src]);
+  const drawKey = `${page}:${width}:${zoom}`;
 
   useEffect(() => {
     const element = frame.current;
@@ -130,7 +91,11 @@ export default function PageViewer({
       });
       await task.promise;
       if (!cancelled)
-        setDrawn({ width: viewport.width, height: viewport.height });
+        setDrawn({
+          key: `${page}:${width}:${zoom}`,
+          width: viewport.width,
+          height: viewport.height,
+        });
     }
     void draw().catch((e) => {
       if (!cancelled && (e as Error)?.name !== "RenderingCancelledException")
@@ -143,7 +108,7 @@ export default function PageViewer({
   }, [doc, page, width, zoom]);
 
   useEffect(() => {
-    if (!linesUrl) return;
+    if (!linesUrl || !showAll) return;
     const abort = new AbortController();
     void fetch(`${linesUrl}?page=${page}`, {
       cache: "no-store",
@@ -153,7 +118,7 @@ export default function PageViewer({
       .then((body) => setLines(body.lines ?? []))
       .catch(() => {});
     return () => abort.abort();
-  }, [linesUrl, page]);
+  }, [linesUrl, page, showAll]);
 
   const size = pages?.find((p) => p.number === page);
   const rotated = !!size?.rotation;
@@ -168,16 +133,37 @@ export default function PageViewer({
     [factor],
   );
 
+  const shown = current?.page === page ? current : null;
+  // Bring the outlined line into view inside the page frame only; the window
+  // itself must not move, or the close-up above would scroll away.
   useEffect(() => {
-    if (!selected) return;
-    document
-      .getElementById(`box-${selected}`)
-      ?.scrollIntoView({ block: "center", behavior: "smooth" });
-  }, [selected, lines, drawn]);
+    const scroller = frame.current;
+    const target = shown && document.getElementById(`box-${shown.id}`);
+    if (!scroller || !target || !factor) return;
+    const outer = scroller.getBoundingClientRect();
+    const inner = target.getBoundingClientRect();
+    scroller.scrollTo({
+      top:
+        scroller.scrollTop +
+        inner.top -
+        outer.top -
+        (scroller.clientHeight - inner.height) / 2,
+      left:
+        scroller.scrollLeft +
+        inner.left -
+        outer.left -
+        (scroller.clientWidth - inner.width) / 2,
+      behavior: "smooth",
+    });
+  }, [shown, factor]);
 
-  const visible = lines.filter(
-    (line) => showAll || line.status !== "accepted" || line.id === selected,
-  );
+  const visible = [
+    ...(showAll
+      ? lines.filter((line) => line.page === page && line.id !== shown?.id)
+      : []),
+    ...(shown ? [shown] : []),
+  ];
+  const ready = drawn?.key === drawKey;
   const button =
     "rounded-md border px-2.5 py-1 text-sm bg-white disabled:opacity-40";
   return (
@@ -239,14 +225,29 @@ export default function PageViewer({
           This page is rotated, so line positions are not drawn on it.
         </p>
       )}
-      {error && <p className="text-sm text-red-800">{error}</p>}
+      {(error || loadFailed) && (
+        <p className="text-sm text-red-800">
+          {error ||
+            "The original could not be displayed here. Open it in a new tab instead."}
+        </p>
+      )}
       <div
         ref={frame}
-        className="h-[78vh] overflow-auto rounded-xl border bg-slate-100"
+        className="relative max-h-[78vh] min-h-48 overflow-auto rounded-xl border bg-slate-100"
       >
+        {!ready && !error && !loadFailed && (
+          <div className="absolute inset-x-0 top-6 z-10 flex justify-center">
+            <span className="rounded-full bg-white px-3 py-1.5 shadow">
+              <Spinner
+                label={doc ? "Drawing the page…" : "Loading the original…"}
+              />
+            </span>
+          </div>
+        )}
         <div className="relative mx-auto w-fit">
           <canvas ref={canvas} className="block bg-white shadow" />
-          {!!factor &&
+          {ready &&
+            !!factor &&
             !rotated &&
             visible.map((line) => (
               <button
@@ -258,10 +259,12 @@ export default function PageViewer({
                 }
                 onClick={() => onSelect(line)}
                 style={box(line)}
-                className={`absolute rounded-sm border-2 ${line.excluded ? tone.excluded : tone[line.status]} ${
-                  line.id === selected
-                    ? "ring-4 ring-sky-500/70 border-sky-600"
-                    : ""
+                className={`absolute rounded-sm border-2 ${
+                  line.id === shown?.id
+                    ? "border-sky-600 bg-sky-300/20 ring-4 ring-sky-500/40"
+                    : line.excluded
+                      ? tone.excluded
+                      : tone[line.status]
                 }`}
               />
             ))}

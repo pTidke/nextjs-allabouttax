@@ -259,17 +259,19 @@ export async function reviewDocument(userId: string, versionId: string) {
     },
   });
   if (!version) throw new HttpError(404, "Document version not found.");
-  const reviewers = await prisma.user.findMany({
-    where: { id: { in: version.extractionReviews.map((r) => r.reviewerId) } },
-    select: { id: true, name: true, email: true },
-  });
-  const engine = await lineReviewOverview(versionId);
-  const draft = access.tax
-    ? await prisma.taxReviewDraft.findUnique({
-        where: { versionId_userId: { versionId, userId } },
-        select: { fields: true, revision: true, updatedAt: true },
-      })
-    : null;
+  const [reviewers, engine, draft] = await Promise.all([
+    prisma.user.findMany({
+      where: { id: { in: version.extractionReviews.map((r) => r.reviewerId) } },
+      select: { id: true, name: true, email: true },
+    }),
+    lineReviewOverview(versionId),
+    access.tax
+      ? prisma.taxReviewDraft.findUnique({
+          where: { versionId_userId: { versionId, userId } },
+          select: { fields: true, revision: true, updatedAt: true },
+        })
+      : null,
+  ]);
   return {
     access,
     engine,

@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 30
     env:
       # The engine release this app is tested with. Update both together.
-      PDFANCHOR_REF: 5ef157f20f7c3f5dc7ac77121b310235fb01774e
+      PDFANCHOR_REF: 55effa78855e0cc806bdf04ca307c3513c18667d
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

@@ -61,6 +61,7 @@ Decided 15 November 2026: the owner and the chartered accountant both check extr
 - [x] **R1.** `/review`: reviewer roles, one queue, the original beside its passages, text check, tax review gated on it, PDF upload, publish to the live library. Review actions removed from `/admin/knowledge`.
 - [x] **R2a.** The engine runs every two hours over pending PDFs and its results are stored per version; a pdf.js page viewer with the engine's line boxes, flagged lines highlighted, and a list of lines that need a look with each reading side by side.
 - [x] **R2b.** Line decisions: confirm a flagged line, use the OCR reading, or type its correction; lines accepted by rule count as checked apart from a five-line spot check; accepting the text rebuilds the chatbot's passages from the reviewed lines.
+- [x] **R2b, follow-up.** Line boxes measured in the crop box (pdfanchor 0.0.2), so they sit on the text of Gazette PDFs; one line at a time with a close-up and automatic advance; loaders and faster page loads.
 - [ ] **R2c.** Scanned PDFs through OCR end to end, and uploads above 4 MB sent straight to storage.
 - [ ] **R3.** Carry over the staging work: Notification 1/2026's accepted extraction and Circular 3/2026's saved review, with their history, from the staging database into the live review records. Needs R2's line-level storage, and an operator run with the staging database credentials. Then retire `/staging`.
 - [ ] **R4.** Withdraw a published decision and roll back a release (D3); show reviewer history per document.

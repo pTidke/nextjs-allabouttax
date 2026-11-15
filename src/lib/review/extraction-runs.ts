@@ -246,7 +246,10 @@ export function forReview(line: EngineLine): LineForReview {
 // What the document page needs up front: the run's state, page sizes, and the
 // lines a person must look at. Page-by-page line boxes come from pageLines.
 export async function runOverview(versionId: string) {
-  const latest = await latestRun(versionId);
+  return overviewOf(await latestRun(versionId));
+}
+
+export function overviewOf(latest: Awaited<ReturnType<typeof latestRun>>) {
   if (!latest) return null;
   if (latest.status !== "OK" || !latest.document)
     return {
