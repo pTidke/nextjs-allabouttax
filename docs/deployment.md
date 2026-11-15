@@ -32,6 +32,12 @@ npx prisma generate
 
 `202611040001_review_drafts` is additive and stores incomplete reviewer fields separately from approved knowledge. Never use reset or accept-data-loss commands against Neon.
 
+Without a local database connection, use the **Apply database migrations** workflow instead: GitHub → Actions → Apply database migrations → Run workflow, on `main`, typing `apply`. It runs `prisma migrate deploy` with the `tax-worker` environment's `DATABASE_URL` and then confirms nothing is pending. If that secret is a pooled Neon URL and the run fails, add the direct (unpooled) URL as a `DIRECT_URL` secret in the same environment and run it again.
+
+Apply a migration before merging code that uses it: Vercel deploys `main` straight away and does not run migrations. Keep migrations additive so the code already running keeps working once they are applied.
+
+`202611150001_answer_outcomes_and_contact` is additive: a nullable `outcome` column on `TaxMessage`, and new `TaxContentGap` and `ContactMessage` tables.
+
 ## Existing-account migration to Neon
 
 The existing Vercel project is `allabouttax`, serving https://www.allabouttax.in. Its legacy production database contains authentication records and must not be replaced without preserving accounts.

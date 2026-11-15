@@ -1,0 +1,38 @@
+name: Apply database migrations
+# Manual only. Applies pending files in prisma/migrations to the production
+# database, using the DATABASE_URL secret of the protected tax-worker environment.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "apply" to change the production database'
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: database-migrations
+  cancel-in-progress: false
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/main' && inputs.confirm == 'apply'
+    runs-on: ubuntu-latest
+    environment: tax-worker
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Optional. Set it when DATABASE_URL is a pooled connection.
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci --legacy-peer-deps
+      - name: List pending migrations
+        # Exits non-zero while migrations are pending, which is expected here.
+        run: npx prisma migrate status || true
+      - name: Apply pending migrations
+        run: npx prisma migrate deploy
+      - name: Confirm nothing is pending
+        run: npx prisma migrate status

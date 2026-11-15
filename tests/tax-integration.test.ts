@@ -1,6 +1,6 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { PrismaPGlite } from "pglite-prisma-adapter";
 import { PrismaClient } from "@prisma/client";
@@ -13,16 +13,11 @@ let review: typeof import("../src/lib/tax/review");
 let retrieval: typeof import("../src/lib/tax/retrieval");
 let access: typeof import("../src/lib/chat/access");
 before(async () => {
-  for (const name of [
-    "202609270001_baseline",
-    "202609270002_tax_foundation",
-    "202609280001_tax_worker",
-    "202609290001_tax_applicability",
-    "202611040001_review_drafts",
-  ])
-    await database.exec(
-      await readFile(`prisma/migrations/${name}/migration.sql`, "utf8"),
-    );
+  for (const name of (await readdir("prisma/migrations")).sort())
+    if (!name.endsWith(".toml"))
+      await database.exec(
+        await readFile(`prisma/migrations/${name}/migration.sql`, "utf8"),
+      );
   (globalThis as unknown as { prisma: PrismaClient }).prisma = db;
   ingestion = await import("../src/lib/tax/ingestion");
   review = await import("../src/lib/tax/review");
