@@ -27,7 +27,7 @@ export default async function ReviewDocumentPage({
     if (error instanceof HttpError && error.status === 404) notFound();
     throw error;
   }
-  const { access, version } = data;
+  const { access, version, engine } = data;
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-4">
       <Link href="/review" className="text-sm underline">
@@ -35,6 +35,12 @@ export default async function ReviewDocumentPage({
       </Link>
       <Workspace
         access={{ extraction: access.extraction, tax: access.tax }}
+        engine={
+          engine && {
+            ...engine,
+            createdAt: engine.createdAt.toISOString(),
+          }
+        }
         version={{
           id: version.id,
           hash: version.hash,

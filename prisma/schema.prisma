@@ -129,6 +129,7 @@ model TaxVersion {
   drafts            TaxReviewDraft[]
   chunks            TaxChunk[]
   extractionReviews ExtractionReview[]
+  extractionRuns    ExtractionRun[]
 
   @@unique([documentId, hash])
 }
@@ -278,6 +279,25 @@ model ExtractionReview {
   note       String
   createdAt  DateTime   @default(now())
   version    TaxVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId, createdAt])
+}
+
+// One run of the extraction engine (pdfanchor) over a version's original. The
+// document is the engine's document.json: every line with its page box, the
+// reader's text, other readings and a rule-based status. Append-only.
+model ExtractionRun {
+  id            String     @id @default(cuid())
+  versionId     String
+  engine        String // name and version, e.g. "pdfanchor 0.0.1@5ef157f"
+  policyVersion String?
+  configSha     String?
+  status        String // OK or FAILED
+  summary       Json?
+  document      Json?
+  error         String?
+  createdAt     DateTime   @default(now())
+  version       TaxVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId, createdAt])
 }
