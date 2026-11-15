@@ -1,0 +1,38 @@
+name: Carry over staging review work
+# R3. Manual only. Step 1 ("inspect") reads the staging review database and the
+# live library and prints counts, hash matches and how the staging regions line
+# up with the engine's lines. It changes nothing. The log is public, so it prints
+# no document text, reviewer identities or notes.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: What to do
+        type: choice
+        options:
+          - inspect
+        default: inspect
+permissions:
+  contents: read
+concurrency:
+  group: staging-carry-over
+  cancel-in-progress: false
+jobs:
+  carry-over:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: tax-worker
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci --legacy-peer-deps
+      - name: ${{ inputs.mode }}
+        run: npx tsx scripts/staging-carry-over.ts "$MODE"
+        env:
+          MODE: ${{ inputs.mode }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}

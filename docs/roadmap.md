@@ -63,7 +63,7 @@ Decided 15 November 2026: the owner and the chartered accountant both check extr
 - [x] **R2b.** Line decisions: confirm a flagged line, use the OCR reading, or type its correction; lines accepted by rule count as checked apart from a five-line spot check; accepting the text rebuilds the chatbot's passages from the reviewed lines.
 - [x] **R2b, follow-up.** Line boxes measured in the crop box (pdfanchor 0.0.2), so they sit on the text of Gazette PDFs; one line at a time with a close-up and automatic advance; loaders and faster page loads.
 - [x] **R2c.** Scanned PDFs through OCR end to end, and uploads of up to 32 MB in parts. The review screen loads lines page by page, so long scans are no longer cut off at 500 lines.
-- [ ] **R3.** Carry over the staging work: Notification 1/2026's accepted extraction and Circular 3/2026's saved review, with their history, from the staging database into the live review records. Needs R2's line-level storage, and an operator run with the staging database credentials. Then retire `/staging`.
+- [ ] **R3.** (Step 1, a read-only inspection workflow, is in place: `carry-over.yml`.) Carry over the staging work: Notification 1/2026's accepted extraction and Circular 3/2026's saved review, with their history, from the staging database into the live review records. Needs R2's line-level storage, and an operator run with the staging database credentials. Then retire `/staging`.
 - [ ] **R4.** Withdraw a published decision and roll back a release (D3); show reviewer history per document.
 
 ## M4. Unattended extraction on the free tier
