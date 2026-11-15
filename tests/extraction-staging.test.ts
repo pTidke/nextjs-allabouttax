@@ -7,6 +7,10 @@ import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 import sharp from "sharp";
 import { runRepairJob } from "../src/lib/extraction-staging/ocr-repair-worker";
+import {
+  repairTargets,
+  TABLE_OCR_PILOT_HOLD,
+} from "../src/lib/extraction-staging/ocr-repair-scope";
 import { HttpError } from "../src/lib/http";
 import {
   digest,
@@ -705,6 +709,144 @@ test("isolated extraction staging persists authenticated, immutable decisions in
           "UPDATE extraction_staging.heads SET revision_id=$1 WHERE candidate_id=$2",
           [newer.revision.id, c.id],
         );
+      },
+    );
+    await t.test(
+      "table OCR preserves coordinates and confirmed blanks, and leaves unreadable cells for manual repair",
+      async () => {
+        const pilot = new ExtractionStore(
+          db,
+          "test-stage",
+          async () => {},
+          true,
+        );
+        const table = fixture("table-ocr-pilot");
+        table.kind = "image_table_band";
+        table.state = "BLOCKED";
+        table.blockingHolds = [TABLE_OCR_PILOT_HOLD, "MISSING_CONTEXT"];
+        const label = {
+          ...table.regions[0],
+          id: "label",
+          tableCell: { tableId: "codes", row: 1, column: 0 },
+        };
+        const target = {
+          ...label,
+          id: "target",
+          box: { x0: 100, top: 10, x1: 160, bottom: 40 },
+          tableCell: { ...label.tableCell, column: 1 },
+        };
+        const confirmedBlank = {
+          ...target,
+          id: "confirmed",
+          raw: null,
+          proposed: "",
+          state: "blank",
+          box: { ...target.box, top: 40, bottom: 70 },
+          tableCell: { ...target.tableCell, row: 2 },
+        };
+        const unreadable = {
+          ...confirmedBlank,
+          id: "unreadable",
+          state: "unresolved",
+          proposed: null,
+          box: { ...confirmedBlank.box, top: 70, bottom: 100 },
+          tableCell: { ...confirmedBlank.tableCell, row: 3 },
+        };
+        table.regions = [label, target, confirmedBlank, unreadable];
+        const issue = (regionId: string) =>
+          command(table, {
+            action: "REQUEST_CHANGES",
+            issues: [
+              {
+                regionId,
+                page: 1,
+                description: "Compare the reported cell to the source.",
+              },
+            ],
+          });
+        assert.equal(repairTargets(table, issue("confirmed")).length, 0);
+        assert.equal(
+          repairTargets(
+            { ...table, blockingHolds: ["MISSING_CONTEXT"] },
+            issue("target"),
+          ).length,
+          0,
+        );
+        assert.equal(
+          repairTargets(
+            { ...table, regions: [label, { ...target, box: label.box }] },
+            issue("target"),
+          ).length,
+          0,
+        );
+        await pilot.register(table);
+        const image = await sharp({
+          create: {
+            width: 1200,
+            height: 1600,
+            channels: 3,
+            background: "white",
+          },
+        })
+          .png()
+          .toBuffer();
+        const unknown = await pilot.save("reviewer-a", issue("unreadable"));
+        const input = () => Promise.resolve(image);
+        assert.equal(
+          await runRepairJob(
+            pilot,
+            input,
+            {
+              model: "fixture",
+              propose: async () => ({ decision: "uncertain", text: null }),
+            },
+            unknown.revision.id,
+          ),
+          "NEEDS_OPERATOR",
+        );
+        const unchanged = await pilot.get("reviewer-a", table.id);
+        assert.equal(unchanged.replacementId, null);
+        assert.deepEqual(unchanged.candidate.regions, table.regions);
+        const report = await pilot.save("reviewer-a", {
+          ...issue("target"),
+          parentRevision: unknown.revision.id,
+        });
+        assert.equal(
+          await runRepairJob(
+            pilot,
+            input,
+            {
+              model: "fixture",
+              propose: async (data) => {
+                assert.deepEqual(data.cell, target.tableCell);
+                assert.deepEqual(data.target, {
+                  left: 0,
+                  top: 0,
+                  width: 120,
+                  height: 60,
+                });
+                return { decision: "blank", text: null };
+              },
+            },
+            report.revision.id,
+          ),
+          "READY",
+        );
+        const { replacementId } = await pilot.get("reviewer-a", table.id);
+        assert.ok(replacementId);
+        const recheck = await pilot.get("reviewer-a", replacementId);
+        assert.deepEqual(recheck.repair?.regionIds, ["target"]);
+        const [nextLabel, nextTarget, nextBlank, nextUnreadable] =
+          recheck.candidate.regions;
+        assert.deepEqual(nextLabel, label);
+        assert.deepEqual(nextBlank, confirmedBlank);
+        assert.deepEqual(nextUnreadable, unreadable);
+        assert.deepEqual(nextTarget.tableCell, target.tableCell);
+        assert.deepEqual(nextTarget.box, target.box);
+        assert.equal(nextTarget.raw, target.raw);
+        assert.equal(nextTarget.state, "proposed_blank");
+        assert.equal(nextTarget.proposed, "");
+        assert.deepEqual(recheck.candidate.blockingHolds, table.blockingHolds);
       },
     );
     await t.test(

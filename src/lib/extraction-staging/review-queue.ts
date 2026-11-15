@@ -27,6 +27,7 @@ const comparable = (text: string) =>
 
 function kindOf(region: Region): IssueKind | null {
   if (region.state === "blank") return null;
+  if (region.state === "proposed_blank") return "changed";
   if (region.state === "unresolved" || !region.proposed?.trim())
     return "unresolved";
   if (
@@ -117,7 +118,9 @@ export function repairReview(
   for (const region of previous.regions) {
     if (
       reportedRegions.has(region.id) &&
-      (previous.kind === "image_table_band" || !currentIds.has(region.id))
+      ((previous.kind === "image_table_band" &&
+        candidate.repair?.scope !== "table_cells") ||
+        !currentIds.has(region.id))
     )
       changedPages.add(region.page);
   }

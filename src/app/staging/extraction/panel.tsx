@@ -74,6 +74,11 @@ const checkLabels = {
 };
 type CheckState = keyof typeof checkLabels;
 const readableFlag = (flag: string) => flag.replaceAll("_", " ").toLowerCase();
+function cellReading(cell: { state: string; proposed: string | null }) {
+  if (cell.state === "blank") return "[confirmed blank]";
+  if (cell.state === "proposed_blank") return "[proposed blank]";
+  return cell.proposed?.trim() ? cell.proposed : "[unresolved]";
+}
 
 function readPosition(key: string): unknown {
   try {
@@ -1242,7 +1247,7 @@ export default function ExtractionPanel({
                                     aria-pressed={selected === cell.id}
                                     className="w-full text-left aria-pressed:bg-emerald-100"
                                   >
-                                    {cell.proposed}
+                                    {cellReading(cell)}
                                   </button>
                                 </th>
                               ))}
@@ -1263,7 +1268,7 @@ export default function ExtractionPanel({
                                       aria-pressed={selected === cell.id}
                                       className="w-full text-left aria-pressed:bg-emerald-100"
                                     >
-                                      {cell.proposed}
+                                      {cellReading(cell)}
                                     </button>
                                   </td>
                                 ))}
@@ -1279,11 +1284,7 @@ export default function ExtractionPanel({
                             Proposed transcription
                           </p>
                           <p className="whitespace-pre-wrap break-words">
-                            {activeRegion.state === "blank"
-                              ? "[confirmed blank]"
-                              : activeRegion.proposed?.trim()
-                                ? activeRegion.proposed
-                                : "[unresolved]"}
+                            {cellReading(activeRegion)}
                           </p>
                         </div>
                         <details className="min-w-0 rounded bg-slate-50 p-3">

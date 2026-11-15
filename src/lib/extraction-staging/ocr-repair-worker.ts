@@ -15,6 +15,7 @@ export type RepairInput = {
   raw: string | null;
   proposed: string | null;
   descriptions: string[];
+  cell?: NonNullable<Candidate["regions"][number]["tableCell"]>;
 };
 export type RepairProvider = {
   model: string;
@@ -44,10 +45,12 @@ export async function repairModelInput(
     y1 = Math.min(height, Math.ceil(region.box.bottom * scaleY));
   if (x0 >= x1 || y0 >= y1 || x1 - x0 > 2000 || y1 - y0 > 360)
     throw new RequiresReview();
-  const left = Math.max(0, x0 - 60),
-    top = Math.max(0, y0 - 45),
-    right = Math.min(width, x1 + 60),
-    bottom = Math.min(height, y1 + 45);
+  const xPadding = region.tableCell ? 0 : 60,
+    yPadding = region.tableCell ? 0 : 45;
+  const left = Math.max(0, x0 - xPadding),
+    top = Math.max(0, y0 - yPadding),
+    right = Math.min(width, x1 + xPadding),
+    bottom = Math.min(height, y1 + yPadding);
   const image = await png
     .extract({ left, top, width: right - left, height: bottom - top })
     .png()
@@ -59,29 +62,42 @@ export async function repairModelInput(
     raw: region.raw?.slice(0, 2000) ?? null,
     proposed: region.proposed?.slice(0, 2000) ?? null,
     descriptions,
+    ...(region.tableCell ? { cell: region.tableCell } : {}),
   };
 }
 
-function correctedLine(value: unknown, before: string | null) {
+function correction(value: unknown, region: Candidate["regions"][number]) {
   if (
     !value ||
     typeof value !== "object" ||
     !("decision" in value) ||
-    value.decision !== "replace" ||
-    !("text" in value) ||
-    typeof value.text !== "string"
+    !("text" in value)
   )
+    throw new RequiresReview();
+  if (region.tableCell && value.decision === "blank" && value.text === null) {
+    return {
+      proposed: "",
+      state: "proposed_blank",
+      note: "The model proposes a blank cell. Check the original for faint or unreadable marks.",
+    };
+  }
+  if (value.decision !== "replace" || typeof value.text !== "string")
     throw new RequiresReview();
   const text = value.text.trim().normalize("NFC");
   if (
     !text.length ||
     text.length > 1200 ||
     /[\x00-\x1f\x7f\u2028\u2029\u202a-\u202e\u2066-\u2069]/u.test(text) ||
-    !/[\p{L}\p{N}]/u.test(text) ||
-    text === before?.trim().normalize("NFC")
+    (!/[\p{L}\p{N}]/u.test(text) &&
+      !(region.tableCell && /^[-–—]$/u.test(text))) ||
+    text === region.proposed?.trim().normalize("NFC")
   )
     throw new RequiresReview();
-  return text;
+  return {
+    proposed: text,
+    state: "transcribed",
+    note: "Automated suggestion. Check the exact characters against the original.",
+  };
 }
 
 export async function runRepairJob(
@@ -101,26 +117,17 @@ export async function runRepairJob(
     const { candidate, request } = input;
     const targets = repairTargets(candidate, request);
     if (!targets.length) throw new RequiresReview();
-    const corrected = new Map<string, string>();
+    const corrected = new Map<string, ReturnType<typeof correction>>();
     for (const target of targets) {
       const evidence = await repairModelInput(candidate, target, readEvidence);
       const result = await provider.propose(evidence);
-      corrected.set(
-        target.region.id,
-        correctedLine(result, target.region.proposed),
-      );
+      corrected.set(target.region.id, correction(result, target.region));
     }
     const regions = candidate.regions.map((region) => {
-      const proposed = corrected.get(region.id);
-      return proposed === undefined
-        ? region
-        : {
-            ...region,
-            proposed,
-            state: "transcribed",
-            note: "Automated suggestion. Check the exact characters against the original.",
-          };
+      const update = corrected.get(region.id);
+      return update ? { ...region, ...update } : region;
     });
+    const tablePilot = targets.every(({ region }) => !!region.tableCell);
     const revisionHash = digest({
       previous: candidate.revisionHash,
       request: job.requestId,
@@ -134,8 +141,10 @@ export async function runRepairJob(
       repair: {
         replacesCandidateId: candidate.id,
         requestRevisionId: job.requestId,
-        description:
-          "Automated OCR proposal for the reported text. Compare the suggested wording with the original.",
+        ...(tablePilot ? { scope: "table_cells" as const } : {}),
+        description: tablePilot
+          ? "Automated proposal for the reported table cells. Check each cell against its original row and column."
+          : "Automated OCR proposal for the reported text. Compare the suggested wording with the original.",
       },
     });
     return (await store.completeRepair(job, repaired, provider.model))

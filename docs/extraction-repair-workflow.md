@@ -4,7 +4,9 @@
 
 With the staging worker enabled, **Send correction request** queues a repair for up to four reported text lines with source boxes. The worker crops the stored image around each line and sends it, the previous reading and the reviewer's description to the configured Azure deployment. The inbox shows progress and refreshes while a job is pending. A validated suggestion returns in **Ready to recheck**, with the original extraction and proposed text available for comparison. The reviewer checks the changes and records the extraction decision. [Azure Responses API image input and structured outputs](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/responses)
 
-Page-wide reports, table changes and uncertain readings go to manual repair. A failed request stays visible in the inbox. The worker preserves original evidence, scope holds and previous decisions. The job references the exact correction request and cannot publish a result after a newer request or replacement. Transient failures retry up to three times.
+Page-wide reports, table structure changes and uncertain readings go to manual repair. A failed request stays visible in the inbox. The worker preserves original evidence, scope holds and previous decisions. The job references the exact correction request and cannot publish a result after a newer request or replacement. Transient failures retry up to three times.
+
+The table OCR pilot runs only on blocked benchmark copies marked with the TABLE_OCR_PILOT hold. A report on a single cell can propose literal text or a blank within the existing source box. Its row, column, neighbouring cells and confirmed blanks stay in place. A proposed blank appears separately from a confirmed blank and requires visual recheck. Overlapping cells, previously confirmed blanks and unreadable results go to manual repair.
 
 To activate on an isolated staging database:
 

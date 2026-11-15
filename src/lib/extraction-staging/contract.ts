@@ -34,6 +34,7 @@ export type Candidate = {
     replacesCandidateId: string;
     requestRevisionId: string;
     description: string;
+    scope?: "table_cells";
   };
 };
 export type ReportedIssue = {
@@ -254,8 +255,17 @@ export function validateCandidate(value: Candidate) {
   if (
     value.repair !== undefined &&
     (!value.repair ||
-      Object.keys(value.repair).sort().join(",") !==
-        "description,replacesCandidateId,requestRevisionId" ||
+      Object.keys(value.repair).some(
+        (key) =>
+          ![
+            "description",
+            "replacesCandidateId",
+            "requestRevisionId",
+            "scope",
+          ].includes(key),
+      ) ||
+      (value.repair.scope !== undefined &&
+        value.repair.scope !== "table_cells") ||
       !SHA.test(value.repair.replacesCandidateId) ||
       value.repair.replacesCandidateId === value.id ||
       !SHA.test(value.repair.requestRevisionId) ||
