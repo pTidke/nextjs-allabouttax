@@ -1,0 +1,102 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-06",
+  "state": "DRAFT_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "local_output": "work/pdf-lab/demo-v2/comparisons/structured-content-v6",
+  "preview_sha256": "999d252c7446547e8bdc524773cab77d739b71fbe56159bde29a7085f69243bf",
+  "prior_preview_sha256": "7fd0591e605982b3aca32eb0ffa52889df89636d99abb52aead9222aac92f578",
+  "file_ledger_sha256": "c0c21fe15157811688901666e68f98c7351a5b41c39433f69f89f24c1435844b",
+  "scope_review_sha256": "0c8c37c760d2c6869885017c033396ba5c2c5352d3a9e3a6e0db2c9422118bea",
+  "date_report_sha256": "6ef1c4b01e0d08963c7f1ddc076721e7af4b1facb41366b94051018704632f49",
+  "code_sha256": {
+    "structured_content.py": "43e9eaf324ede5d90b88e3a30ed6d928b6561a17791c3ae0e4d02056a61e8a94",
+    "content_models.py": "035a6f7392c0e6359d7849d98ce159088d546f70744765e7a4d62aef3855c403",
+    "content_classification.py": "1867ada7bc238a84f9912f3086638aa59593651a97ddb7535bc1d3b5196b56d3",
+    "content_scope.py": "8031c57a88ceec8e0bb4aa61f2d4401518d3450cb60110e8bfd6a89de95d46f5",
+    "content_view.py": "de1a089b5b96321e46ed1e7fab28aac35e6096726d8f0082ad9c8f80232fe366",
+    "review.py": "159a26cb2a68c8849bf19059e855cf240edbff94ce4af7ef6d7a1f65075758a2"
+  },
+  "source_documents": 2,
+  "source_pages": 2,
+  "variant_count": 5,
+  "source_line_count": 202,
+  "source_character_count": 9429,
+  "span_count": 210,
+  "scope_counts": {
+    "administrative_excluded": 64,
+    "content_candidate": 110,
+    "metadata": 22,
+    "signature_excluded": 14
+  },
+  "direct_owner_classified_signature_spans": 4,
+  "agent_source_compared_signature_spans_in_other_variants": 10,
+  "agent_source_compared_printed_issuer_metadata_spans": 2,
+  "raw_date_warnings_retained": 12,
+  "pairwise_date_flags_retained": 14,
+  "pages": [
+    {
+      "input_id": "circular4-known-superscript-control",
+      "scope_counts": {
+        "content_candidate": 38,
+        "metadata": 1
+      }
+    },
+    {
+      "input_id": "f95677aefb37-p1-unchanged-eng-3",
+      "scope_counts": {
+        "administrative_excluded": 14,
+        "content_candidate": 17,
+        "metadata": 5,
+        "signature_excluded": 4
+      }
+    },
+    {
+      "input_id": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "scope_counts": {
+        "administrative_excluded": 14,
+        "content_candidate": 17,
+        "metadata": 5,
+        "signature_excluded": 4
+      }
+    },
+    {
+      "input_id": "f95677aefb37-p1-unchanged-flattened",
+      "scope_counts": {
+        "administrative_excluded": 14,
+        "content_candidate": 17,
+        "metadata": 5,
+        "signature_excluded": 4
+      }
+    },
+    {
+      "input_id": "c15-independent-easyocr",
+      "scope_counts": {
+        "administrative_excluded": 22,
+        "content_candidate": 21,
+        "metadata": 6,
+        "signature_excluded": 2
+      }
+    }
+  ],
+  "checks": {
+    "file_ledger_matches": true,
+    "code_hashes_match": true,
+    "all_original_render_raw_artifact_copies_unchanged": true,
+    "all_raw_character_spans_and_crops_unchanged": true,
+    "proposed_order_and_reviewed_date_text_unchanged": true,
+    "page_holds_and_date_warnings_unchanged": true,
+    "browser_signature_group_and_source_highlight_verified": true,
+    "printed_issuer_retained": true
+  },
+  "accuracy": null,
+  "new_full_page_reference_verified": false,
+  "tax_review_completed": false,
+  "rag_index_modified": false,
+  "production_ingestion_modified": false,
+  "limitations": [
+    "Source-bound scoped human/agent classification on previously inspected development data, not a trained or validated signature detector.",
+    "Exact OCR spans are excluded; overlapping image pixels are never erased. Printed issuer text and all original evidence remain preserved.",
+    "No substantive-date, full-page transcription, table or reading-order approval is supplied by this feedback."
+  ]
+}

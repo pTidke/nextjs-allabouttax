@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-08",
+  "state": "AGENT_LAYOUT_PROPOSAL_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "owner_verified": false,
+  "local_output": "work/pdf-lab/demo-v2/comparisons/table-structure-v4",
+  "source_package": "work/pdf-lab/demo-v2/benchmarks/table-layout-v1/packages/e228528d7afc-1794039858956568000",
+  "source_title": "Notification No.97/2026: block-assessment return form, source pages 6\u20138",
+  "source_sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+  "artifact_sha256": "762c28731ef5fbf01f0d5c6c00bef87b77cb54ac17b18d49b3875f962f279174",
+  "plan_sha256": "8ec3817bad24613bb96777ebea7efa79dda5c02a923fb833d05c6c46d1e1b475",
+  "report_sha256": "82f8fc83fe9d4258350483e3d59d74444fa92294de1689795410c97c03a4d924",
+  "file_ledger_sha256": "9770bbc1571be2c69ea7a966fc35f36fc22ade7f2df63efd544071ffd2fd8adf",
+  "file_ledger_entries": 13,
+  "code_sha256": {
+    "table_structure.py": "41551ff7edd3e6f65bfb964d4892becb6102cd35e052ca6c47737a4f6d77a29d",
+    "table_review.py": "0b933bc45a281045d8b04e665eb3fff6df229a9aff2af30ce118531601543647",
+    "models.py": "8681d495fd77a205b30edfd2b7a55f59d1fdd536d97ff38f650b9ac4a7fcd8da",
+    "runner.py": "32a8fdc0bd4fc1495559a2bbbdcf87f93a6c98764f9a0316e89160626747f1c3",
+    "benchmark.py": "d7a6ffd0571b74ec3372cdbf7ec4777a33eb0d2ffceec5aacc94faf6aa4b5cf0"
+  },
+  "summary": {
+    "pages": 3,
+    "tables": 4,
+    "source_cells_preserved": 465,
+    "header_groups": 2,
+    "continuation_proposals": 2,
+    "alternative_boundaries": 1,
+    "tables_joined": 0,
+    "accepted_tables": 0
+  },
+  "source_inspection": {
+    "performed_by": "agent",
+    "development_scope": "Previously seen native form pages; not held-out accuracy evidence",
+    "header_proposals": 2,
+    "null_slots_proposed_as_covered": 2,
+    "page_continuation_proposals": 2,
+    "split_header_fragment_pairs": 7,
+    "maximum_split_header_edge_offset_pt": 2.3142819047619696,
+    "alternative_separator": "Page 7 literal OR block p7-b13",
+    "unresolved_shading": "No fillability, blank, zero or not-applicable interpretation assigned"
+  },
+  "limits": [
+    "Agent source comparison; owner confirmation is pending.",
+    "All raw cells, nulls, blanks, text and geometry remain in artifact.json.",
+    "Only the listed relationships are proposed; unlisted cells/headers are unreviewed.",
+    "Geometry consistency is not transcription or semantic validation.",
+    "Shaded form cells need review; no blank, zero or not-applicable value is inferred.",
+    "No full-table, page-order, legal, retrieval or publication acceptance."
+  ],
+  "preserved_prior_outputs": [
+    "work/pdf-lab/demo-v2/comparisons/table-structure-v1",
+    "work/pdf-lab/demo-v2/comparisons/table-structure-v2",
+    "work/pdf-lab/demo-v2/comparisons/table-structure-v3"
+  ],
+  "prior_output_note": "Earlier preview-generation revisions retained; final v4 includes the focused page-break crop, current code bindings and original render-inventory revalidation. No OCR/native extraction rerun occurred."
+}

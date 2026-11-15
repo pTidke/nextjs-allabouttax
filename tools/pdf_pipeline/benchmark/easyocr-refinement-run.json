@@ -1,0 +1,130 @@
+{
+  "state": "BLOCKED",
+  "publication_eligible": false,
+  "comparison_sha256": "9f7e89db2fda3341160260ba699242c820d0902b2abd6eae5644820d4e30fa7f",
+  "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+  "baseline_artifact_sha256": "264ecda9ae77bdec1abef2de0ea8aba9248314d6ce5684df6639673413b294b5",
+  "refinement": {
+    "engine": "EasyOCR 1.7.2, English only",
+    "previous_comparison_sha256": "2011327e7a3ac6b4da5e556331ae2ddc239de7e50f997b926e5afcc8b108efec",
+    "applied_review_sha256": "83bb99893edea8fd6affccdb408e3f155b6130411123872ad83b4847585897d5",
+    "excluded_region_ids": [
+      "p1-b34",
+      "p2-b23",
+      "p2-b24",
+      "p2-b5"
+    ],
+    "policy_applied": true,
+    "excluded_regions_count_as_correct": false,
+    "model_manifest_sha256": "ef8df2acd5cb98a18628df3c63463b8c18a46cccf745de982cdc48aabcda87b0",
+    "engine_versions": {
+      "easyocr": "1.7.2",
+      "torch": "2.15.0",
+      "torchvision": "0.29.2",
+      "opencv-python-headless": "5.0.0.93",
+      "numpy": "2.5.4",
+      "Pillow": "13.0.0"
+    },
+    "code_sha256": "a3ccc882da9f07648c1924fa15a55bf2c20bb7a9413d1e483dec6cfb0fc374a9",
+    "worker_sha256": "f9a39461ddce9983062a1e14d656863c88396ec128acb7b448c3d17944ee30b0",
+    "review_code_sha256": "7bb69f5f77bc0b841f4c72b0282ee0d00e72f3dc8c5bc0550efff3203057d42f",
+    "ocr_requests": 6,
+    "worker_wall_timeout_seconds": 180,
+    "all_target_regions_still_require_review": true,
+    "hindi": "Retained prior bilingual candidate; EasyOCR Hindi was not evaluated."
+  },
+  "source_pages": 2,
+  "observed_crop_outputs": [
+    {
+      "region_ids": [
+        "p1-b1"
+      ],
+      "resolution": "UNRESOLVED_REVIEW_REQUIRED",
+      "attempts": [
+        {
+          "text": "CIRCULAR NO.06_/2026",
+          "numeric_items": null,
+          "non_numeric_items": null,
+          "confidence": 52.86942489683577
+        }
+      ]
+    },
+    {
+      "region_ids": [
+        "p1-b3",
+        "p1-b4",
+        "p1-b5",
+        "p1-b6"
+      ],
+      "resolution": "UNRESOLVED_REVIEW_REQUIRED",
+      "attempts": [
+        {
+          "text": "Government of India / HRT TTR\n\nMinistry of Finance fdv HATT4\nDepartment of Revenue / RTRa f4H1T\nCentral Board of Direct Taxes\n344 Tad &r&s",
+          "numeric_items": null,
+          "non_numeric_items": null,
+          "confidence": 0.0
+        }
+      ]
+    },
+    {
+      "region_ids": [
+        "p1-b34"
+      ],
+      "resolution": "REVIEWER_EXCLUDED_FROM_TEXT",
+      "attempts": []
+    },
+    {
+      "region_ids": [
+        "p2-b5"
+      ],
+      "resolution": "REVIEWER_EXCLUDED_FROM_TEXT",
+      "attempts": []
+    },
+    {
+      "region_ids": [
+        "p2-b6"
+      ],
+      "resolution": "UNRESOLVED_REVIEW_REQUIRED",
+      "attempts": [
+        {
+          "text": "(Hardev Singh)",
+          "numeric_items": null,
+          "non_numeric_items": null,
+          "confidence": 88.8614694621169
+        }
+      ]
+    },
+    {
+      "region_ids": [
+        "p2-b23",
+        "p2-b24",
+        "p2-b25",
+        "p2-b26",
+        "p2-b27",
+        "p2-b28",
+        "p2-b29",
+        "p2-b30"
+      ],
+      "resolution": "UNRESOLVED_REVIEW_REQUIRED",
+      "attempts": [
+        {
+          "text": "aEl\n1\n2\n3\n4\n5\n6\n7",
+          "numeric_items": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+          ],
+          "non_numeric_items": [
+            "aEl"
+          ],
+          "confidence": 0.24323372472139265
+        }
+      ]
+    }
+  ],
+  "review_status": "Revised output awaits source review; no accuracy score or accepted extraction."
+}

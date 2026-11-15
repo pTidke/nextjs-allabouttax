@@ -1,0 +1,51 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-06",
+  "state": "SCOPED_FIELD_REVIEW_ONLY",
+  "publication_eligible": false,
+  "local_output": "work/pdf-lab/demo-v2/comparisons/transfer-field-review-v1",
+  "review_sha256": "4461d9b201411dea39df00e1ed965dcb1bc96d7d5a5fff75067b07a53cfb5a60",
+  "source_report_sha256": "94d4c4d478e6fb5fb091fcfd82d7913fcb28c8c94247fbdc1ac8b36b12d135aa",
+  "preview_sha256": "9200e0ab7fd56e1c169633f681213c5e67320da3c0266001e1b5f0b131056833",
+  "file_ledger_sha256": "13829b8e037d049e575dcec1391bfdfec24cc91d8f171d69d411a8f7664a84f6",
+  "verified_fields": 3,
+  "new_full_page_reference_pages": 0,
+  "comparisons": {
+    "circular-2-2024-date": {
+      "native": "MISMATCH",
+      "tesseract-eng-psm3": "MISMATCH",
+      "tesseract-eng+hin-psm3": "MISMATCH",
+      "easyocr-eng": "MISMATCH"
+    },
+    "itr2-validations-2024-25-date": {
+      "native": "MATCH",
+      "tesseract-eng-psm3": "MISMATCH",
+      "tesseract-eng+hin-psm3": "MISMATCH",
+      "easyocr-eng": "MATCH"
+    },
+    "circular-2-2024-number": {
+      "native": "MISMATCH",
+      "tesseract-eng-psm3": "MATCH",
+      "tesseract-eng+hin-psm3": "MATCH",
+      "easyocr-eng": "MATCH"
+    }
+  },
+  "checks": {
+    "prior_pilot_files_unchanged": true,
+    "raw_hashes_match": true,
+    "all_three_crops_recreated_from_original_renders": true,
+    "all_candidate_fragments_inside_source_crops": true,
+    "all_twelve_comparisons_recomputed_from_bound_raw_spans": true,
+    "browser_all_three_crops_loaded": true,
+    "browser_no_horizontal_overflow_or_logged_errors": true
+  },
+  "limitations": [
+    "Three explicitly supplied literal fields only. No other date, identifier, body text, table, condition or reading order is owner verified.",
+    "Date strings are not interpreted as effective dates, publication dates or filing periods.",
+    "Source regions and OCR alternatives were previously inspected; this is development feedback, not independent accuracy evaluation.",
+    "OCR date fragments are associated by agent source comparison. The owner did not verify the provider reading order or this association algorithm.",
+    "Date warning absence is not a clean verdict. No automatic repair or production acceptance is introduced."
+  ],
+  "production_ingestion_modified": false,
+  "rag_index_modified": false
+}

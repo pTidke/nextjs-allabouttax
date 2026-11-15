@@ -1,0 +1,836 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_date": "2026-11-05",
+  "reviewer_role": "product_owner",
+  "scan_report_sha256": "a8c2a223cb86cfb7253dc36544f47dff8f611f29e0f4eb0831d8567484c033ac",
+  "original_message": "Circular 2/2026\nBharat Sarkar, Vitta mantralay, rajasva vibhag, p1 ocr eng hin 7 is random those are just stars, p1 ocr eng hin 8 is th which is above 25th, p1 ocr eng hin 9 is 25th march, p1 ocr eng hin 16 is not v5 its is 2.\np1 ocr eng hin 25 the end part is signature, p1 ocr eng hin 26 is Rubal Singh, p1 ocr eng hin 30 is starts with 1.\np1 ocr eng hin 35 start is 5.\np1 ocr eng hin 41 start is 9,\np1 ocr eng hin 42 is a signature and Rubal Singh\n\ncircular p1 4/2026 -  everything is wrong and there is lot of text bleeding from back side\ncircular p2 4/2026\np2 ocr eng hin 7 - start is (e)\np2 ocr eng hin 14 there is no | in the line\np2 ocr eng hin 18 again no |\np2 ocr eng hin 23 24 is signature\n\ncircular 7/2026 p1 ocr eng 33 is basically a col of number from 1 to 9\n\nCircular No. 6/2026 - page 2 looks good just first line is 5 in hindi, and Hardev Singh is wrong and the p2 ocr eng hin 6 is Fd which is not needed\np2 ocr eng hin 10 is again a number column from 1 to 7 given as some gibberish text\np1 is almost correct with few inconsistencies in numbers punctuation and language sometimes it is hindi sometimes it has ; instead of .\n\nsynthetic scan p1 is just gibberish i know it is vertical text but still\n\nsynthetic scan is perfect",
+  "findings": [
+    {
+      "id": "c2-header-3",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "hindi_header",
+      "action": "correction_proposed",
+      "user_report": "Bharat Sarkar",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-3",
+          "text": "Government of India/(HINd सरकार)\n",
+          "confidence": 85.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 201.19946266297904,
+            "top": 66.73883681535857,
+            "x1": 385.5922876333465,
+            "bottom": 78.74222473178996
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 838,
+            "y0": 278,
+            "x1": 1606,
+            "y1": 328
+          }
+        }
+      ],
+      "expected_value": "भारत सरकार",
+      "expected_sequence": [],
+      "value_scope": "Hindi header phrase only. Devanagari is a transcription proposal from the reviewer’s Romanized correction, not a complete accepted line.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-header-4",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "hindi_header",
+      "action": "correction_proposed",
+      "user_report": "Vitta mantralay",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-4",
+          "text": "Ministry of Finance/(faa मत्रांलय)\n",
+          "confidence": 61.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 208.64240221256418,
+            "top": 79.46242800677584,
+            "x1": 378.86963255630184,
+            "bottom": 94.58669678147939
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 869,
+            "y0": 331,
+            "x1": 1578,
+            "y1": 394
+          }
+        }
+      ],
+      "expected_value": "वित्त मंत्रालय",
+      "expected_sequence": [],
+      "value_scope": "Hindi header phrase only. Devanagari is a transcription proposal from the reviewer’s Romanized correction, not a complete accepted line.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-header-5",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "hindi_header",
+      "action": "correction_proposed",
+      "user_report": "rajasva vibhag",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-5",
+          "text": "Department of Revenue/(<Tsitd विभाग)\n",
+          "confidence": 85.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 192.07585934413274,
+            "top": 93.38635798983626,
+            "x1": 395.1960806005531,
+            "bottom": 110.43116883116883
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 800,
+            "y0": 389,
+            "x1": 1646,
+            "y1": 460
+          }
+        }
+      ],
+      "expected_value": "राजस्व विभाग",
+      "expected_sequence": [],
+      "value_scope": "Hindi header phrase only. Devanagari is a transcription proposal from the reviewer’s Romanized correction, not a complete accepted line.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-stars",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "decorative_stars",
+      "action": "exclude_decoration",
+      "user_report": "p1 ocr eng hin 7 is random those are just stars",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-7",
+          "text": "#म॑र##रमेरे\n\n",
+          "confidence": 12.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 289.5543579612801,
+            "top": 126.75577639751553,
+            "x1": 324.3681074674042,
+            "bottom": 130.83692828910222
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 1206,
+            "y0": 528,
+            "x1": 1351,
+            "y1": 545
+          }
+        }
+      ],
+      "expected_value": null,
+      "expected_sequence": [],
+      "value_scope": "Decorative separator only; preserve pixels and raw OCR. Do not treat it as a word or count exclusion as correct extraction.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-date",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "date_superscript_fragment",
+      "action": "correction_proposed",
+      "user_report": "p1 ocr eng hin 8 is th which is above 25th, p1 ocr eng hin 9 is 25th march",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-8",
+          "text": "Mh\n",
+          "confidence": 36.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 451.1381746345318,
+            "top": 125.07530208921514,
+            "x1": 458.1009245357566,
+            "bottom": 130.11672501411633
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 1879,
+            "y0": 521,
+            "x1": 1908,
+            "y1": 542
+          }
+        },
+        {
+          "id": "p1-ocr-eng-hin-9",
+          "text": "New Delhi, dated 2>..March, 2026\n\n",
+          "confidence": 80.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 339.25398656657444,
+            "top": 132.99753811405986,
+            "x1": 520.7656736467799,
+            "bottom": 150.04234895539244
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 1413,
+            "y0": 554,
+            "x1": 2169,
+            "y1": 625
+          }
+        }
+      ],
+      "expected_value": "25th March",
+      "expected_sequence": [],
+      "value_scope": "Keep the superscript as part of the date, not noise. Reassociate the two regions; retain the printed year and place name without guessing a new full-line transcription.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-paragraph-2",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "paragraph_number",
+      "action": "correction_proposed",
+      "user_report": "p1 ocr eng hin 16 is not v5 its is 2.",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-16",
+          "text": "v5 Representations have been received by the Central Board of Direct Taxes\n",
+          "confidence": 89.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 93.39688660608455,
+            "top": 275.8378543195935,
+            "x1": 520.5255788225998,
+            "bottom": 287.121038961039
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 389,
+            "y0": 1149,
+            "x1": 2168,
+            "y1": 1196
+          }
+        }
+      ],
+      "expected_value": "2",
+      "expected_sequence": [],
+      "value_scope": "Leading paragraph number only; remaining sentence is retained.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-mixed-signature",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "body_and_signature",
+      "action": "split_mixed_region",
+      "user_report": "p1 ocr eng hin 25 the end part is signature",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-25",
+          "text": "shall be treated as having been issued within the prescribed time. (Rk A\n",
+          "confidence": 89.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 92.91669695772421,
+            "top": 420.83878035008473,
+            "x1": 483.5509758988541,
+            "bottom": 460.2098927159797
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 387,
+            "y0": 1753,
+            "x1": 2014,
+            "y1": 1917
+          }
+        }
+      ],
+      "expected_value": null,
+      "expected_sequence": [],
+      "value_scope": "Keep the substantive sentence. Split only its trailing signature contamination; never exclude the full region.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-name",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "printed_name",
+      "action": "correction_proposed",
+      "user_report": "p1 ocr eng hin 26 is Rubal Singh",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-26",
+          "text": "bs\n\n",
+          "confidence": 15.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 451.37826945871194,
+            "top": 439.08392998306044,
+            "x1": 519.3251047016988,
+            "bottom": 470.5328063241107
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 1880,
+            "y0": 1829,
+            "x1": 2163,
+            "y1": 1960
+          }
+        }
+      ],
+      "expected_value": "Rubal Singh",
+      "expected_sequence": [],
+      "value_scope": "Printed name proposed by the reviewer; signature strokes are not an identity source.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-list-1",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "list_number",
+      "action": "correction_proposed",
+      "user_report": "p1 ocr eng hin 30 is starts with 1.",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-30",
+          "text": "|, The Chairman & Members, CBDT\n\n",
+          "confidence": 92.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 92.67660213354405,
+            "top": 521.907306606437,
+            "x1": 296.27701303832475,
+            "bottom": 532.9504234895539
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 386,
+            "y0": 2174,
+            "x1": 1234,
+            "y1": 2220
+          }
+        }
+      ],
+      "expected_value": "1.",
+      "expected_sequence": [],
+      "value_scope": "Leading list label only; do not replace the recipient text or infer other missing labels.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-list-5",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "list_number",
+      "action": "correction_proposed",
+      "user_report": "p1 ocr eng hin 35 start is 5.",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-35",
+          "text": "के ADG (PR, P&P) for necessary action.\n\n",
+          "confidence": 85.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 96.99830896878703,
+            "top": 586.485533596838,
+            "x1": 311.88317661003555,
+            "bottom": 599.6892603049125
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 404,
+            "y0": 2443,
+            "x1": 1299,
+            "y1": 2498
+          }
+        }
+      ],
+      "expected_value": "5.",
+      "expected_sequence": [],
+      "value_scope": "Leading list label only; do not replace the recipient text or infer other missing labels.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-list-9",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "list_number",
+      "action": "correction_proposed",
+      "user_report": "p1 ocr eng hin 41 start is 9,",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-41",
+          "text": "६. All Chambers of Commerce.\n",
+          "confidence": 93.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 90.99593836428288,
+            "top": 666.1880293619424,
+            "x1": 266.26516001580404,
+            "bottom": 676.0308074534162
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 379,
+            "y0": 2775,
+            "x1": 1109,
+            "y1": 2816
+          }
+        }
+      ],
+      "expected_value": "9",
+      "expected_sequence": [],
+      "value_scope": "Leading list label only; do not replace the recipient text or infer other missing labels.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c2-signature-and-name",
+      "case_id": "f9f2c1a621f7-p1-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "signature_and_printed_name",
+      "action": "split_mixed_region",
+      "user_report": "p1 ocr eng hin 42 is a signature and Rubal Singh",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-hin-42",
+          "text": "oa\n\n",
+          "confidence": 17.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 449.2174160410904,
+            "top": 701.2379220779221,
+            "x1": 517.1642512840774,
+            "bottom": 732.6867984189723
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 1871,
+            "y0": 2921,
+            "x1": 2154,
+            "y1": 3052
+          }
+        }
+      ],
+      "expected_value": "Rubal Singh",
+      "expected_sequence": [],
+      "value_scope": "Split signature strokes from printed Rubal Singh; do not discard the name with the signature.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c4-page-1-failed",
+      "case_id": "ffa0e21cd3db-p1-unchanged",
+      "languages": null,
+      "psm": null,
+      "category": "foreground_bleed_through_failure",
+      "action": "reject_page",
+      "user_report": "circular p1 4/2026 - everything is wrong and there is lot of text bleeding from back side",
+      "regions": [],
+      "expected_value": null,
+      "expected_sequence": [],
+      "value_scope": "Reject all current OCR variants for this page. Page-wide show-through observation supplies no safe region masks; preserve faint foreground and do not delete whole-page content.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c4-label-e",
+      "case_id": "ffa0e21cd3db-p2-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "clause_label",
+      "action": "correction_proposed",
+      "user_report": "p2 ocr eng hin 7 - start is (e)",
+      "regions": [
+        {
+          "id": "p2-ocr-eng-hin-7",
+          "text": "(ec) Where the functionality to issue communication is not available in the System.\n\n",
+          "confidence": 92.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 125.30432621359223,
+            "top": 186.988156626506,
+            "x1": 481.05339029126213,
+            "bottom": 198.2698554216867
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 522,
+            "y0": 779,
+            "x1": 2004,
+            "y1": 826
+          }
+        }
+      ],
+      "expected_value": "(e)",
+      "expected_sequence": [],
+      "value_scope": "Leading clause label only; preserve the remaining sentence.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c4-spurious-bar-14",
+      "case_id": "ffa0e21cd3db-p2-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "spurious_bar",
+      "action": "correction_proposed",
+      "user_report": "p2 ocr eng hin 14 there is no | in the line",
+      "regions": [
+        {
+          "id": "p2-ocr-eng-hin-14",
+          "text": "(i) | the competent authority for communication issued by an income-tax authority\n",
+          "confidence": 93.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 130.5853514563107,
+            "top": 311.3268795180723,
+            "x1": 501.21730485436893,
+            "bottom": 322.12850602409634
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 544,
+            "y0": 1297,
+            "x1": 2088,
+            "y1": 1342
+          }
+        }
+      ],
+      "expected_value": "Remove |",
+      "expected_sequence": [],
+      "value_scope": "Only the spurious vertical-bar character is absent from the source; preserve clause labels and substantive text.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c4-spurious-bar-18",
+      "case_id": "ffa0e21cd3db-p2-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "spurious_bar",
+      "action": "correction_proposed",
+      "user_report": "p2 ocr eng hin 18 there is no | in the line",
+      "regions": [
+        {
+          "id": "p2-ocr-eng-hin-18",
+          "text": "(ii) | the competent authority in any other case not covered under clause (i) shall be\n",
+          "confidence": 93.0,
+          "low_confidence": false,
+          "bbox": {
+            "x0": 130.10525825242718,
+            "top": 374.4563855421687,
+            "x1": 503.3777242718446,
+            "bottom": 384.77793975903614
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 542,
+            "y0": 1560,
+            "x1": 2097,
+            "y1": 1603
+          }
+        }
+      ],
+      "expected_value": "Remove |",
+      "expected_sequence": [],
+      "value_scope": "Only the spurious vertical-bar character is absent from the source; preserve clause labels and substantive text.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c4-signatures",
+      "case_id": "ffa0e21cd3db-p2-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "signature",
+      "action": "exclude_signature",
+      "user_report": "p2 ocr eng hin 23 24 is signature",
+      "regions": [
+        {
+          "id": "p2-ocr-eng-hin-23",
+          "text": "Shace®\n",
+          "confidence": 36.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 478.65292427184465,
+            "top": 486.31322891566265,
+            "x1": 512.2594485436894,
+            "bottom": 497.35489156626505
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 1994,
+            "y0": 2026,
+            "x1": 2134,
+            "y1": 2072
+          }
+        },
+        {
+          "id": "p2-ocr-eng-hin-24",
+          "text": "trae 4.2026\n",
+          "confidence": 44.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 439.2852815533981,
+            "top": 490.8739156626506,
+            "x1": 512.499495145631,
+            "bottom": 516.7978192771085
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 1830,
+            "y0": 2045,
+            "x1": 2135,
+            "y1": 2153
+          }
+        }
+      ],
+      "expected_value": null,
+      "expected_sequence": [],
+      "value_scope": "These two exact regions are signatures. Retain adjacent printed name region 25 and designation region 26.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c7-number-column",
+      "case_id": "62e34ef5e8c8-p1-unchanged",
+      "languages": "eng",
+      "psm": 3,
+      "category": "number_column",
+      "action": "reconstruct_column",
+      "user_report": "circular 7/2026 p1 ocr eng 33 is basically a col of number from 1 to 9",
+      "regions": [
+        {
+          "id": "p1-ocr-eng-33",
+          "text": "CP ANADMWPYN YE\n\n",
+          "confidence": 22.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 75.10486094316808,
+            "top": 514.56,
+            "x1": 83.26321644498186,
+            "bottom": 642.24
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 313,
+            "y0": 2144,
+            "x1": 347,
+            "y1": 2676
+          }
+        }
+      ],
+      "expected_value": null,
+      "expected_sequence": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "value_scope": "Nine row labels, not one rotated sentence. Do not assign them to recipients until geometry is checked. Expected sequence is retained only as review/scoring data.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c6-hindi-5",
+      "case_id": "cc4238745db8-p2-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "source_digit_script",
+      "action": "keep_source_script",
+      "user_report": "page 2 looks good just first line is 5 in hindi",
+      "regions": [
+        {
+          "id": "p2-ocr-eng-hin-1",
+          "text": "५\n\n",
+          "confidence": 31.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 60.22362153344209,
+            "top": 121.43415704387992,
+            "x1": 67.90153344208811,
+            "bottom": 129.83375288683604
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 251,
+            "y0": 506,
+            "x1": 283,
+            "y1": 541
+          }
+        }
+      ],
+      "expected_value": "५",
+      "expected_sequence": [],
+      "value_scope": "The raw region already reads the Devanagari digit ५. Preserve it; do not silently convert it to Arabic 5. This does not confirm all other page text.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c6-name",
+      "case_id": "cc4238745db8-p2-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "printed_name",
+      "action": "correction_proposed",
+      "user_report": "Hardev Singh is wrong",
+      "regions": [
+        {
+          "id": "p2-ocr-eng-hin-7",
+          "text": "(Harde¥ Singh)\n",
+          "confidence": 72.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 448.43804241435566,
+            "top": 194.6306351039261,
+            "x1": 521.1382707993475,
+            "bottom": 210.46987297921478
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 1869,
+            "y0": 811,
+            "x1": 2172,
+            "y1": 877
+          }
+        }
+      ],
+      "expected_value": "Hardev Singh",
+      "expected_sequence": [],
+      "value_scope": "The extraction has (Harde¥ Singh). The previously supplied reviewer spelling is Hardev Singh; retain that proposal and parentheses as separate raw evidence.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c6-stray-mark",
+      "case_id": "cc4238745db8-p2-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "stray_nontext_mark",
+      "action": "exclude_decoration",
+      "user_report": "the p2 ocr eng hin 6 is Fd which is not needed",
+      "regions": [
+        {
+          "id": "p2-ocr-eng-hin-6",
+          "text": "Fd\n\n",
+          "confidence": 54.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 514.6600326264274,
+            "top": 184.07114318706698,
+            "x1": 520.1785318107667,
+            "bottom": 187.6709699769053
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 2145,
+            "y0": 767,
+            "x1": 2168,
+            "y1": 782
+          }
+        }
+      ],
+      "expected_value": null,
+      "expected_sequence": [],
+      "value_scope": "Only this exact stray mark; no general low-confidence deletion rule.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c6-number-column",
+      "case_id": "cc4238745db8-p2-unchanged",
+      "languages": "eng+hin",
+      "psm": 3,
+      "category": "number_column",
+      "action": "reconstruct_column",
+      "user_report": "p2 ocr eng hin 10 is again a number column from 1 to 7 given as some gibberish text",
+      "regions": [
+        {
+          "id": "p2-ocr-eng-hin-10",
+          "text": "wee SS SS\n\n",
+          "confidence": 30.0,
+          "low_confidence": true,
+          "bbox": {
+            "x0": 78.21872756933116,
+            "top": 264.227286374134,
+            "x1": 86.61644371941273,
+            "bottom": 354.2229561200924
+          },
+          "order_verified": false,
+          "image_bbox": {
+            "x0": 326,
+            "y0": 1101,
+            "x1": 361,
+            "y1": 1476
+          }
+        }
+      ],
+      "expected_value": null,
+      "expected_sequence": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "value_scope": "Seven visible labels, not a rotated sentence. Reviewer sequence is not sent to OCR and no missing label is filled automatically.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "c6-page-1-inconsistencies",
+      "case_id": "cc4238745db8-p1-unchanged",
+      "languages": null,
+      "psm": null,
+      "category": "mixed_script_numbers_punctuation",
+      "action": "qualitative_only",
+      "user_report": "p1 is almost correct with few inconsistencies in numbers punctuation and language sometimes it is hindi sometimes it has ; instead of .",
+      "regions": [],
+      "expected_value": null,
+      "expected_sequence": [],
+      "value_scope": "Partial qualitative feedback only. No exact affected span list was supplied; do not normalize Hindi to English or replace semicolons globally. Existing earlier scoped feedback remains separate.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "synthetic-vertical-failed",
+      "case_id": "944d5d44b2c9-p1-rotated90",
+      "languages": null,
+      "psm": null,
+      "category": "orientation_failure",
+      "action": "reject_page",
+      "user_report": "synthetic scan p1 is just gibberish i know it is vertical text but still",
+      "regions": [],
+      "expected_value": null,
+      "expected_sequence": [],
+      "value_scope": "The rotated synthetic derivative is a failure despite nonempty output. Preserve both language attempts and test independent orientation candidates.",
+      "full_page_reference_verified": false
+    },
+    {
+      "id": "synthetic-readable-feedback",
+      "case_id": null,
+      "languages": null,
+      "psm": null,
+      "category": "qualitative_synthetic_feedback",
+      "action": "qualitative_only",
+      "user_report": "synthetic scan is perfect",
+      "regions": [],
+      "expected_value": null,
+      "expected_sequence": [],
+      "value_scope": "Positive feedback on an unrotated synthetic scan; exact unchanged/blurred variant was not specified, so do not promote this to a new verified reference. Existing authored references and per-variant scores remain unchanged.",
+      "full_page_reference_verified": false
+    }
+  ],
+  "publication_eligible": false
+}

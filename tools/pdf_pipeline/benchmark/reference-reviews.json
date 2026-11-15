@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.0",
+  "reviews": [
+    {
+      "reference_id": "4859b7812f85-p1",
+      "source_sha256": "4859b7812f854f48cfb0458a67294027661ca0908bd8773ac0b1f5dc4c1db099",
+      "render_sha256": "7e8c863b745cb732ac8221743ce7b56361954abe94a906550ecbe2c990d7b076",
+      "page": 1,
+      "base_candidate_sha256": "76e0f673c82f1e7859d1d04f0e758a75f301394aa8f578b2d385f737b8246fc5",
+      "previous_reference_sha256": "6e30d677cb3428bd5a04593e6671698e5ae048745c906748fb5aa9a24e5f59f9",
+      "reference_sha256": "f6135eb8f43de709979a645cc39cbcc2165455668582ffec507d2068691a30ea",
+      "annotation_sha256": "28ced57beb1b289d09f659fe72db2f367ae4bb70e7dab189424e9617edcea431",
+      "reviewer_role": "product_owner",
+      "review_instruction": "Compare the complete original page to the displayed transcription, including missing lines, Hindi, names, dates, numbers and punctuation.",
+      "user_statement": "all looks good on that page",
+      "followup_question": "The notification’s Hindi header reads “राजपत्र”; the extracted text reads “रािपत्र”. Can you confirm that the reference should use “राजपत्र”?",
+      "followup_answer": "Yes, use राजपत्र",
+      "corrections": [
+        {
+          "original_candidate": "रािपत्र",
+          "verified_reference": "राजपत्र",
+          "occurrences": 1,
+          "kind": "native_text_mapping_error",
+          "scope": "Hindi Gazette header"
+        }
+      ],
+      "status": "HUMAN_VERIFIED",
+      "checked_at": "2026-11-06T05:33:25.803941+00:00",
+      "scope": "Full-page transcription reference for a previously inspected development sample; not independent holdout evidence.",
+      "raw_candidate_modified": false,
+      "original_modified": false,
+      "tax_review_completed": false,
+      "extraction_accepted_for_publication": false,
+      "publication_eligible": false,
+      "local_reference": "work/pdf-lab/demo-v2/benchmarks/reference-development-v3/references/4859b7812f85-p1.json",
+      "previous_reports_preserved": true,
+      "persisted_reference": "tools/pdf_pipeline/benchmark/references/notification-1-2026-p1.json"
+    }
+  ]
+}

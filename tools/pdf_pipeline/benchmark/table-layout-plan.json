@@ -1,0 +1,44 @@
+{
+  "schema_version": "0.1.0",
+  "frozen_on": "2026-11-07",
+  "scope": "Bounded broader native-table/layout development trial; no accepted labels or held-out accuracy.",
+  "selection_policy": "Previously reviewed Form 49A page 4 control; ITR manual middle page 21 and its immediate neighbors 20/22; longer 13-page form middle page 7 and neighbors 6/8. Fixed before this run, no outcome-based substitution. All originals were seen previously.",
+  "prior_exposure": "The control and ITR page 21 were inspected; ITR 20/22 were not processed in source-transfer-v4. All thirteen pages of the longer form were previously natively extracted, without table acceptance. Related forms are development data.",
+  "publication_eligible": false,
+  "documents": [
+    {
+      "sha256": "fbe3a013d4eae664403272dbb80f8cd11dcf0014667ca5d77a7be1e71a7c009f",
+      "kind": "official",
+      "template_group": "reviewed-character-box-control",
+      "split": "engineering",
+      "expected_pages": 8,
+      "pages": [
+        4
+      ]
+    },
+    {
+      "sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "kind": "official",
+      "template_group": "adjacent-validation-rule-grids",
+      "split": "engineering",
+      "expected_pages": 41,
+      "pages": [
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+      "kind": "official",
+      "template_group": "complex-form-adjacent-pages",
+      "split": "engineering",
+      "expected_pages": 13,
+      "pages": [
+        6,
+        7,
+        8
+      ]
+    }
+  ]
+}

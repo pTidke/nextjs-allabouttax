@@ -1,0 +1,292 @@
+{
+  "$defs": {
+    "ExpectedCell": {
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Row",
+          "type": "integer"
+        },
+        "column": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Column",
+          "type": "integer"
+        },
+        "meaning": {
+          "enum": [
+            "text",
+            "blank",
+            "covered"
+          ],
+          "title": "Meaning",
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "row_span": {
+          "default": 1,
+          "maximum": 200,
+          "minimum": 1,
+          "title": "Row Span",
+          "type": "integer"
+        },
+        "column_span": {
+          "default": 1,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Column Span",
+          "type": "integer"
+        },
+        "covered_by": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Covered By"
+        }
+      },
+      "required": [
+        "row",
+        "column",
+        "meaning"
+      ],
+      "title": "ExpectedCell",
+      "type": "object"
+    },
+    "ExpectedTable": {
+      "additionalProperties": false,
+      "properties": {
+        "rows": {
+          "maximum": 200,
+          "minimum": 1,
+          "title": "Rows",
+          "type": "integer"
+        },
+        "columns": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Columns",
+          "type": "integer"
+        },
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/ExpectedCell"
+          },
+          "maxItems": 20000,
+          "title": "Cells",
+          "type": "array"
+        },
+        "header_rows": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Header Rows",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rows",
+        "columns",
+        "cells"
+      ],
+      "title": "ExpectedTable",
+      "type": "object"
+    },
+    "Verification": {
+      "additionalProperties": false,
+      "properties": {
+        "reviewer": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "checked_at": {
+          "format": "date-time",
+          "title": "Checked At",
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "visual_source_comparison",
+            "fixture_authoring_contract"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "annotation_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Annotation Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reviewer",
+        "checked_at",
+        "method",
+        "annotation_sha256"
+      ],
+      "title": "Verification",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "source_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "render_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Render Sha256",
+      "type": "string"
+    },
+    "page": {
+      "maximum": 1000,
+      "minimum": 1,
+      "title": "Page",
+      "type": "integer"
+    },
+    "kind": {
+      "enum": [
+        "official",
+        "synthetic"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "template_group": {
+      "maxLength": 160,
+      "minLength": 1,
+      "title": "Template Group",
+      "type": "string"
+    },
+    "split": {
+      "const": "development",
+      "default": "development",
+      "title": "Split",
+      "type": "string"
+    },
+    "status": {
+      "default": "PROPOSED",
+      "enum": [
+        "PROPOSED",
+        "HUMAN_VERIFIED",
+        "AUTHORED_SYNTHETIC"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "scope": {
+      "const": "all_visible_printed_text",
+      "default": "all_visible_printed_text",
+      "title": "Scope",
+      "type": "string"
+    },
+    "expected_text": {
+      "anyOf": [
+        {
+          "maxLength": 30000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expected Text"
+    },
+    "critical_strings": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Critical Strings",
+      "type": "array"
+    },
+    "tables": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ExpectedTable"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tables"
+    },
+    "notes": {
+      "default": "",
+      "maxLength": 5000,
+      "title": "Notes",
+      "type": "string"
+    },
+    "verification": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Verification"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "publication_eligible": {
+      "const": false,
+      "default": false,
+      "title": "Publication Eligible",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "source_sha256",
+    "render_sha256",
+    "page",
+    "kind",
+    "template_group"
+  ],
+  "title": "Reference",
+  "type": "object"
+}

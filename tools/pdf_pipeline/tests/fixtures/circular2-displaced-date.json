@@ -1,0 +1,73 @@
+{
+  "scope": "Previously inspected source-bound development regression; subset of provider lines, not a complete page. No reference is passed to the detector.",
+  "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+  "source_render_sha256": "877975b3eb55fb8549cdfc9286af93bae03823ddd05bc252b76aa3adcb1377c2",
+  "provider_envelope_sha256": "f189ef3f5c1dcf81ac73cf77da4aba390c149f90dd104457f6dff8a57143cad6",
+  "record_id": "circular-2-2024",
+  "original_line_numbers": [
+    8,
+    9,
+    64
+  ],
+  "confirmed_reference_review_sha256": "4461d9b201411dea39df00e1ed965dcb1bc96d7d5a5fff75067b07a53cfb5a60",
+  "page": {
+    "width": 609.36,
+    "height": 851.52
+  },
+  "raw": {
+    "width": 2540,
+    "height": 3549,
+    "languages": [
+      "eng"
+    ],
+    "image_sha256": "877975b3eb55fb8549cdfc9286af93bae03823ddd05bc252b76aa3adcb1377c2",
+    "blocks": [
+      {
+        "paragraphs": [
+          {
+            "lines": [
+              {
+                "text": "Dated",
+                "bbox": {
+                  "x0": 1729.0,
+                  "y0": 720.0,
+                  "x1": 1860.0,
+                  "y1": 765.0
+                },
+                "confidence": 99.99700385945926
+              }
+            ]
+          },
+          {
+            "lines": [
+              {
+                "text": "March, 2024",
+                "bbox": {
+                  "x0": 1949.0,
+                  "y0": 718.0,
+                  "x1": 2216.0,
+                  "y1": 772.0
+                },
+                "confidence": 92.15159156781472
+              }
+            ]
+          },
+          {
+            "lines": [
+              {
+                "text": "0sth",
+                "bbox": {
+                  "x0": 1856.9161138650584,
+                  "y0": 704.2590756247694,
+                  "x1": 1958.0838861349416,
+                  "y1": 774.7409243752306
+                },
+                "confidence": 63.95278573036194
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-09",
+  "scope": "Fixed image-input table development trial; selected after source-page inspection, before provider runs. No accepted labels or held-out accuracy claim.",
+  "dpi": 300,
+  "preprocessing": "none",
+  "providers": ["docling-image-en", "tesseract-image-eng+hin-psm3"],
+  "documents": [
+    {
+      "sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+      "kind": "official",
+      "template_group": "previously-seen-sovereign-wealth-fund-forms",
+      "split": "engineering",
+      "expected_pages": 6,
+      "pages": [3, 5],
+      "image_kind": "genuine_scan_with_embedded_ocr",
+      "checks": ["label-to-blank-field relationships", "nested Country Code / Number columns", "Part C multi-level header and total row"]
+    },
+    {
+      "sha256": "454ae8882a9e5a1d8999d0b08c7d36a62812b2e3de11c280c9057395395e2efe",
+      "kind": "official",
+      "template_group": "previously-seen-sft-data-dictionary",
+      "split": "engineering",
+      "expected_pages": 19,
+      "pages": [10],
+      "image_kind": "genuine_scan_with_embedded_ocr",
+      "checks": ["five-column field dictionary", "wrapped values and remarks", "row labels 7 through 24 as printed, without completing sequences"]
+    },
+    {
+      "sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+      "kind": "official",
+      "template_group": "previously-seen-block-assessment-form-control",
+      "split": "engineering",
+      "expected_pages": 13,
+      "pages": [6],
+      "image_kind": "rasterized_native_control_not_a_real_scan",
+      "checks": ["merged Amount / Section headings", "shaded cells and null-versus-blank ambiguity"]
+    }
+  ],
+  "budgets": {"selected_pages": 4, "provider_attempts": 8, "page_pixels": 16000000, "provider_timeout_seconds": 180, "total_timeout_seconds": 1200},
+  "coverage_gaps": [
+    "Real image-only source PDFs are absent; genuine scans contain an existing OCR layer, which is not passed to either image provider.",
+    "No Hindi or bilingual table page, handwritten table, broken/faint ruled grid or completed taxpayer return is in this fixed sample.",
+    "Docling weights currently support English only; the bilingual plain-OCR configuration does not establish Hindi table performance.",
+    "These reused pages and related forms are development examples, not independent test templates."
+  ],
+  "policy": "No provider receives embedded/native text, source table cells, expected row counts, corrections or owner feedback. Preserve every raw output and failure; no fallback, substitution, auto-join, engine winner or publication."
+}

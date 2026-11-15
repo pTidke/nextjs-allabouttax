@@ -1,0 +1,136 @@
+{
+  "schema_version": "0.1.0",
+  "reviewed_on": "2026-11-06",
+  "state": "SCOPED_ROW_RELATIONSHIPS_OWNER_VERIFIED",
+  "publication_eligible": false,
+  "reviewer_role": "product_owner",
+  "reviewer_authentication": "Conversation feedback; no authenticated production reviewer identity is claimed.",
+  "user_statement": "Last name  - KANDASWAMY\nFirst - Madurai\nMiddle - Somasundram\n\nLast - XYZ DATA CORPORATION (IND\nfirst - IA) PRIVATE LIMITED\nbut in this case first and last name doesn't matter since its a corporation so name should be XYZ DATA CORPORATION (INDIA) PRIVATE LIMITED\n\nLast - MANOJ MAFATLAL DAVE (HUF)\n\nLast - RAO\nFirst - Satyam\nMiddle  -  VENKAT M K",
+  "source_sha256": "fbe3a013d4eae664403272dbb80f8cd11dcf0014667ca5d77a7be1e71a7c009f",
+  "source_title": "Form 49A and instructions (historical specimen)",
+  "page": 4,
+  "source_render_sha256": "8f8b64af974d257d0e7f672494dc1e9f8208672a4044cddf1796c2cec857f806",
+  "artifact_sha256": "b9628f37e9b60dcf52bbacfd0a621cb034ff90eb86aea3369b8ffd267d6666e1",
+  "source_report_sha256": "94d4c4d478e6fb5fb091fcfd82d7913fcb28c8c94247fbdc1ac8b36b12d135aa",
+  "local_package": "work/pdf-lab/demo-v2/benchmarks/source-transfer-v4/packages/fbe3a013d4ea-1793998218058212000",
+  "local_pilot": "work/pdf-lab/demo-v2/benchmarks/source-transfer-v4",
+  "tables": [
+    {
+      "table_id": "p4-t2",
+      "title": "Individual example",
+      "table_sha256": "db45c1c6e08ab414467c98c78597364e44cd4cc8fc8cfe8caaed9c9c0cf49ca0",
+      "reference_rows": [
+        {
+          "row": 0,
+          "semantic_field": "last_name",
+          "user_value": "KANDASWAMY",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        },
+        {
+          "row": 1,
+          "semantic_field": "first_name",
+          "user_value": "Madurai",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        },
+        {
+          "row": 2,
+          "semantic_field": "middle_name",
+          "user_value": "Somasundram",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        }
+      ]
+    },
+    {
+      "table_id": "p4-t3",
+      "title": "Corporation example",
+      "table_sha256": "745021dae27c93cd9c06e71eb8eb5a75b624840aab3c1ec6c2d36161a25e99e3",
+      "reference_rows": [
+        {
+          "row": 0,
+          "semantic_field": "last_name",
+          "user_value": "XYZ DATA CORPORATION (IND",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        },
+        {
+          "row": 1,
+          "semantic_field": "first_name",
+          "user_value": "IA) PRIVATE LIMITED",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        }
+      ]
+    },
+    {
+      "table_id": "p4-t4",
+      "title": "HUF example",
+      "table_sha256": "bf698b2f5611028df2b2069390f73b41cd460753f50d5e32b6575b5b0043256e",
+      "reference_rows": [
+        {
+          "row": 0,
+          "semantic_field": "last_name",
+          "user_value": "MANOJ MAFATLAL DAVE (HUF)",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        }
+      ]
+    },
+    {
+      "table_id": "p4-t5",
+      "title": "Individual example with initials",
+      "table_sha256": "281b60dbe169bb5892c567be68b79e850d32047308188ccbc5ccc896cfbc0eba",
+      "reference_rows": [
+        {
+          "row": 0,
+          "semantic_field": "last_name",
+          "user_value": "RAO",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        },
+        {
+          "row": 1,
+          "semantic_field": "first_name",
+          "user_value": "Satyam",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        },
+        {
+          "row": 2,
+          "semantic_field": "middle_name",
+          "user_value": "VENKAT M K",
+          "status": "OWNER_CONFIRMED_LABEL_VALUE_ASSOCIATION",
+          "label_literal_status": "Agent maps the supplied field label to its visible source row; not independent exact-label transcription."
+        }
+      ]
+    }
+  ],
+  "comparison_policy": "Case-fold and collapse whitespace for the explicitly confirmed aggregate field only; preserve punctuation, cell gaps and leading zeros. Labels/row bands and exact source table bindings are checked separately.",
+  "verified_filled_rows": 9,
+  "blank_rows_owner_verified": 0,
+  "whole_page_verified": false,
+  "full_tables_accepted": 0,
+  "tax_review_completed": false,
+  "automatic_entity_name_policy_added": false,
+  "raw_candidates_modified": false,
+  "limits": [
+    "Feedback covers nine filled label/value associations and the stated company full name. Three unmentioned blank rows, individual character cells, spans, all prose, footnotes and whole-page reading order remain unverified.",
+    "These are four nested character grids on one previously inspected historical specimen page. This does not establish general table accuracy, scanned-table accuracy, merged headers, multi-page continuity or current form applicability.",
+    "The company continuation joins two reviewed layout rows without a separator only at this explicitly reviewed split inside INDIA. It is not a global last-name/first-name rule.",
+    "Projection is reference-independent and ASCII character-box only; ordinary prose, unknown/missing slots and ambiguous geometry stay held. Empty candidate cells remain unverified rather than becoming confirmed blanks."
+  ],
+  "entity_name": {
+    "table_id": "p4-t3",
+    "source_rows": [
+      0,
+      1
+    ],
+    "separator_at_reviewed_boundary": "",
+    "confirmed_value": "XYZ DATA CORPORATION (INDIA) PRIVATE LIMITED",
+    "status": "OWNER_CONFIRMED_ENTITY_NAME_FOR_THIS_EXAMPLE",
+    "semantic_role": "Full non-individual name; physical form labels retained separately.",
+    "requires_exact_source_table_sha256": "745021dae27c93cd9c06e71eb8eb5a75b624840aab3c1ec6c2d36161a25e99e3"
+  }
+}

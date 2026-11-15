@@ -1,0 +1,189 @@
+{
+  "schema_version": "0.1.0",
+  "snapshot_date": "2026-11-05",
+  "scope": "Public official originals only; machine triage is not ground truth. The stored-original sample is biased toward documents accepted by the old text extractor.",
+  "stored_corpus_snapshot": {
+    "documents": 156,
+    "pdfs": 155,
+    "attention": 1
+  },
+  "triage": [
+    {
+      "title": "Notification No.1/2026 [No. 500/PF6/S10(23FE)/FT&TR-II (2)]/SO 44(E)",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-1-2026-pdf",
+      "source_sha256": "4859b7812f854f48cfb0458a67294027661ca0908bd8773ac0b1f5dc4c1db099",
+      "bytes": 220545,
+      "pages": 1,
+      "pages_with_images": 0,
+      "pages_with_devanagari": 1,
+      "pages_with_suspect_characters": 0,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Circular No. 6/2026 : Condonation of delay in filing Form No. 10AB electronically for approval under clause(ii) of the first proviso to section 80G(5) of the Income-tax Act, 1961",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/circular-no-06-2026-pdf",
+      "source_sha256": "cc4238745db8f4ec56fb8a97c8ed6cb9287a6609adca5b602a1829fcbe8b0072",
+      "bytes": 3204618,
+      "pages": 2,
+      "pages_with_images": 2,
+      "pages_with_devanagari": 0,
+      "pages_with_suspect_characters": 0,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 1 of 2026 : Format, Procedure and Guidelines for submission of Statement of Financial Transactions (SFT-2517) for Depository Transactions under section 508(1) of the Income-tax Act, 2025 read with sub-rule 6 of rule 237 the Income-tax Rules, 2026",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification_1_sft-pdf",
+      "source_sha256": "454ae8882a9e5a1d8999d0b08c7d36a62812b2e3de11c280c9057395395e2efe",
+      "bytes": 2217331,
+      "pages": 19,
+      "pages_with_images": 19,
+      "pages_with_devanagari": 0,
+      "pages_with_suspect_characters": 0,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Circular No. 3/2026 : Notification of Sovereign Wealth Fund under Schedule V [Table: Sl. No. 7.Note S(a)(ii)(G)] of the Income-tax Act, 2025",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/circular-3-2026-pdf",
+      "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+      "bytes": 1947697,
+      "pages": 6,
+      "pages_with_images": 6,
+      "pages_with_devanagari": 0,
+      "pages_with_suspect_characters": 0,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 2 of 2026 : Format, Procedure and Guidelines for submission of Statement of Financial Transactions (SFT-2518) for Mutual Fund Transactions under section 508(1) of the Income-tax Act, 2025 read with sub-rule 6 of rule 237 of the Income-tax Rules, 2026 by Registrar and Share Transfer Agent",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification_2_sft-pdf",
+      "source_sha256": "6f99723750ece0469fe3aad7fb70447f36966ec6c612442d7ef6e3787e325242",
+      "bytes": 1927274,
+      "pages": 17,
+      "pages_with_images": 17,
+      "pages_with_devanagari": 0,
+      "pages_with_suspect_characters": 0,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 97/2026 [F. No. 370142/11/2026-TPL] / GSR 656(E) : Income-tax (Third Amendment) Rules, 2026 : Notification of Income Tax Return (Block assessment) under section 294",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-97-2026-pdf",
+      "source_sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+      "bytes": 1476388,
+      "pages": 13,
+      "pages_with_images": 0,
+      "pages_with_devanagari": 7,
+      "pages_with_suspect_characters": 5,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 49/2026 [F. No. 370142/9/2026-TPL] / G.S.R. 230(E) : Income-tax (Sixth Amendment) Rules, 2026",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-no-49-2026-pdf",
+      "source_sha256": "25e3b7facaf05f1bbd1450654563221696a0d53411d1c4587c38acd878a5879b",
+      "bytes": 1449685,
+      "pages": 69,
+      "pages_with_images": 1,
+      "pages_with_devanagari": 35,
+      "pages_with_suspect_characters": 14,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 48/2026 [F. No. 370142/8/2026-TPL] / G.S.R. 229(E) : Income-tax (Fifth Amendment) Rules, 2026",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-no-48-2026-pdf",
+      "source_sha256": "521cbf27a6e5371dd062ee09fb7cda665459c8531a6b9bd4752c071fc7a0597b",
+      "bytes": 1422817,
+      "pages": 57,
+      "pages_with_images": 2,
+      "pages_with_devanagari": 29,
+      "pages_with_suspect_characters": 13,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 47/2026 [F. No. 370142/7/2026-TPL] / GSR 228(E) : Income-tax (Fourth Amendment) Rules, 2026",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-no-47-2026-pdf",
+      "source_sha256": "2a11dd9368f4673c36cd7da2ae1b73c682c80a5b2f542e8c1b1f4d577ba54882",
+      "bytes": 1333190,
+      "pages": 59,
+      "pages_with_images": 4,
+      "pages_with_devanagari": 30,
+      "pages_with_suspect_characters": 9,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 46/2026 [F. No. 370142/6/2026-TPL] / G.S.R. 227(E) : Income-tax (Third Amendment) Rules, 2026",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-no-46-2026-pdf",
+      "source_sha256": "8e7aeec17f33d68a3aa32a079d429855ee3d378a4301f74f6cf67de7a28b8c35",
+      "bytes": 1218296,
+      "pages": 34,
+      "pages_with_images": 2,
+      "pages_with_devanagari": 18,
+      "pages_with_suspect_characters": 8,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 50/2026 [F. No. 370142/10/2026-TPL] / G.S.R. 231(E) : Income-tax (Seventh Amendment) Rules, 2026",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-no-50-2026-pdf",
+      "source_sha256": "6107366caa0b6b56f9631edb2c5cd777d6e6c2027ba4c5a5770e0333f4302dc8",
+      "bytes": 1048974,
+      "pages": 46,
+      "pages_with_images": 1,
+      "pages_with_devanagari": 23,
+      "pages_with_suspect_characters": 16,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    },
+    {
+      "title": "Notification No. 3 of 2026 : Procedure for registration of reporting person/entity and submission of Form No. 98 as per rule 160 of the Income-tax Rules, 2026",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/notificationno-3-of-2026-1-pdf",
+      "source_sha256": "309139f3b8b1545117e1ac74575154b79cac22bd55b3201d54ada11e111e1b15",
+      "bytes": 929515,
+      "pages": 3,
+      "pages_with_images": 3,
+      "pages_with_devanagari": 0,
+      "pages_with_suspect_characters": 0,
+      "label_status": "UNLABELLED",
+      "evaluation_split": "UNASSIGNED",
+      "template_group": null
+    }
+  ],
+  "large_document": {
+    "title": "Notification No. 22/2026 [F. No. 370142/41/2025-TPL] / GSR 198(E) : Income-tax Rules, 2026",
+    "url": "https://www.incometaxindia.gov.in/documents/d/guest/en-notified-it-rules-2026-20-03-2026-pdf",
+    "source_sha256": "f565e0f5ff3bf8f717daeb507f5e8569e720abc3309e6719f6f085889c9b802f",
+    "bytes": 10111559,
+    "pages": 976,
+    "label_status": "UNLABELLED",
+    "full_processing_verified": false
+  },
+  "summary": {
+    "triaged_documents": 12,
+    "triaged_pages": 326,
+    "pages_with_images": 57,
+    "pages_with_devanagari": 143,
+    "pages_with_suspect_characters": 65
+  },
+  "coverage_gaps": [
+    "Pure image-only PDFs currently represented by synthetic fixtures, not a labelled official cohort.",
+    "No human-labelled accuracy score or held-out split exists yet.",
+    "Current optional RapidOCR English configuration rejects Hindi."
+  ]
+}

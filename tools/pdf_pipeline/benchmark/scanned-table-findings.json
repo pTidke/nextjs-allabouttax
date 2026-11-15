@@ -1,0 +1,54 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-09",
+  "state": "AGENT_SOURCE_COMPARISON_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "owner_verified": false,
+  "trial_report_sha256": "6d2830ec884cb3de6075bf9aa06ba2ef2bb59c9c91e8e056f77a871e46b90959",
+  "scope": "Agent comparison of source images and literal provider table claims; not owner-confirmed ground truth, full transcription, applicability review or provider selection. Authored after trial execution and not used as model input.",
+  "cases": [
+    {
+      "id": "3756112e45b5-p3",
+      "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+      "image_sha256": "4ff6cda4e8bb2536d236d2bb21c0a66455595b88cb813f5ac67a57ce8c4fc256",
+      "docling_raw_sha256": "7e35568b0b1797a4ae563a8bb73811abf4059b59b0ba77fcaebefd922cc27080",
+      "notes": [
+        "The source has a nested Country Code / Number area. The image provider keeps those two labels separately, but its grid has eight unrepresented positions. These are not eight established omissions of printed content and are not confirmed blank cells.",
+        "The explanatory notes occupy shared areas in the source. Their spans and relationships to blank form fields still need review; no field fillability is inferred."
+      ]
+    },
+    {
+      "id": "3756112e45b5-p5",
+      "source_sha256": "3756112e45b5ce53d2b577223fc2fae786b2cf94ec5d6e62a3c3a00fa650103b",
+      "image_sha256": "a3af9bf67beead669bd91392e4e0a0a7aa1aa33b4cf7f4b284e3b0706dea8f57",
+      "docling_raw_sha256": "89ae7e234ec1f953919636aaebaf5f3ac0034ca8210213b8f446f28f215aa070",
+      "notes": [
+        "The source Part C has a separate Amount heading. The provider attaches Amount to the Part C title instead of retaining it as a separate header cell.",
+        "The source letter labels B and C occupy separate boxes. The provider emits the combined cell text B C under Date of investment. This is a source-compared structural defect, even though the overall provider grid has eight columns.",
+        "The extracted Nature of income heading reads Nature Jo income. All raw text remains unchanged, and no transcription correction is applied."
+      ]
+    },
+    {
+      "id": "454ae8882a9e-p10",
+      "source_sha256": "454ae8882a9e5a1d8999d0b08c7d36a62812b2e3de11c280c9057395395e2efe",
+      "image_sha256": "b8a6368c3b355aec33b0581e7acfaa95c7af14ffa5082b40dc8e43e0864d458a",
+      "docling_raw_sha256": "230e56c1b8c6bf009250f6bb6c1010c91bbb365c3fd926a24c6392f32ba67bca",
+      "notes": [
+        "The provider emits a 19-row/five-column grid with 95 cell claims and no uncovered or overlapping grid positions. This is structural plausibility, not verified table accuracy.",
+        "The source includes wrapped format and remarks text. Those relationships and critical characters still need full source review; no exact-match or whole-table reference is supplied."
+      ]
+    },
+    {
+      "id": "e228528d7afc-p6",
+      "source_sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+      "image_sha256": "c05ad45b2685c25bde4548dcd5da82bcc5fbe14d468636bbb354b8ff319128da",
+      "docling_raw_sha256": "be270890fcd25323f2cdab70bc80498c85f1e324a5732d53737c04909a56fbcf",
+      "notes": [
+        "This is a rasterized native control, not a genuinely scanned source. Its source shows separate Amount / Section subcolumns under both B and C.",
+        "The image provider emits a five-row/nine-column grid. It folds Amount Section into the C label and places Amount (Rs.) and Section (Rs.) as single B/C cell claims, losing the original pair of subcolumns under each heading.",
+        "The conditional Part C title is outside the detected table region. It remains in the full raw document output but is not automatically attached as table context.",
+        "Grey source cells remain visible; the pipeline does not classify them as blank, zero or not applicable."
+      ]
+    }
+  ]
+}
