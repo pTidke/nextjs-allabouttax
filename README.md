@@ -2,6 +2,8 @@
 
 Indian income-tax research assistant using reviewed official sources, Azure-hosted inference and Neon PostgreSQL. The early-access app has bounded central income-tax coverage. Filing, tax calculations and statutory return drafts are follow-up milestones.
 
+- [Platform overview and architectural decisions](brain.md)
+- [Improvement areas and forward architecture](docs/improvement-areas.md)
 - [Current release plan and remaining work](docs/release-plan.md)
 - [Data pipeline, review rules and database setup](docs/tax-foundation.md)
 - [Build, deployment, worker activation and evaluations](docs/deployment.md)
