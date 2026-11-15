@@ -149,17 +149,19 @@ test("the review page gets the lines that need a look, and boxes page by page", 
   assert.equal(overview?.status, "OK");
   if (overview?.status !== "OK") return;
   assert.equal(overview.attentionTotal, 2);
-  assert.deepEqual(
-    overview.attention.map((line) => [
-      line.page,
-      line.text,
-      line.other[0]?.text ?? null,
-    ]),
-    [
-      [1, "nnnnMINISTRY OF FINANCE", "MINISTRY OF FINANCE"],
-      [2, "Annexure A", null],
-    ],
+  // Each line comes with every reading of it; only that page is read.
+  const flagged = await Promise.all(
+    [1, 2].map(async (n) => {
+      const found = await runs.pageLines(reviewer, first, n);
+      return found.lines
+        .filter((line) => line.status !== "accepted")
+        .map((line) => [line.page, line.text, line.other[0]?.text ?? null]);
+    }),
   );
+  assert.deepEqual(flagged.flat(), [
+    [1, "nnnnMINISTRY OF FINANCE", "MINISTRY OF FINANCE"],
+    [2, "Annexure A", null],
+  ]);
   assert.deepEqual(
     overview.pages.map((p) => [p.number, p.kind]),
     [

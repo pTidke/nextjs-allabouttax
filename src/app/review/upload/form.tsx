@@ -3,11 +3,20 @@ import Link from "next/link";
 import { useState } from "react";
 
 type Result = { versionId: string; passages: number; needsOcr: boolean };
+const MAX_BYTES = 32 * 1024 * 1024;
+
+async function send(url: string, init: RequestInit) {
+  const response = await fetch(url, init);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || "The upload did not work.");
+  return body;
+}
 
 export default function UploadForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
+  const [progress, setProgress] = useState("");
   const field = "block w-full border rounded-lg p-2 mt-1";
   return (
     <form
@@ -17,34 +26,67 @@ export default function UploadForm() {
         const form = event.currentTarget;
         const file = (form.elements.namedItem("file") as HTMLInputElement)
           .files?.[0];
-        if (file && file.size > 4 * 1024 * 1024) {
-          setError(
-            "This file is larger than 4 MB. Larger documents need the extraction engine, which is coming next.",
-          );
+        if (!file) return;
+        if (file.size > MAX_BYTES) {
+          setError("This file is larger than 32 MB.");
           return;
         }
+        const fields = new FormData(form);
         setBusy(true);
         setError("");
         setResult(null);
         try {
-          const response = await fetch("/api/review/upload", {
+          setProgress("Checking the file…");
+          const bytes = await file.arrayBuffer();
+          const digest = await crypto.subtle.digest("SHA-256", bytes);
+          const sha256 = [...new Uint8Array(digest)]
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+          const started = await send("/api/review/upload", {
             method: "POST",
-            body: new FormData(form),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: fields.get("title"),
+              officialUrl: fields.get("officialUrl"),
+              issuedAt: fields.get("issuedAt") || undefined,
+              size: file.size,
+              sha256,
+            }),
           });
-          const body = await response.json().catch(() => ({}));
-          if (!response.ok)
-            throw new Error(body.error || "The upload did not work.");
-          setResult(body);
+          // Vercel accepts request bodies of up to 4.5 MB, so the file goes in parts.
+          for (let i = 0; i < started.parts; i++) {
+            setProgress(
+              started.parts > 1
+                ? `Uploading part ${i + 1} of ${started.parts}…`
+                : "Uploading…",
+            );
+            const part = bytes.slice(
+              i * started.partBytes,
+              (i + 1) * started.partBytes,
+            );
+            await send(`/api/review/upload/${started.uploadId}/${i}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/octet-stream" },
+              body: part,
+            });
+          }
+          setProgress("Reading the text…");
+          setResult(
+            await send(`/api/review/upload/${started.uploadId}`, {
+              method: "POST",
+            }),
+          );
           form.reset();
         } catch (e) {
           setError(e instanceof Error ? e.message : "The upload did not work.");
         } finally {
           setBusy(false);
+          setProgress("");
         }
       }}
     >
       <label className="block text-sm font-medium">
-        PDF file (up to 4 MB)
+        PDF file (up to 32 MB)
         <input
           name="file"
           type="file"
@@ -96,7 +138,7 @@ export default function UploadForm() {
         >
           Uploaded.{" "}
           {result.needsOcr
-            ? "No text could be read from it, so it is waiting for OCR."
+            ? "It has no text layer, so it is a scan. The extraction engine reads it with OCR on its next run, within two hours."
             : `${result.passages} passages were extracted.`}{" "}
           <Link href={`/review/${result.versionId}`} className="underline">
             Open it for review
@@ -107,7 +149,7 @@ export default function UploadForm() {
         disabled={busy}
         className="rounded-lg bg-emerald-700 text-white px-5 py-2 disabled:opacity-40"
       >
-        {busy ? "Uploading…" : "Upload"}
+        {busy ? progress || "Uploading…" : "Upload"}
       </button>
     </form>
   );

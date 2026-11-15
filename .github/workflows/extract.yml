@@ -15,7 +15,8 @@ jobs:
     if: vars.TAX_WORKER_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: tax-worker
-    timeout-minutes: 30
+    # 20 minutes of budget, plus up to 15 for a long scan started just before it ran out.
+    timeout-minutes: 40
     env:
       # The engine release this app is tested with. Update both together.
       PDFANCHOR_REF: 55effa78855e0cc806bdf04ca307c3513c18667d

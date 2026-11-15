@@ -38,6 +38,8 @@ Apply a migration before merging code that uses it: Vercel deploys `main` straig
 
 `202611150004_line_reviews` is additive: a new `LineReview` table. Until it is applied, line decisions and accepting a text check on a document with an engine run fail; the rest of the site is unaffected.
 
+`202611150005_upload_parts` is additive: two new tables, `PendingUpload` and `UploadPart`, for PDFs uploaded in parts. The migrate workflow runs only from `main`, so run it right after merging: until it has run, uploads fail with a database error, and everything else works as before. Large uploads count against `TAX_MAX_ORIGINAL_BYTES` (default 128 MiB) and Neon's free 0.5 GB; raise the budget only with storage to spare.
+
 `202611150003_extraction_runs` is additive: a new `ExtractionRun` table for the engine's results. Until it is applied, the extract workflow fails and document pages show no line boxes.
 
 **Extraction engine.** `.github/workflows/extract.yml` runs every two hours (and on demand) in the `tax-worker` environment, with the same `DATABASE_URL` and the `TAX_WORKER_ENABLED` switch as the knowledge worker. It installs pdfanchor from `github.com/pTidke/benzeneblack` at the commit in `PDFANCHOR_REF`. To upgrade the engine, change that commit in the workflow; every pending PDF whose text has not been accepted is then read again by the new version, and earlier runs are kept. Line decisions belong to a run, so decisions made on the old runs no longer count; run the workflow by hand right after merging, before reviewers carry on.

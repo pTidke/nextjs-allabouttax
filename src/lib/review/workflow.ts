@@ -294,12 +294,26 @@ export async function reviewDocument(userId: string, versionId: string) {
   };
 }
 
-export async function originalDocument(userId: string, versionId: string) {
+// The stored original's size and type, without reading the file itself.
+export async function originalInfo(userId: string, versionId: string) {
   await requireReviewer(userId);
-  const version = await prisma.taxVersion.findUnique({
-    where: { id: versionId },
-    select: { original: true, contentType: true },
-  });
-  if (!version) throw new HttpError(404, "Document version not found.");
-  return version;
+  const [found] = await prisma.$queryRaw<
+    { size: number; contentType: string }[]
+  >`SELECT octet_length(original)::int AS size, "contentType" FROM "TaxVersion" WHERE id = ${versionId}`;
+  if (!found) throw new HttpError(404, "Document version not found.");
+  return found;
+}
+
+// Bytes [start, start + length) of a stored original. Files can be larger than
+// a Vercel response may be, so they are served in slices; see the original route.
+export async function originalSlice(
+  versionId: string,
+  start: number,
+  length: number,
+) {
+  const [found] = await prisma.$queryRaw<{ data: Uint8Array }[]>`
+    SELECT substring(original FROM ${start + 1}::int FOR ${length}::int) AS data
+    FROM "TaxVersion" WHERE id = ${versionId}`;
+  if (!found) throw new HttpError(404, "Document version not found.");
+  return new Uint8Array(found.data);
 }

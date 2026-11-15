@@ -3,9 +3,9 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { HttpError } from "../http";
 import {
-  forReview,
   latestRun,
   overviewOf,
+  pageLines,
   type EngineDocument,
   type EngineLine,
   type LineForReview,
@@ -160,8 +160,6 @@ export async function recordLineDecision(
 }
 
 export type ReviewLine = LineForReview & {
-  // Where the line falls in reading order across the whole document.
-  position: number;
   decision: {
     decision: LineDecision;
     text: string | null;
@@ -170,8 +168,27 @@ export type ReviewLine = LineForReview & {
   } | null;
 };
 
-// What the review page shows: the engine overview, every line that needs a
-// decision with its current decision, and how far along the check is.
+// One entry per line that needs a decision, in reading order. Kept small, because
+// a long scan can have thousands; the lines themselves load page by page.
+export type QueueEntry = {
+  id: string;
+  page: number;
+  spotCheck: boolean;
+  decision: LineDecision | null;
+};
+
+async function reviewerNames(decisions: Map<string, Decided>) {
+  const ids = [...new Set([...decisions.values()].map((d) => d.reviewer))];
+  if (!ids.length) return new Map<string, string>();
+  const users = await prisma.user.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, name: true, email: true },
+  });
+  return new Map(users.map((user) => [user.id, user.name ?? user.email]));
+}
+
+// What the review page shows up front: the engine overview, the queue of lines
+// that need a decision, and how far along the check is.
 export async function lineReviewOverview(versionId: string) {
   // The run's document can be several megabytes, so it is read once.
   const run = await latestRun(versionId);
@@ -180,40 +197,54 @@ export async function lineReviewOverview(versionId: string) {
   const document = run!.document as unknown as EngineDocument;
   const required = requiredLines(run!.id, document);
   const decisions = await lineDecisions(run!.id);
-  const names = new Map(
-    (
-      await prisma.user.findMany({
-        where: {
-          id: {
-            in: [...new Set([...decisions.values()].map((d) => d.reviewer))],
-          },
-        },
-        select: { id: true, name: true, email: true },
-      })
-    ).map((user) => [user.id, user.name ?? user.email]),
-  );
-  const position = new Map(lines(document).map((line, i) => [line.id, i]));
-  const withDecision = (line: EngineLine): ReviewLine => {
-    const found = decisions.get(line.id);
-    return {
-      ...forReview(line),
-      position: position.get(line.id) ?? 0,
-      decision: found
-        ? {
-            decision: found.decision,
-            text: found.text,
-            reviewer: names.get(found.reviewer) ?? "Former reviewer",
-            at: found.at.toISOString(),
-          }
-        : null,
-    };
-  };
+  const spot = new Set(required.sample.map((line) => line.id));
+  const needed = new Set([
+    ...required.attention.map((line) => line.id),
+    ...spot,
+  ]);
+  const queue: QueueEntry[] = lines(document)
+    .filter((line) => needed.has(line.id))
+    .map((line) => ({
+      id: line.id,
+      page: line.page,
+      spotCheck: spot.has(line.id),
+      decision: decisions.get(line.id)?.decision ?? null,
+    }));
   return {
     ...overview,
     runId: run!.id,
-    attention: required.attention.slice(0, 500).map(withDecision),
-    sample: required.sample.map(withDecision),
+    queue,
+    sampleSize: required.sample.length,
     progress: progress(required, decisions),
+  };
+}
+
+// One page's lines for the review screen, each with its latest decision. Which
+// lines need one is in the overview's queue.
+export async function pageForReview(
+  userId: string,
+  versionId: string,
+  page: number,
+) {
+  const found = await pageLines(userId, versionId, page);
+  const decisions = await lineDecisions(found.runId);
+  const names = await reviewerNames(decisions);
+  return {
+    ...found,
+    lines: found.lines.map((line): ReviewLine => {
+      const decided = decisions.get(line.id);
+      return {
+        ...line,
+        decision: decided
+          ? {
+              decision: decided.decision,
+              text: decided.text,
+              reviewer: names.get(decided.reviewer) ?? "Former reviewer",
+              at: decided.at.toISOString(),
+            }
+          : null,
+      };
+    }),
   };
 }
 
