@@ -245,7 +245,7 @@ Fix: page-group scheduling with resumable runs, which the lab README already nam
 An accepted extraction and a tax decision produce nothing in `TaxVersion` or `TaxChunk`. Until a release adapter exists, the live chatbot keeps using the text-layer path and none of this work reaches users.
 Fix: after C1, a release step that turns an accepted extraction revision plus an accepted tax decision into retrievable items, with a dry-run manifest first (as `pdf-staging-handoff.md` proposes).
 
-**L10. Two review systems with different fields. P1.**
+**L10. Two review systems with different fields. P1. Partly fixed.** The live review moved to `/review` with roles and a text-check gate before tax review. The staging screens still exist and are retired once their work is carried over (roadmap R3). The original finding:
 `/admin/knowledge` on `main` records structured scope (document type, legal status, period mode, effective dates, entity, investment window). `/staging/tax-review` records four free-text fields and supporting line ids. Retrieval needs the structured form.
 Fix: one tax-review model, structured, bound to an extraction revision, with supporting lines per field. Retire the other.
 

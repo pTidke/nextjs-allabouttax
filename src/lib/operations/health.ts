@@ -27,7 +27,7 @@ export async function knowledgeHealth(now = new Date()) {
           latestVersionId: true,
           verifiedAt: true,
           lastError: true,
-          source: { select: { enabled: true, lastError: true } },
+          source: { select: { enabled: true, lastError: true, kind: true } },
         },
       },
     },
@@ -35,8 +35,11 @@ export async function knowledgeHealth(now = new Date()) {
   const fresh = approved.filter(
     (v) =>
       v.document.latestVersionId === v.id &&
-      v.document.verifiedAt &&
-      now.getTime() - v.document.verifiedAt.getTime() <= MAX_FRESHNESS_MS &&
+      // Uploaded copies are fixed snapshots, exempt from the freshness rule.
+      (v.document.source.kind === "UPLOAD" ||
+        (!!v.document.verifiedAt &&
+          now.getTime() - v.document.verifiedAt.getTime() <=
+            MAX_FRESHNESS_MS)) &&
       !v.document.lastError &&
       v.document.source.enabled &&
       !v.document.source.lastError,

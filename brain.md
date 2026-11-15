@@ -167,9 +167,18 @@ Hand-written SQL that Prisma's schema does not express: the GIN full-text index 
 7. **Version.** Hash is SHA-256 of the bytes for PDFs and of the extracted text for HTML (so changing page chrome does not create a new version). A new hash creates a new `PENDING` `TaxVersion` with its chunks; an existing hash is reused. `latestVersionId` and `verifiedAt` are updated. A cumulative budget on stored originals (`TAX_MAX_ORIGINAL_BYTES`, default 128 MiB) is enforced under an advisory lock.
 8. **Fail safely.** Errors are truncated, stored on the job and on the document or source, retried up to three attempts with exponential backoff, then left `FAILED` and visible to the admin.
 
-### 7.2 Review and release (admin)
+### 7.2 Review and release (`/review`)
 
-The admin page lists the latest `PENDING` versions ten at a time, with the extracted text, any saved draft, and (for two specific documents) a hard-coded preset.
+Review happens in the Review workspace at `/review` (since 15 November 2026; before that, in `/admin/knowledge`, which now only manages sources). Code: `src/lib/review/`, `src/app/review/`, `src/app/api/review/`.
+
+- **Roles** (`ReviewerGrant`, `lib/review/roles.ts`): `EXTRACTION` checks extracted text; `TAX` decides applicability and publishes. An administrator grants and revokes them at `/review/team` by e-mail; the person must have signed in once. Being an administrator grants neither role. Roles are re-read from the database on every request.
+- **Queue** (`reviewQueue`): current `PENDING` versions with filters *Needs text check*, *Ready for tax review*, *Needs OCR* (no passages), *Uploaded*, *All*, ten a page.
+- **Document page**: the stored original beside the extracted passages. PDFs open in the browser's own viewer through `/api/review/[versionId]/original`; clicking a passage's anchor jumps to its page.
+- **Gate 1, text check** (`ExtractionReview`, append-only): `ACCEPTED` (needs at least one passage) or `NEEDS_CHANGES` (needs a note). The newest row is the current state.
+- **Gate 2, tax review**: the structured form (`components/review/TaxReviewForm.tsx`), with drafts. `recordTaxDecision` refuses approval unless the user has `TAX` and the latest text check is `ACCEPTED`, then calls `reviewVersion` below. Rejecting needs no text check.
+- **Upload** (`lib/tax/upload.ts`, `/review/upload`): a PDF of up to 4 MB (Vercel's request limit), a title and the official https address on a `.gov.in` or `.nic.in` site, which is what the chatbot cites. It goes into the `uploads` source (kind `UPLOAD`) under the same storage budget. A PDF with no text layer is kept with a "needs OCR" error and no passages. Uploaded copies are fixed snapshots: the worker never re-fetches them and they are exempt from the 48-hour freshness rule.
+
+The structured fields and their checks are unchanged:
 
 Approving requires: selected sections, document type, legal status, period mode, effective-from date, and a note. `validateReview` enforces date sanity, period overlap, and the entity and investment-window rules. Inside one transaction under advisory lock `740126`, `reviewVersion`:
 
@@ -313,6 +322,8 @@ Each entry records the decision, the reason, and the consequence that matters fo
 | AD-32 | **Two review gates: extraction acceptance, then tax applicability**, each bound to an exact revision. | Transcription quality and legal meaning are different skills. | A document needs two human passes before it can be released. |
 | AD-33 | **OCR repair proposals come from the Azure chat model reading a crop**, returned for human recheck. | Fast to build; matched three reviewed fields in a probe. | The document path depends on a chat model. The owner has since decided against this (section 12). |
 | AD-37 | **Unanswered questions are kept, anonymously, for the administrator.** `/admin/inbox` lists them with period and reason but no name, email or user id, and they are deleted with their conversation. The privacy policy says so. | The best signal for what to ingest next. | User text is read by a person; the wording in the privacy policy must stay accurate. |
+| AD-39 | **Two review gates with separate roles** (text check, then tax review), enforced on the server, with roles granted explicitly and independent of `ADMIN`. | A transcription error and a legal misreading are different mistakes and need different people. | Every document needs two passes. The owner, as admin, must grant himself a role to review. |
+| AD-40 | **Uploaded documents are fixed snapshots**, cited by their official address, never re-fetched and exempt from the freshness rule. | Many official PDFs are not on the listings the worker reads. | If the official copy later changes, nothing notices; re-upload to replace it. |
 | AD-38 | **The contact form writes to the database**, with a hidden spam field, 3 messages per sender per hour and 100 site-wide per hour. Messages appear in `/admin/inbox`. | Free, no e-mail service or key. | Nobody is notified of a new message; the admin has to look. |
 | AD-34 | **The engine is a generic, standalone package**; tax-specific rules and the staging contract stay in the application. | It is meant to be published for others; the application should treat it as a black box producing `document.json`. | Two places to change during the port from the lab. |
 | AD-35 | **The engine decides by rule**: a line is accepted only when validators pass and an independent reading agrees on every critical token. Engine confidence is never used. | The owner allows rules to accept; recorded cases show confidence is high on wrong dates. | "Accepted" means "passed every rule" until thresholds are measured on reference pages. |

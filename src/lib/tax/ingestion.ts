@@ -211,7 +211,10 @@ export async function runNextJob(
     });
     if (!source.enabled) throw new Error("Source was disabled.");
     let result: string;
-    if (job.documentUrl || source.kind === "DOCUMENT") {
+    if (source.kind === "UPLOAD") {
+      // Never fetched: an uploaded copy is the evidence itself.
+      result = "Uploaded documents are not refreshed.";
+    } else if (job.documentUrl || source.kind === "DOCUMENT") {
       await ingestDocument(
         source.id,
         job.documentUrl || source.url,
