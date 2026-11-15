@@ -1,0 +1,131 @@
+{
+  "$defs": {
+    "ObjectRef": {
+      "additionalProperties": false,
+      "properties": {
+        "object_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$",
+          "title": "Object Id",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "object_id",
+        "sha256"
+      ],
+      "title": "ObjectRef",
+      "type": "object"
+    },
+    "RenderRef": {
+      "additionalProperties": false,
+      "properties": {
+        "page": {
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "object": {
+          "$ref": "#/$defs/ObjectRef"
+        }
+      },
+      "required": [
+        "page",
+        "object"
+      ],
+      "title": "RenderRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0",
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "const": "STAGING_IMPORT_REQUEST",
+      "default": "STAGING_IMPORT_REQUEST",
+      "title": "State",
+      "type": "string"
+    },
+    "publication_eligible": {
+      "const": false,
+      "default": false,
+      "title": "Publication Eligible",
+      "type": "boolean"
+    },
+    "acceptance": {
+      "default": null,
+      "title": "Acceptance",
+      "type": "null"
+    },
+    "source_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "original": {
+      "$ref": "#/$defs/ObjectRef"
+    },
+    "artifact": {
+      "$ref": "#/$defs/ObjectRef"
+    },
+    "renders": {
+      "items": {
+        "$ref": "#/$defs/RenderRef"
+      },
+      "maxItems": 1000,
+      "title": "Renders",
+      "type": "array"
+    },
+    "raw_outputs": {
+      "items": {
+        "$ref": "#/$defs/ObjectRef"
+      },
+      "maxItems": 20,
+      "title": "Raw Outputs",
+      "type": "array"
+    },
+    "revision": {
+      "$ref": "#/$defs/ObjectRef"
+    },
+    "expected_parent_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expected Parent Sha256"
+    }
+  },
+  "required": [
+    "source_id",
+    "run_id",
+    "original",
+    "artifact",
+    "renders",
+    "raw_outputs",
+    "revision"
+  ],
+  "title": "ImportEnvelope",
+  "type": "object"
+}

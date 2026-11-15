@@ -1,0 +1,22 @@
+{
+  "scope": "Table review UI revision; benchmark source/extraction packages unchanged",
+  "state": "UNFINISHED_TABLE_REVIEW",
+  "publication_eligible": false,
+  "source_table": "Circular No. 3/2026 page 3 p3-t1",
+  "validation": {
+    "python_tests": 68,
+    "javascript_tests": 3,
+    "checks": [
+      "All 48 browser selections exported identically after import/save/reload",
+      "Explicit candidate confirmation copied synthetic 1.5 unchanged",
+      "Independent progress validator checked source binding and kept strict_draft_valid false"
+    ],
+    "real_source_text_auto_filled": false,
+    "accepted_reference_labels": 0
+  },
+  "ui_assets": {
+    "index.html": "4a5abe916bb92500fdc328d3617c319e30143d18bc51339b0210743a203c6cc8",
+    "workspace.css": "5605c7593140bf9e9ae1ced79f6d283cc17696bba25e25d40b6ee1141c8e2f33",
+    "workspace.js": "80fb0bc4e83031f0283c896e1827e531d8bd8b2b7d71f77ce7ee9abdf0f4b054"
+  }
+}

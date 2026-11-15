@@ -1,0 +1,55 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-11",
+  "state": "AGENT_SOURCE_COMPARISON_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "owner_verified": false,
+  "trial_report_sha256": "8f3e9a98d1d20100b8fafd957eab3ebcc848d6caaaeefa1ef8355227be75226c",
+  "scope": "Agent inspection of newly acquired source pages and unchanged raw outputs after the frozen run. Not accepted transcription, tax guidance, an engine winner or a held-out accuracy estimate.",
+  "cases": [
+    {
+      "id": "95ba5fe0bac7-p3",
+      "source_sha256": "95ba5fe0bac7ae71e60f93919dae8b3b93124483349db2987f7780dd16c70685",
+      "image_sha256": "3ac05401e567a12edf3220b35ac6dd7533101948cb297166e15e23fb8674387d",
+      "docling_raw_sha256": "88e7111eb19700fd1f03084f153e712db8aaa6135c7e07f470a2a0119c68e4ae",
+      "notes": [
+        "The source audit form contains nested tables, boxed PAN/date placeholders, rotated section labels and a Type of auditee choice row. The image provider emits two small grids and does not represent the whole form as a complete structured table.",
+        "The Type of auditee source row visibly includes Trust, Society, Company and others. Full raw Docling text retains Trust as an unchecked checkbox but does not retain the other three labels as that choice row. This is an agent source-compared omission, not a reference-based accuracy score. Plain bilingual OCR has different artifacts and supplies no reliable checkbox/table contract.",
+        "Do not treat the ten boxed PAN example characters or dd/mm/yyyy placeholders as taxpayer data or confirmed blank cells. The previously reviewed blank cells belong to a different source and do not transfer."
+      ]
+    },
+    {
+      "id": "95ba5fe0bac7-p4",
+      "source_sha256": "95ba5fe0bac7ae71e60f93919dae8b3b93124483349db2987f7780dd16c70685",
+      "image_sha256": "171b8ed9841d3b260c0d5518da233c0e68a740e40593b6c2f1b35749abd5b775",
+      "docling_raw_sha256": "d3aa0de11956c377fba01e4f107d54b5861f3227152fa5f898e0bc8b6504816a",
+      "notes": [
+        "The original contains several nested row groups and sub-tables with shared headings. The provider emits one 35-row/14-column grid with 105 cell claims and 66 uncovered positions; these inventory figures do not establish 66 missing printed items.",
+        "Span expansion repeats shared cells in the generated Markdown. That renderer behavior is not proof of repeated source content; use the original and raw anchor cells when reviewing hierarchy.",
+        "Rotated section labels, nested book-account headings, Yes/No options and blank entry areas remain unreviewed. No full table structure, blank state, unit association or page continuation is accepted."
+      ]
+    },
+    {
+      "id": "c69e098e34a3-p2",
+      "source_sha256": "c69e098e34a32236d035bfcf093ef55f766407bc41c0c74e0f7cd97cdd2e4c09",
+      "image_sha256": "feb69658f44b4b6144ff8bc9f333b5b747f2c9d9080dcbf81000a7c96e2e8efc",
+      "docling_raw_sha256": "9144916b5b9a13becf8540fd1aadb95b9ea353b2f0e176caa15702795dee6cff",
+      "notes": [
+        "The thin-sheet scan has visible reverse-side show-through. Its surcharge table has a complete claimed 4-by-3 grid with no uncovered positions, but raw income-condition text is still wrong/incomplete.",
+        "In row (a), the source ends its cited section list with 112A; the raw condition instead ends 11I2). In row (c), the source includes the final 112A) condition but the raw cell stops after 112 or. These critical-character/omission findings remain agent observations, not accepted corrections or current-law advice.",
+        "The printed old-regime heading is narrative outside the detected table. The remaining rows occur at the top of page 3. The two page fragments are retained separately and not automatically joined."
+      ]
+    },
+    {
+      "id": "c69e098e34a3-p3",
+      "source_sha256": "c69e098e34a32236d035bfcf093ef55f766407bc41c0c74e0f7cd97cdd2e4c09",
+      "image_sha256": "1750c5f5dce95b5be23b98bb278d903b38061601138ac2d6d1c00f9f1faa3f0e",
+      "docling_raw_sha256": "147598042bbf88abe163c9046451adc2a82a692138d435e6116be6fd225a021d",
+      "notes": [
+        "The page begins with two more surcharge rows, followed by a different new-regime heading and six-band tax table. The provider keeps two separate grids; the printed headings and following qualifications remain outside those table cells.",
+        "The second grid looks plausible on initial source comparison, but no complete row/critical-token reference or tax approval is supplied. It cannot be published merely because its claimed positions are complete.",
+        "The first table contains a lower-case l in the raw l12A identifier and a missing space in 111Aor. Preserve literal raw alternatives and source context; do not automatically normalize numeric/section identifiers or bridge the old/new regimes."
+      ]
+    }
+  ]
+}

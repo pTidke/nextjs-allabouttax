@@ -1,0 +1,103 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-11",
+  "state": "ISOLATED_STAGING_IMPORT_DEMONSTRATION_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "local_demo": "work/pdf-staging/import-v2",
+  "plan_sha256": "e6d163d11e5d9c8603d6065c15598f6cd3a8b4a7709b50db18fa0516ac449c86",
+  "registry_descriptor_sha256": "41cdb3b3863e4e28065ab4ab291b48de74956951ee64ba438e46d9fbd2d6dfaf",
+  "demo_report_sha256": "b186ebef657aa0f885ddb122af39062aaf01130df5bdc94d1e1ad92f4e8a960f",
+  "file_ledger_sha256": "9edf8599980c840e51619ce800e85001be40bcf1acad7004c13ccb1e171a05a4",
+  "ledger_entries_verified": 23,
+  "registered_objects": 17,
+  "receipts": {
+    "native-page-draft": {
+      "state": "AWAITING_EXTRACTION_REVIEW",
+      "import_key": "176ffe718c01f9ece871496609de2b8346602df541604a469483a34c783ef12e",
+      "revision_sha256": "b95deed615b7ca68999bfd52de36cf38a76608390333eef5ebe154f6683b20a8",
+      "envelope_sha256": "d836bcf288cd162a55aa7852332514c37729995a60722e886bd3ec337c6e3823",
+      "receipt_sha256": "13226193c737d5e6982bc1846b5d065d70bfe7f1c1737972c09a0609bdb9c079",
+      "whole_document_processed": true,
+      "original_pages": 1,
+      "scope_pages": [
+        1
+      ],
+      "blocking_holds": [],
+      "review_holds": [
+        "AUTHENTICATED_EXTRACTION_REVIEW_REQUIRED",
+        "READING_ORDER_UNVERIFIED",
+        "RELEASE_REQUIRED",
+        "TAX_REVIEW_REQUIRED"
+      ],
+      "table_accounting": null
+    },
+    "blank-table-draft": {
+      "state": "BLOCKED",
+      "import_key": "cfa8673c8507e36299d0ec0b023ccecf05a757d520942c2ee94b6a6240f2dfe0",
+      "revision_sha256": "6f6a3f4e5feab107cecba5166d04a906010792f460ae9c4080d124908825438e",
+      "envelope_sha256": "c948e192c1de2bf9cd4a4766bc1a392c84ab84a361a57b81bb6070aa31f4be43",
+      "receipt_sha256": "7c72b357947c5e0cd04ca5ed1b2dd580487fb574642febab4d92648640e83f1d",
+      "whole_document_processed": false,
+      "original_pages": 6,
+      "scope_pages": [
+        5
+      ],
+      "blocking_holds": [
+        "CONTEXT_DEPENDENCIES_UNREVIEWED",
+        "IMAGE_CONTENT_UNVERIFIED",
+        "SCOPE_PAGE_PROCESSING_INCOMPLETE",
+        "TABLE_CONTEXT_AND_STRUCTURE_UNREVIEWED",
+        "TABLE_RAW_TEXT_UNPLACED",
+        "TABLE_STRUCTURE_UNVERIFIED"
+      ],
+      "review_holds": [
+        "AUTHENTICATED_EXTRACTION_REVIEW_REQUIRED",
+        "READING_ORDER_UNVERIFIED",
+        "RELEASE_REQUIRED",
+        "TAX_REVIEW_REQUIRED"
+      ],
+      "table_accounting": {
+        "raw_characters": 544,
+        "mapped_characters": 252,
+        "unplaced_characters": 292,
+        "unresolved_cells": 0,
+        "publication_eligible": false
+      }
+    }
+  },
+  "schema_sha256": "6c79cf918bc1cf4189371129df22867b217f344ee4a0485d07b14ea9eeffdeed",
+  "code_sha256": {
+    "staging.py": "1ae11e324cdf442f5fb151981f18bf5a2e3ae969d64eb35e685e23c05fa1dc44",
+    "staging_bundle.py": "2c33eac78350265c796e388ecf50956d0998dd78eb656805935668086b229c84",
+    "staging_demo.py": "dac5b41c391bc4c74e8a5fd7aba5666f88e049f2716acdec30301e15351cea7e",
+    "cli.py": "2a444fefc892d6b49bdfc725fc8d46a8ce1efa8490fe92f4cfc19ce6b8f040d8"
+  },
+  "verification": {
+    "python_tests_passed": 327,
+    "javascript_tests_passed": 15,
+    "new_staging_tests": 42,
+    "python_lint_format": "passed",
+    "canonical_schema_diff": "passed",
+    "repeat_preview_import_keys": "identical across two fresh staging directories",
+    "cli_exits": {
+      "awaiting_extraction_review": 0,
+      "blocked_with_preserved_receipt": 2,
+      "invalid_evidence": 1
+    },
+    "old_history_rows_and_heads": "unchanged versus preceding verified backup",
+    "pure_validator_external_io": "test forbids file opens, database connects and socket connections",
+    "production_database_writes": 0,
+    "retrieval_items_created": 0,
+    "authenticated_decisions_created": 0
+  },
+  "limitations": [
+    "The registry is selected by a trusted local operator, not accepted from an import request. Its metadata/registration is not authenticated cloud authority.",
+    "The pure function checks expected review parent at preview time only. A future authenticated persistence transaction must recheck it and implement deduplication/leases. Stable import keys do not prove atomic import persistence.",
+    "AWAITING_EXTRACTION_REVIEW means candidate integrity and scope inventory consistency, not source accuracy, accepted reading order, legal approval or publication.",
+    "Only complete selected native pages and the fixed partial image-table reconstruction are supported. General native table import, OCR-region edits, exclusions, footnotes, cross-page acceptance and multilingual completeness remain held/unsupported.",
+    "The table keeps nineteen exact saved blank states, zero unresolved cell states and 292 unplaced characters, with unresolved structure/context. No blanket acceptance is inferred from blank choices.",
+    "The known Hindi header edit and historical feedback remain as proposals/evidence. No owner feedback is upgraded into authenticated reviewer identity or tax authority.",
+    "Local registered original page counts are checked with the PDF parser during demonstration registration; the pure validator trusts server registration and does not parse original PDFs.",
+    "No application endpoint, sign-in/capability grant, cloud storage, production migration, model/OCR call, chunk, embedding or index write."
+  ]
+}

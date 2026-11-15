@@ -1,0 +1,169 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-11",
+  "state": "FRESH_SOURCE_TABLE_DEVELOPMENT_TRIAL_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "owner_verified": false,
+  "plan_frozen_at_commit": "cb9a97f",
+  "local_trial": "work/pdf-lab/demo-v2/benchmarks/table-transfer-v1",
+  "local_review": "work/pdf-lab/demo-v2/comparisons/table-transfer-v1",
+  "plan_sha256": "8cf29c5a6ce55cdb095e0820452d4c621de04d0a18cd8ae4be613204e4e555df",
+  "prior_source_inventory_sha256": "0ffc81ab493fe0fe1917dfad1f0c7c83e19abad3163f5ef8f445a293176c904a",
+  "prior_original_hashes": 24,
+  "prior_artifacts": 87,
+  "source_manifest_sha256": "31039fec57c194fd1c805b4cf3ac75450770691ce4b8723182d5d27b14906c46",
+  "trial_report_sha256": "8f3e9a98d1d20100b8fafd957eab3ebcc848d6caaaeefa1ef8355227be75226c",
+  "trial_file_ledger_sha256": "98abcb43c0a0b694f9e0566af574564169dac9afa9006ad557e0f95f7e4818f8",
+  "trial_ledger_entries_verified": 53,
+  "review_report_sha256": "254f8dc065fae7653cce07e9ae9ec629cfb4936523803f2ddcd4d0bab36b3c42",
+  "review_file_ledger_sha256": "a4256ef9f6db69389be03d2436d6336e859091d47edaff16d96cb955c7afc2e3",
+  "review_ledger_entries_verified": 2,
+  "findings_sha256": "9432f57911481873378ac4f99e7de1647acfe72d95a158fd797e36ea46de40b6",
+  "source_profile_sha256": "dc0ce539d51f6c113b8a09c6444259e7b8a33c2d19584d811c4396e9ffb9b562",
+  "trial_code_sha256": {
+    "scan_tables.py": "a7465c7887d91212aa94b9a7c25c80a0091ac2c1fca7e14321444f8b57717307",
+    "docling_probe.py": "27b514824ba3d0412f8ec0f31331ac39af7f9137592359cddfb39d2e921cceee",
+    "table_inventory.py": "f50fbf53e428242b6701b2be4f20fe927921b6a7ef541f4489d1f36ab31d91df",
+    "runner.py": "32a8fdc0bd4fc1495559a2bbbdcf87f93a6c98764f9a0316e89160626747f1c3",
+    "worker.py": "4c1242d5d2f08212cf2de00d1fc8b4b6bbaba57ebb9329cb99360a627c52165c"
+  },
+  "tesseract_weights_manifest_sha256": "50b38feb1ddceadb8f445dfefa81489ab64cfbdbc68bb9fda46f2e221c1f389a",
+  "docling_weights_manifest_sha256": "b0c9199bdec164281915bf724b584ddf558cd1a23016ceae6644c0275a63c231",
+  "summary": {
+    "selected_pages": 4,
+    "genuine_scanned_pages": 2,
+    "rasterized_native_controls": 2,
+    "provider_attempts": 8,
+    "completed_attempts": 8,
+    "failed_attempts": 0,
+    "accepted_tables": 0
+  },
+  "original_pages": 40,
+  "provider_wall_seconds_sum": 75.791,
+  "docling_cells_retained": 172,
+  "uncovered_provider_grid_positions": 66,
+  "provider_table_grids": [
+    {
+      "case": "95ba5fe0bac7-p3",
+      "table_id": "provider-table-1",
+      "rows_claimed": 2,
+      "columns_claimed": 5,
+      "cells": 10,
+      "uncovered_positions": 0,
+      "overlapping_positions": 0
+    },
+    {
+      "case": "95ba5fe0bac7-p3",
+      "table_id": "provider-table-2",
+      "rows_claimed": 2,
+      "columns_claimed": 9,
+      "cells": 18,
+      "uncovered_positions": 0,
+      "overlapping_positions": 0
+    },
+    {
+      "case": "95ba5fe0bac7-p4",
+      "table_id": "provider-table-1",
+      "rows_claimed": 35,
+      "columns_claimed": 14,
+      "cells": 105,
+      "uncovered_positions": 66,
+      "overlapping_positions": 0
+    },
+    {
+      "case": "c69e098e34a3-p2",
+      "table_id": "provider-table-1",
+      "rows_claimed": 4,
+      "columns_claimed": 3,
+      "cells": 12,
+      "uncovered_positions": 0,
+      "overlapping_positions": 0
+    },
+    {
+      "case": "c69e098e34a3-p3",
+      "table_id": "provider-table-1",
+      "rows_claimed": 2,
+      "columns_claimed": 3,
+      "cells": 6,
+      "uncovered_positions": 0,
+      "overlapping_positions": 0
+    },
+    {
+      "case": "c69e098e34a3-p3",
+      "table_id": "provider-table-2",
+      "rows_claimed": 7,
+      "columns_claimed": 3,
+      "cells": 21,
+      "uncovered_positions": 0,
+      "overlapping_positions": 0
+    }
+  ],
+  "acquisition": {
+    "planned_originals": 2,
+    "acquired_originals": 2,
+    "attempts": [
+      {
+        "id": "salary-circular-3-2025",
+        "state": "FAILED",
+        "reason": "fetch failed"
+      },
+      {
+        "id": "audit-notification-7-2023",
+        "state": "ACQUIRED",
+        "sha256": "95ba5fe0bac7ae71e60f93919dae8b3b93124483349db2987f7780dd16c70685"
+      },
+      {
+        "id": "salary-circular-3-2025",
+        "url": "https://www.incometaxindia.gov.in/web/guest/w/circular-no.-3/2025-income-tax-deduction-from-salaries-during-the-financial-year-2024-25-under-section-192-of-the-income-tax-act-1961",
+        "state": "PAGE_ACQUIRED_FOR_OFFICIAL_RELOCATION",
+        "sha256": "9c0676cafe40c2f7dc366b57e64f1f6ea56867aee41740034ae33b761f2e3158"
+      },
+      {
+        "id": "salary-circular-3-2025",
+        "url": "https://www.incometaxindia.gov.in/documents/20117/6507196/Circular-no-03-2025.pdf/d7fbb6ed-7b91-b230-b397-97b422b31794?t=1762868895064",
+        "state": "ACQUIRED",
+        "sha256": "c69e098e34a32236d035bfcf093ef55f766407bc41c0c74e0f7cd97cdd2e4c09"
+      }
+    ],
+    "note": "Initial legacy salary URL failed. Exact replacement PDF link was read from the public official detail page using the existing allowlisted/public-address-checked fetcher. Failed attempt is retained; no source slot was substituted. Original binaries and acquisition page/scripts stay local."
+  },
+  "originals": [
+    {
+      "id": "audit-notification-7-2023",
+      "title": "CBDT Notification 7/2023 audit forms (historical extraction sample)",
+      "sha256": "95ba5fe0bac7ae71e60f93919dae8b3b93124483349db2987f7780dd16c70685",
+      "bytes": 1203185,
+      "url": "https://www.incometaxindia.gov.in/documents/20117/6507196/Notification-7-2023.pdf/cf82e92e-1f97-a107-840a-dba971d66215?t=1763195324401",
+      "family": "gazette-audit-report-forms",
+      "prior_family_exposure": true
+    },
+    {
+      "id": "salary-circular-3-2025",
+      "title": "CBDT salary Circular 3/2025 (historical extraction sample)",
+      "sha256": "c69e098e34a32236d035bfcf093ef55f766407bc41c0c74e0f7cd97cdd2e4c09",
+      "bytes": 3575932,
+      "url": "https://www.incometaxindia.gov.in/documents/20117/6507196/Circular-no-03-2025.pdf/d7fbb6ed-7b91-b230-b397-97b422b31794?t=1762868895064",
+      "family": "salary-tds-circular",
+      "prior_family_exposure": true
+    }
+  ],
+  "browser_checks": {
+    "source_images_loaded": 10,
+    "source_images_total": 10,
+    "page_horizontal_overflow": false,
+    "captured_warnings_or_errors": 0,
+    "compared_case": "c69e098e34a3-p2",
+    "scope": "Source row (c) and raw cell show missing terminal condition; no review decision or correction saved."
+  },
+  "staging_design": "docs/pdf-staging-handoff.md",
+  "limitations": [
+    "Fresh original bytes were absent from 24 observed prior local source hashes, but related circular/form families were already exposed. This is not an independent template-held-out benchmark.",
+    "Original source pages were inspected before selecting/fixing the four-page plan. No provider settings, expected cell contents or corrections changed during the run.",
+    "Two true scans have an embedded OCR layer excluded from image-provider input. The other two pages are native-PDF raster controls.",
+    "Hindi occurs only in a running header of the audit sample, not in its table body. Hindi tables, genuinely image-only originals, filled returns and handwriting remain gaps.",
+    "All six grids, 172 cell claims and 66 uncovered positions are inventory data, not source omission counts or table accuracy.",
+    "The complete claimed surcharge grid still contains wrong/incomplete condition text. Grid validity cannot accept content. No whole-table reference or automatic detector is introduced.",
+    "Previous source blank-cell feedback was not used as provider input or transferred as reference labels; its nineteen saved blanks remain confined to that exact source/revision.",
+    "No table acceptance, tax review, engine winner, cross-page joining, paid API, production database, chunk, embedding or index write."
+  ]
+}

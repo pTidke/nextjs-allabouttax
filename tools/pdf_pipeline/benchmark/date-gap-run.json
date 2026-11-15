@@ -1,0 +1,427 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-06",
+  "state": "EXPERIMENTAL_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "parent_run_sha256": "25030a018fc93c0ad95903c25053e7cebb085af10fa535edaf1fd66ce191319d",
+  "input_manifest_sha256": "45dcf0d31a5333e34a9948abbb5cab1ef2ab19dc3766ac026ab02489698bad37",
+  "local_manifest": "work/pdf-lab/demo-v2/date-warning-inputs-v2.json",
+  "report_sha256": "6ef1c4b01e0d08963c7f1ddc076721e7af4b1facb41366b94051018704632f49",
+  "local_report": "work/pdf-lab/demo-v2/comparisons/date-warnings-v5/date-review.json",
+  "code_sha256": "0113579d5205bbacc63ae4a3f57cbfeda6f8719b10c4b7fc0c3b03b2a94169df",
+  "dependencies": {
+    "date_regions.py": "174a20b8ccd9359d37b4d904a313333997d081b8f63ea05b477677ec878854a7",
+    "date_disagreement.py": "38cd988a9b76da99d246d33cfe7952970dd2a44876f25ccc4c25d6e44f4a192a",
+    "targeted_ocr.py": "09cdc691ba1333f3d29f0bb25060bc034e53955118902244a0822ed59a960125",
+    "ocr_compare.py": "ef2297b7636c7a0a92c34881703abcfe0b306c14be593281f8693663ea4cc5ca"
+  },
+  "new_source_acquisitions": 0,
+  "new_ocr_page_attempts": 1,
+  "reused_tesseract_attempts": 4,
+  "independent_ocr": {
+    "engine": "EasyOCR",
+    "batch_sha256": "b08558340c4d9635126a85026a37beac1f97e25028670553b99d19bfbbcf1acd",
+    "model_manifest_sha256": "ef8df2acd5cb98a18628df3c63463b8c18a46cccf745de982cdc48aabcda87b0",
+    "versions": {
+      "easyocr": "1.7.2",
+      "torch": "2.15.0",
+      "torchvision": "0.29.2",
+      "opencv-python-headless": "5.0.0.93",
+      "numpy": "2.5.4",
+      "Pillow": "13.0.0"
+    },
+    "only_image_and_opaque_id_in_job": true,
+    "downloads_enabled": false,
+    "elapsed_seconds": 17.14,
+    "selected": false
+  },
+  "inputs": [
+    {
+      "id": "circular4-known-superscript-control",
+      "engine": "Tesseract.js",
+      "variant": "Flattened · English · layout 3",
+      "source_sha256": "ffa0e21cd3db036707a4850414aa2e7d673d4be28ee1991a1fd3f1c1222c5e78",
+      "source_render_sha256": "e898e04666d151ca8dd005c4416a351f124fed7f8f8327526d66c57b6164c5e0",
+      "image_sha256": "2f1899c6151c9a8dd3fe12e8cc2d65013503b2abf42e9e5b4785ecbf3068844d",
+      "raw_sha256": "c2e403742017876a2f2104de4459296bcaf6c797e1577a9bfaed7e956f892008",
+      "state": "REVIEW_REQUIRED",
+      "date_regions": 2,
+      "warnings": 2
+    },
+    {
+      "id": "f95677aefb37-p1-unchanged-eng-3",
+      "engine": "Tesseract.js",
+      "variant": "Unchanged · eng · layout 3",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "image_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "raw_sha256": "a4f0d566f32a90a98073d9c1844cf6ed37431d0a3fd059eaa70ea841dfd7e00b",
+      "state": "REVIEW_REQUIRED",
+      "date_regions": 4,
+      "warnings": 3
+    },
+    {
+      "id": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "engine": "Tesseract.js",
+      "variant": "Unchanged · eng+hin · layout 3",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "image_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "raw_sha256": "5a4fa561e1a5cef9c69597f471c38193bf73d4172f9a67402a22a1b00e1773df",
+      "state": "REVIEW_REQUIRED",
+      "date_regions": 4,
+      "warnings": 3
+    },
+    {
+      "id": "f95677aefb37-p1-unchanged-flattened",
+      "engine": "Tesseract.js",
+      "variant": "Flattened · English · layout 3",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "image_sha256": "1610e6d243143e1cc4d49627b68545f39115d5f2d2a9136d5c08ae222b827f1c",
+      "raw_sha256": "982580925bd7237fda2eeb18e06427f07ffd8b3ca9c7504f3426f36ade152c28",
+      "state": "REVIEW_REQUIRED",
+      "date_regions": 4,
+      "warnings": 3
+    },
+    {
+      "id": "c15-independent-easyocr",
+      "engine": "EasyOCR",
+      "variant": "Independent EasyOCR · English · unchanged",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "image_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "raw_sha256": "b615cb68663a09983851ade2383579239715325cfc035993fc9dcf5905db75f8",
+      "state": "REVIEW_REQUIRED",
+      "date_regions": 2,
+      "warnings": 1
+    }
+  ],
+  "known_split_date_regressions_detected": [
+    {
+      "input_id": "f95677aefb37-p1-unchanged-eng-3",
+      "raw": "31* October, 2025",
+      "fragments": [
+        {
+          "line_number": 14,
+          "start": 91,
+          "end": 94,
+          "text": "31*",
+          "line_text": "referred in clause (a) of Explanation 2 to sub-section (1) of section 139 of the Act, from 31*\n",
+          "image_bbox": {
+            "x0": 2114,
+            "y0": 1274,
+            "x1": 2184,
+            "y1": 1314
+          },
+          "geometry_precision": "word",
+          "line_confidence": 96.0
+        },
+        {
+          "line_number": 15,
+          "start": 0,
+          "end": 13,
+          "text": "October, 2025",
+          "line_text": "October, 2025 to 10\" December, 2025. Consequently, the specified date for furnishing of\n",
+          "image_bbox": {
+            "x0": 297,
+            "y0": 1365,
+            "x1": 583,
+            "y1": 1407
+          },
+          "geometry_precision": "word",
+          "line_confidence": 94.0
+        }
+      ],
+      "codes": [
+        "DATE_SUFFIX_MARK_REVIEW"
+      ]
+    },
+    {
+      "input_id": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "raw": "31* October, 2025",
+      "fragments": [
+        {
+          "line_number": 14,
+          "start": 91,
+          "end": 94,
+          "text": "31*",
+          "line_text": "referred in clause (a) of Explanation 2 to sub-section (1) of section 139 of the Act, from 31*\n",
+          "image_bbox": {
+            "x0": 2114,
+            "y0": 1274,
+            "x1": 2184,
+            "y1": 1314
+          },
+          "geometry_precision": "word",
+          "line_confidence": 96.0
+        },
+        {
+          "line_number": 15,
+          "start": 0,
+          "end": 13,
+          "text": "October, 2025",
+          "line_text": "October, 2025 to 1070 December, 2025. Consequently, the specified date for furnishing of\n",
+          "image_bbox": {
+            "x0": 297,
+            "y0": 1365,
+            "x1": 583,
+            "y1": 1407
+          },
+          "geometry_precision": "word",
+          "line_confidence": 94.0
+        }
+      ],
+      "codes": [
+        "DATE_SUFFIX_MARK_REVIEW"
+      ]
+    },
+    {
+      "input_id": "f95677aefb37-p1-unchanged-flattened",
+      "raw": "31* October, 2025",
+      "fragments": [
+        {
+          "line_number": 14,
+          "start": 91,
+          "end": 94,
+          "text": "31*",
+          "line_text": "referred in clause (a) of Explanation 2 to sub-section (1) of section 139 of the Act, from 31*\n",
+          "image_bbox": {
+            "x0": 2114,
+            "y0": 1274,
+            "x1": 2184,
+            "y1": 1314
+          },
+          "geometry_precision": "word",
+          "line_confidence": 96.0
+        },
+        {
+          "line_number": 15,
+          "start": 0,
+          "end": 13,
+          "text": "October, 2025",
+          "line_text": "October, 2025 to 10\" December, 2025. Consequently, the specified date for furnishing of\n",
+          "image_bbox": {
+            "x0": 297,
+            "y0": 1365,
+            "x1": 583,
+            "y1": 1407
+          },
+          "geometry_precision": "word",
+          "line_confidence": 94.0
+        }
+      ],
+      "codes": [
+        "DATE_SUFFIX_MARK_REVIEW"
+      ]
+    }
+  ],
+  "known_oversized_day_regression_detected": [
+    {
+      "input_id": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "raw": "1070 December, 2025",
+      "codes": [
+        "DAY_DIGIT_COUNT_REVIEW",
+        "CALENDAR_DATE_REVIEW"
+      ],
+      "source_bbox": {
+        "x0": 159.84,
+        "top": 326.4,
+        "x1": 267.84,
+        "bottom": 337.67999999999995
+      }
+    }
+  ],
+  "date_warning_count": 12,
+  "comparison_flag_kinds": {
+    "DATE_OCR_DISAGREEMENT": 8,
+    "UNMATCHED_DATE_REGION": 6
+  },
+  "comparisons": [
+    {
+      "left_input": "f95677aefb37-p1-unchanged-eng-3",
+      "right_input": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "selected_candidate": null,
+      "state": "REVIEW_HINTS_ONLY",
+      "flags": [
+        {
+          "kind": "DATE_OCR_DISAGREEMENT",
+          "left": [
+            "date-3"
+          ],
+          "right": [
+            "date-3"
+          ]
+        }
+      ],
+      "same_surface_text_unverified": 3,
+      "accuracy": null
+    },
+    {
+      "left_input": "f95677aefb37-p1-unchanged-eng-3",
+      "right_input": "f95677aefb37-p1-unchanged-flattened",
+      "selected_candidate": null,
+      "state": "REVIEW_HINTS_ONLY",
+      "flags": [],
+      "same_surface_text_unverified": 4,
+      "accuracy": null
+    },
+    {
+      "left_input": "f95677aefb37-p1-unchanged-eng-3",
+      "right_input": "c15-independent-easyocr",
+      "selected_candidate": null,
+      "state": "REVIEW_HINTS_ONLY",
+      "flags": [
+        {
+          "kind": "DATE_OCR_DISAGREEMENT",
+          "left": [
+            "date-1"
+          ],
+          "right": [
+            "date-1"
+          ]
+        },
+        {
+          "kind": "UNMATCHED_DATE_REGION",
+          "left": [
+            "date-2"
+          ],
+          "right": []
+        },
+        {
+          "kind": "UNMATCHED_DATE_REGION",
+          "left": [
+            "date-3"
+          ],
+          "right": []
+        },
+        {
+          "kind": "DATE_OCR_DISAGREEMENT",
+          "left": [
+            "date-4"
+          ],
+          "right": [
+            "date-2"
+          ]
+        }
+      ],
+      "same_surface_text_unverified": 0,
+      "accuracy": null
+    },
+    {
+      "left_input": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "right_input": "f95677aefb37-p1-unchanged-flattened",
+      "selected_candidate": null,
+      "state": "REVIEW_HINTS_ONLY",
+      "flags": [
+        {
+          "kind": "DATE_OCR_DISAGREEMENT",
+          "left": [
+            "date-3"
+          ],
+          "right": [
+            "date-3"
+          ]
+        }
+      ],
+      "same_surface_text_unverified": 3,
+      "accuracy": null
+    },
+    {
+      "left_input": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "right_input": "c15-independent-easyocr",
+      "selected_candidate": null,
+      "state": "REVIEW_HINTS_ONLY",
+      "flags": [
+        {
+          "kind": "DATE_OCR_DISAGREEMENT",
+          "left": [
+            "date-1"
+          ],
+          "right": [
+            "date-1"
+          ]
+        },
+        {
+          "kind": "UNMATCHED_DATE_REGION",
+          "left": [
+            "date-2"
+          ],
+          "right": []
+        },
+        {
+          "kind": "UNMATCHED_DATE_REGION",
+          "left": [
+            "date-3"
+          ],
+          "right": []
+        },
+        {
+          "kind": "DATE_OCR_DISAGREEMENT",
+          "left": [
+            "date-4"
+          ],
+          "right": [
+            "date-2"
+          ]
+        }
+      ],
+      "same_surface_text_unverified": 0,
+      "accuracy": null
+    },
+    {
+      "left_input": "f95677aefb37-p1-unchanged-flattened",
+      "right_input": "c15-independent-easyocr",
+      "selected_candidate": null,
+      "state": "REVIEW_HINTS_ONLY",
+      "flags": [
+        {
+          "kind": "DATE_OCR_DISAGREEMENT",
+          "left": [
+            "date-1"
+          ],
+          "right": [
+            "date-1"
+          ]
+        },
+        {
+          "kind": "UNMATCHED_DATE_REGION",
+          "left": [
+            "date-2"
+          ],
+          "right": []
+        },
+        {
+          "kind": "UNMATCHED_DATE_REGION",
+          "left": [
+            "date-3"
+          ],
+          "right": []
+        },
+        {
+          "kind": "DATE_OCR_DISAGREEMENT",
+          "left": [
+            "date-4"
+          ],
+          "right": [
+            "date-2"
+          ]
+        }
+      ],
+      "same_surface_text_unverified": 0,
+      "accuracy": null
+    }
+  ],
+  "raw_text_modified": false,
+  "originals_modified": false,
+  "new_reference_approvals": 0,
+  "limits": [
+    "This rerun reuses inspected development pages, not an unseen or representative evaluation sample. Earlier acquisition failures remain unchanged.",
+    "Cross-line windows are at most three geometrically adjacent lines within a provider paragraph. Source fragments remain exact and reading order unverified. Different columns, paragraphs, blocks and pages are not bridged.",
+    "Word geometry is used only when complete literal word alignment succeeds; otherwise coarse line geometry can create ambiguous matches. Spatial overlap is a heuristic requiring review.",
+    "Twelve date warnings and fourteen pairwise flags are correlated diagnostics across five attempts on two pages, not twelve/fourteen distinct errors or an accuracy measure.",
+    "Tesseract English/bilingual/flattened variants are not independent engines. Equal incorrect 31* text can agree; no agreement or engine confidence grants acceptance.",
+    "One local EasyOCR page attempt also misreads a handwritten date and segments body dates into different provider blocks. Unmatched date candidates do not prove OCR text omissions.",
+    "Other scripts, numeric-date semantics, plausible incorrect day substitutions and arbitrary cross-layout reading order remain unvalidated. No automatic correction, selection, publication or RAG integration."
+  ]
+}

@@ -1,0 +1,266 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-07",
+  "state": "DATE_FRAGMENT_HINTS_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "cohort": {
+    "state": "FIXED_REUSED_DEVELOPMENT_OUTPUTS",
+    "frozen_on": "2026-11-07",
+    "scope": "Every 15 non-native attempt from source-transfer-v4 plus all 5 date-warning-inputs-v2 attempts. No acquisition, OCR rerun, source substitution or independent holdout claim.",
+    "reference_policy": "Existing scoped owner dates are used only after diagnostic generation; no expected value enters the detector.",
+    "false_positive_rate": null,
+    "accuracy": null,
+    "adapter_note": "Three EasyOCR per-page records are copied literally from their unchanged one-record provider envelopes; envelope path/hash and record ID retained. The initial envelope-as-page manifest failed protocol validation and was retained, with no baseline published."
+  },
+  "manifest_sha256": "02871c1089f814581f6d0f369d27c9b37a9dc43ccd7105f0249f94facdb2458d",
+  "local_manifest": "work/pdf-lab/demo-v2/date-fragment-inputs-v2.json",
+  "baseline": {
+    "local_output": "work/pdf-lab/demo-v2/comparisons/date-fragments-baseline-v1",
+    "report_sha256": "79a35a46a27f32fab01bed26f44a1a8b243ae59e0a6da2a680013357fda6e7c3",
+    "file_ledger_sha256": "379d178df4d37db7aa47cbd1c0b6b19a6eafd6d477dd8ffac27bb6f9d1cf7375",
+    "code_sha256": "0113579d5205bbacc63ae4a3f57cbfeda6f8719b10c4b7fc0c3b03b2a94169df",
+    "dependencies_sha256": {
+      "date_regions.py": "174a20b8ccd9359d37b4d904a313333997d081b8f63ea05b477677ec878854a7",
+      "date_disagreement.py": "38cd988a9b76da99d246d33cfe7952970dd2a44876f25ccc4c25d6e44f4a192a",
+      "targeted_ocr.py": "09cdc691ba1333f3d29f0bb25060bc034e53955118902244a0822ed59a960125",
+      "ocr_compare.py": "ef2297b7636c7a0a92c34881703abcfe0b306c14be593281f8693663ea4cc5ca"
+    },
+    "git_commit": "ac425d0"
+  },
+  "current": {
+    "local_output": "work/pdf-lab/demo-v2/comparisons/date-fragments-v1",
+    "report_sha256": "140af8578c9a5de8317357e2678f36c0e105474dd51a10df902babd6e0c7f9c2",
+    "preview_sha256": "d2c0ce0273986d20085c177d5f50007d49560f929aad53cfd840fb7c29bf265a",
+    "file_ledger_sha256": "79e53850cc6df6a4114538d2f4c0cbe18708fc1a8bef79be9ad222e53d171f83",
+    "code_sha256": "8d84c72c41048755c54636d42f1e0bf5f8261f59dd23d37b4f97674c90e99c8e",
+    "dependencies_sha256": {
+      "date_regions.py": "1d3082d42dcf25307da0e6b815a7b43ddd23927c9acdd3cfa618637cda9d7cc7",
+      "date_spatial.py": "e56486e0ff88483cb6c40f27f474baa9255a50a459c6390621fb69d2d4e151f4",
+      "date_disagreement.py": "38cd988a9b76da99d246d33cfe7952970dd2a44876f25ccc4c25d6e44f4a192a",
+      "targeted_ocr.py": "09cdc691ba1333f3d29f0bb25060bc034e53955118902244a0822ed59a960125",
+      "ocr_compare.py": "ef2297b7636c7a0a92c34881703abcfe0b306c14be593281f8693663ea4cc5ca"
+    }
+  },
+  "summary": {
+    "reused_ocr_attempts": 20,
+    "source_documents": 5,
+    "source_pages": 8,
+    "baseline_warning_count": 16,
+    "current_warning_count": 18,
+    "previous_date_regions_retained": 21,
+    "previous_warnings_retained": 16,
+    "new_spatial_review_regions": 2,
+    "warning_regions_removed": 0,
+    "baseline_pair_flags": 18,
+    "current_pair_flags": 18,
+    "new_ocr_runs": 0,
+    "new_reference_pages_verified": 0,
+    "extractions_accepted": 0
+  },
+  "new_evidence": [
+    {
+      "input_id": "c15-independent-easyocr",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "page": 1,
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "raw_ocr_sha256": "b615cb68663a09983851ade2383579239715325cfc035993fc9dcf5905db75f8",
+      "evidence": {
+        "start": 0,
+        "end": 19,
+        "raw": "10th December, 2025",
+        "codes": [
+          "DATE_SPATIAL_FRAGMENTS_REVIEW"
+        ],
+        "fragments": [
+          {
+            "line_number": 50,
+            "start": 0,
+            "end": 4,
+            "text": "10th",
+            "line_text": "10th",
+            "image_bbox": {
+              "x0": 656.1579833204635,
+              "y0": 1350.5301770165124,
+              "x1": 750.8420166795365,
+              "y1": 1413.4698229834876
+            },
+            "geometry_precision": "line",
+            "line_confidence": 98.34191799163818
+          },
+          {
+            "line_number": 18,
+            "start": 0,
+            "end": 14,
+            "text": "December, 2025",
+            "line_text": "December, 2025.",
+            "image_bbox": {
+              "x0": 754.0,
+              "y0": 1357.0,
+              "x1": 1119.0,
+              "y1": 1413.0
+            },
+            "geometry_precision": "line",
+            "line_confidence": 63.573707852784935
+          }
+        ],
+        "line_number": 50,
+        "line_text": "10th\nDecember, 2025.",
+        "line_confidence": 63.573707852784935,
+        "image_bbox": {
+          "x0": 656.1579833204635,
+          "y0": 1350.5301770165124,
+          "x1": 1119.0,
+          "y1": 1413.4698229834876
+        },
+        "source_bbox": {
+          "x0": 157.4779159969112,
+          "top": 324.12724248396296,
+          "x1": 268.55999999999995,
+          "bottom": 339.232757516037
+        },
+        "cross_line": true,
+        "association": "SAME_VISUAL_ROW_HINT",
+        "fragment_order": "PROPOSED_LEFT_TO_RIGHT_SOURCE_POSITION",
+        "provider_order_differs": true,
+        "search_view": "10th December, 2025",
+        "search_separator": " ",
+        "reading_order_verified": false,
+        "action": "COMPARE_WITH_ORIGINAL",
+        "suggested_replacement": null,
+        "id": "date-3",
+        "source_crop": "warning-4-2.png",
+        "source_image_crop": [
+          648,
+          1342,
+          1127,
+          1421
+        ],
+        "source_crop_sha256": "c4715472d72f66618b3f6f113862f1b23d93241135bbf0cb6e94140d40ba0b73"
+      },
+      "scope": "Spatial association review only; no automatic character correction or date-role inference."
+    },
+    {
+      "input_id": "transfer-circular-2-2024-p1-easyocr-eng",
+      "source_sha256": "efc82c78e8f4e48d57c03093508f241f7b32c44a1863f53818914122e0ac21f7",
+      "page": 1,
+      "source_render_sha256": "877975b3eb55fb8549cdfc9286af93bae03823ddd05bc252b76aa3adcb1377c2",
+      "raw_ocr_sha256": "13142cfd6b373a5328374e932cd841e66c777d1f719d364b024fa94eec19c416",
+      "evidence": {
+        "start": 0,
+        "end": 22,
+        "raw": "Dated 0sth March, 2024",
+        "codes": [
+          "DATE_SPATIAL_FRAGMENTS_REVIEW",
+          "CALENDAR_DATE_REVIEW",
+          "DATE_SUFFIX_MARK_REVIEW"
+        ],
+        "fragments": [
+          {
+            "line_number": 8,
+            "start": 0,
+            "end": 5,
+            "text": "Dated",
+            "line_text": "Dated",
+            "image_bbox": {
+              "x0": 1729.0,
+              "y0": 720.0,
+              "x1": 1860.0,
+              "y1": 765.0
+            },
+            "geometry_precision": "line",
+            "line_confidence": 99.99700385945926
+          },
+          {
+            "line_number": 64,
+            "start": 0,
+            "end": 4,
+            "text": "0sth",
+            "line_text": "0sth",
+            "image_bbox": {
+              "x0": 1856.9161138650584,
+              "y0": 704.2590756247694,
+              "x1": 1958.0838861349416,
+              "y1": 774.7409243752306
+            },
+            "geometry_precision": "line",
+            "line_confidence": 63.95278573036194
+          },
+          {
+            "line_number": 9,
+            "start": 0,
+            "end": 11,
+            "text": "March, 2024",
+            "line_text": "March, 2024",
+            "image_bbox": {
+              "x0": 1949.0,
+              "y0": 718.0,
+              "x1": 2216.0,
+              "y1": 772.0
+            },
+            "geometry_precision": "line",
+            "line_confidence": 92.15159156781472
+          }
+        ],
+        "line_number": 8,
+        "line_text": "Dated\n0sth\nMarch, 2024",
+        "line_confidence": 63.95278573036194,
+        "image_bbox": {
+          "x0": 1729.0,
+          "y0": 704.2590756247694,
+          "x1": 2216.0,
+          "y1": 774.7409243752306
+        },
+        "source_bbox": {
+          "x0": 414.7966299212598,
+          "top": 168.9745528531991,
+          "x1": 531.6306141732283,
+          "bottom": 185.88543024063014
+        },
+        "cross_line": true,
+        "association": "SAME_VISUAL_ROW_HINT",
+        "fragment_order": "PROPOSED_LEFT_TO_RIGHT_SOURCE_POSITION",
+        "provider_order_differs": true,
+        "search_view": "Dated 0sth March, 2024",
+        "search_separator": " ",
+        "reading_order_verified": false,
+        "action": "COMPARE_WITH_ORIGINAL",
+        "suggested_replacement": null,
+        "id": "date-1",
+        "source_crop": "warning-7-0.png",
+        "source_image_crop": [
+          1721,
+          696,
+          2224,
+          782
+        ],
+        "source_crop_sha256": "0df7ff2ac6eaf58c71f4b004cfe23efb0154820bb5654bce4b2944ef7cad35ae"
+      },
+      "scope": "Spatial association review only; no automatic character correction or date-role inference."
+    }
+  ],
+  "scoped_reference_review_sha256": "4461d9b201411dea39df00e1ed965dcb1bc96d7d5a5fff75067b07a53cfb5a60",
+  "source_bound_regression_fixture_sha256": "7e81c6c846166bca7adfb6fa7d5d3f03c4d996a2df57efedf6b8a5f4d556aa0a",
+  "checks": {
+    "all_raw_text_and_copies_unchanged": true,
+    "all_prior_regions_and_warning_codes_retained": true,
+    "all_fragment_offsets_match_original_provider_lines": true,
+    "all_source_crops_recreated": true,
+    "three_easyocr_record_adapters_match_unchanged_envelopes": true,
+    "final_code_hashes_match": true,
+    "browser_new_warning_crop_loaded": true,
+    "browser_no_overflow_or_logged_errors": true,
+    "both_added_regions_compared_to_original_pixels": true
+  },
+  "accuracy": null,
+  "false_warning_rate": null,
+  "tax_review_completed": false,
+  "rag_index_modified": false,
+  "production_ingestion_modified": false,
+  "limits": [
+    "The two added regions include one known wrong day and one apparently correct date with displaced fragments. Region counts are not confirmed-error counts.",
+    "Twenty correlated existing outputs from five inspected sources are development regressions, not held-out accuracy, precision or recall evidence.",
+    "Same-row thresholds are heuristics. Known native table intersections are excluded, but scanned tables and closely adjacent columns are not generally solved.",
+    "Uncued split plain numeric days, arbitrary garbled tokens, Hindi dates, numeric date order, legal roles and omission coverage remain incomplete.",
+    "No candidate is selected and no characters are repaired, including the previously confirmed March and April dates."
+  ]
+}

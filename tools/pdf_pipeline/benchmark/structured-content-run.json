@@ -1,0 +1,192 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-06",
+  "state": "DRAFT_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "local_output": "work/pdf-lab/demo-v2/comparisons/structured-content-v5",
+  "preview_sha256": "7fd0591e605982b3aca32eb0ffa52889df89636d99abb52aead9222aac92f578",
+  "file_ledger_sha256": "661aea4ae5664c52fa465f974178e9f2df792c73dcc2f1e9de93ba32669d0c6f",
+  "manifest_sha256": "45dcf0d31a5333e34a9948abbb5cab1ef2ab19dc3766ac026ab02489698bad37",
+  "date_report_sha256": "6ef1c4b01e0d08963c7f1ddc076721e7af4b1facb41366b94051018704632f49",
+  "scope_review_sha256": "2e7e96d01e9f201787ce88e2489efe9a29ead3643323d52f4d646f90e6b167c0",
+  "code_sha256": {
+    "structured_content.py": "a5478ec32c90a7dc9d51e992e4744c5d0ac319272ba48b8a997d10bad9b6e9b8",
+    "content_models.py": "04fa7da2d5b047814b72bd9d4858782fb7f6c2de09b2bf318ef92e4656ad3cba",
+    "content_scope.py": "8031c57a88ceec8e0bb4aa61f2d4401518d3450cb60110e8bfd6a89de95d46f5",
+    "content_view.py": "e3c61e3f272a547611cd6da82c1b0e8e66593b4ffbc8e539d442a1a2fa1a445e",
+    "review.py": "159a26cb2a68c8849bf19059e855cf240edbff94ce4af7ef6d7a1f65075758a2"
+  },
+  "source_documents": 2,
+  "source_pages": 2,
+  "variant_count": 5,
+  "source_line_count": 202,
+  "source_character_count": 9429,
+  "span_count": 210,
+  "scope_counts": {
+    "administrative_excluded": 64,
+    "content_candidate": 110,
+    "metadata": 20,
+    "mixed_review": 16
+  },
+  "header_edit_count": 3,
+  "raw_date_warnings_retained": 12,
+  "pairwise_date_flags_retained": 14,
+  "pages": [
+    {
+      "input_id": "circular4-known-superscript-control",
+      "source_sha256": "ffa0e21cd3db036707a4850414aa2e7d673d4be28ee1991a1fd3f1c1222c5e78",
+      "page": 1,
+      "expected_pages": 2,
+      "unrepresented_pages": [
+        2
+      ],
+      "source_lines": 39,
+      "source_characters": 2498,
+      "spans": 39,
+      "scope_counts": {
+        "content_candidate": 38,
+        "metadata": 1
+      },
+      "header_edit_count": 1,
+      "table_candidates": 0,
+      "holds": [
+        "FULL_PAGE_TEXT_UNVERIFIED",
+        "READING_ORDER_UNVERIFIED",
+        "TAX_REVIEW_NOT_PERFORMED",
+        "CRITICAL_FIELD_COVERAGE_NOT_ESTABLISHED",
+        "RAW_DATE_WARNINGS_RETAINED",
+        "OTHER_DOCUMENT_PAGES_NOT_REPRESENTED"
+      ]
+    },
+    {
+      "input_id": "f95677aefb37-p1-unchanged-eng-3",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "page": 1,
+      "expected_pages": 1,
+      "unrepresented_pages": [],
+      "source_lines": 38,
+      "source_characters": 1753,
+      "spans": 40,
+      "scope_counts": {
+        "administrative_excluded": 14,
+        "content_candidate": 17,
+        "metadata": 5,
+        "mixed_review": 4
+      },
+      "header_edit_count": 1,
+      "table_candidates": 0,
+      "holds": [
+        "FULL_PAGE_TEXT_UNVERIFIED",
+        "READING_ORDER_UNVERIFIED",
+        "TAX_REVIEW_NOT_PERFORMED",
+        "CRITICAL_FIELD_COVERAGE_NOT_ESTABLISHED",
+        "RAW_DATE_WARNINGS_RETAINED",
+        "BODY_DATES_UNRESOLVED"
+      ]
+    },
+    {
+      "input_id": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "page": 1,
+      "expected_pages": 1,
+      "unrepresented_pages": [],
+      "source_lines": 37,
+      "source_characters": 1750,
+      "spans": 40,
+      "scope_counts": {
+        "administrative_excluded": 14,
+        "content_candidate": 17,
+        "metadata": 5,
+        "mixed_review": 4
+      },
+      "header_edit_count": 0,
+      "table_candidates": 0,
+      "holds": [
+        "FULL_PAGE_TEXT_UNVERIFIED",
+        "READING_ORDER_UNVERIFIED",
+        "TAX_REVIEW_NOT_PERFORMED",
+        "CRITICAL_FIELD_COVERAGE_NOT_ESTABLISHED",
+        "HEADER_CORRECTION_NOT_BOUND_TO_THIS_VARIANT",
+        "RAW_DATE_WARNINGS_RETAINED",
+        "BODY_DATES_UNRESOLVED"
+      ]
+    },
+    {
+      "input_id": "f95677aefb37-p1-unchanged-flattened",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "page": 1,
+      "expected_pages": 1,
+      "unrepresented_pages": [],
+      "source_lines": 37,
+      "source_characters": 1751,
+      "spans": 40,
+      "scope_counts": {
+        "administrative_excluded": 14,
+        "content_candidate": 17,
+        "metadata": 5,
+        "mixed_review": 4
+      },
+      "header_edit_count": 0,
+      "table_candidates": 0,
+      "holds": [
+        "FULL_PAGE_TEXT_UNVERIFIED",
+        "READING_ORDER_UNVERIFIED",
+        "TAX_REVIEW_NOT_PERFORMED",
+        "CRITICAL_FIELD_COVERAGE_NOT_ESTABLISHED",
+        "HEADER_CORRECTION_NOT_BOUND_TO_THIS_VARIANT",
+        "RAW_DATE_WARNINGS_RETAINED",
+        "BODY_DATES_UNRESOLVED"
+      ]
+    },
+    {
+      "input_id": "c15-independent-easyocr",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "page": 1,
+      "expected_pages": 1,
+      "unrepresented_pages": [],
+      "source_lines": 51,
+      "source_characters": 1677,
+      "spans": 51,
+      "scope_counts": {
+        "administrative_excluded": 22,
+        "content_candidate": 21,
+        "metadata": 4,
+        "mixed_review": 4
+      },
+      "header_edit_count": 1,
+      "table_candidates": 0,
+      "holds": [
+        "FULL_PAGE_TEXT_UNVERIFIED",
+        "READING_ORDER_UNVERIFIED",
+        "TAX_REVIEW_NOT_PERFORMED",
+        "CRITICAL_FIELD_COVERAGE_NOT_ESTABLISHED",
+        "RAW_DATE_WARNINGS_RETAINED",
+        "BODY_DATES_UNRESOLVED"
+      ]
+    }
+  ],
+  "integrity_checks": {
+    "file_ledger_matches": true,
+    "source_render_raw_and_artifact_copies_match": true,
+    "source_character_accounting_complete": true,
+    "code_hashes_match": true
+  },
+  "browser_checks": {
+    "source_highlight_geometry": true,
+    "reviewed_date_and_unchanged_raw_visible": true,
+    "no_horizontal_overflow_desktop": true
+  },
+  "engine_selected": null,
+  "accuracy": null,
+  "full_page_reference_newly_verified": false,
+  "tax_review_completed": false,
+  "rag_index_modified": false,
+  "production_ingestion_modified": false,
+  "limitations": [
+    "Selected development sources and correlated OCR alternatives; no held-out accuracy or general critical-field-coverage claim.",
+    "Administrative scope applies only to the exact reviewed source/page/render; mixed spans and all full-page/order uncertainty stay held.",
+    "Original page coverage is not established by complete OCR-character accounting. Circular 4 page 2 is unrepresented.",
+    "No native table candidates are present in these two selected page inputs; table preservation/overlap is tested on synthetic contracts, not a measured official-table acceptance.",
+    "Reviewed header date is not a legal applicability determination; substantive body dates remain unresolved."
+  ]
+}

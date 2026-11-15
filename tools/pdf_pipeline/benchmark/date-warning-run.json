@@ -1,0 +1,264 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-06",
+  "state": "EXPERIMENTAL_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "plan_sha256": "20f10131b7b918facdf911800fbd65056230e73c86f73afc1411648788b30cbb",
+  "initial_detector_commit": "7d7b19c",
+  "initial_detector_sha256": "8fc5caf79f4c7a7ac2280eea34924b0cf6aa2b3c25223bdfd275f0bccfb914f3",
+  "latest_detector_sha256": "da6a6337706af2f3443b3955b6967fbb45e9a0438e172fe83ef27429b46ee43e",
+  "dependency_sha256": {
+    "targeted_ocr.py": "09cdc691ba1333f3d29f0bb25060bc034e53955118902244a0822ed59a960125",
+    "ocr_compare.py": "ef2297b7636c7a0a92c34881703abcfe0b306c14be593281f8693663ea4cc5ca",
+    "runner.py": "32a8fdc0bd4fc1495559a2bbbdcf87f93a6c98764f9a0316e89160626747f1c3"
+  },
+  "acquisition_manifest_sha256": "e43da4a8b21302f71275ade5c82e0ef1a727a92a297e6f9fe391cfdb359e5501",
+  "acquisition_attempts": [
+    {
+      "identifier": "Circular 13/2025",
+      "state": "FAILED",
+      "url": "https://incometaxindia.gov.in/news/circular-no-13-2025.pdf",
+      "reason": "Official source returned HTTP 404."
+    },
+    {
+      "identifier": "Circular 14/2025",
+      "state": "FAILED",
+      "url": null,
+      "reason": "No verified official download link found; not replaced by a different circular"
+    },
+    {
+      "identifier": "Circular 15/2025",
+      "state": "ACQUIRED",
+      "sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "url": "https://www.incometaxindia.gov.in/documents/20117/6507196/Circular-15-2025.pdf/60f3f58a-b2a0-d00a-cf5c-7339522dd25f?t=1764390386053"
+    },
+    {
+      "identifier": "Circular 13/2025",
+      "state": "FAILED",
+      "url": "https://www.incometaxindia.gov.in/documents/d/guest/waiver-of-interest-circular-no-13-2025",
+      "reason": "Official source returned HTTP 404."
+    },
+    {
+      "identifier": "Circular 14/2025",
+      "state": "FAILED",
+      "url": "https://incometaxindia.gov.in/communications/circular/circular-no-14-2025.pdf",
+      "reason": "Official source returned HTTP 404."
+    }
+  ],
+  "discovery_failure": "Official listing API search page 1 returned HTTP 403; direct public official links used where available. No access-control or allowlist bypass.",
+  "selected_fresh_sources": 3,
+  "acquired_fresh_sources": 1,
+  "unavailable_fresh_sources": 2,
+  "substituted_sources": 0,
+  "new_ocr_image_attempts": 3,
+  "reused_known_control_attempts": 1,
+  "fresh_scan_report_sha256": "2c4e81245e7f5c191577d718ec9bf5115faca8fa870e5d04c00e257c7cbbbb1c",
+  "models_sha256": "50b38feb1ddceadb8f445dfefa81489ab64cfbdbc68bb9fda46f2e221c1f389a",
+  "source_profile": {
+    "native_status": "ocr_required",
+    "native_characters": 1732,
+    "real_image_only_source_demonstrated": false
+  },
+  "audit_revisions": [
+    {
+      "local_report": "work/pdf-lab/demo-v2/comparisons/date-warnings-v1/date-review.json",
+      "sha256": "8d29c189bbcd036f3f34dd01fab29c02b5325fdb5ced6a37d659949ba4a2ebc5",
+      "warnings": 3,
+      "notes": "Frozen four-rule detector evaluated before inspecting local fresh OCR. Caught 10-double-quote December at line confidence 94 but missed the garbled dated header."
+    },
+    {
+      "local_report": "work/pdf-lab/demo-v2/comparisons/date-warnings-v2/date-review.json",
+      "sha256": "ab8e6e912f84871779c39eae947ab196b0b1ec8c0b77dd8e7a50f5e23d66c55b",
+      "warnings": 7,
+      "notes": "After observing the fresh header failure, added an unparsed dated/date: cue with a four-digit year. This sample is now development/tuning evidence."
+    },
+    {
+      "local_report": "work/pdf-lab/demo-v2/comparisons/date-warnings-v3/date-review.json",
+      "sha256": "fb7fca2320d80ffbd8567cecfd3ed60fc1984bb40bd30696e48248172620539c",
+      "warnings": 7,
+      "notes": "Same warning findings as the preceding revision; user-facing explanations changed to plain language."
+    }
+  ],
+  "inputs": [
+    {
+      "id": "circular4-known-superscript-control",
+      "title": "Circular 4/2026 — previously reviewed control",
+      "variant": "Flattened · English · layout 3",
+      "source_sha256": "ffa0e21cd3db036707a4850414aa2e7d673d4be28ee1991a1fd3f1c1222c5e78",
+      "source_render_sha256": "e898e04666d151ca8dd005c4416a351f124fed7f8f8327526d66c57b6164c5e0",
+      "image_sha256": "2f1899c6151c9a8dd3fe12e8cc2d65013503b2abf42e9e5b4785ecbf3068844d",
+      "raw_sha256": "c2e403742017876a2f2104de4459296bcaf6c797e1577a9bfaed7e956f892008",
+      "state": "REVIEW_REQUIRED",
+      "clean": null,
+      "warnings": [
+        {
+          "raw": "31* March, 2026",
+          "codes": [
+            "DATE_SUFFIX_MARK_REVIEW"
+          ],
+          "line_confidence": 94.0,
+          "source_bbox": {
+            "x0": 336.24,
+            "top": 147.79521357164495,
+            "x1": 516.48,
+            "bottom": 158.59194183580732
+          },
+          "source_crop_sha256": "6cf55f8bd40451396669b33d43fa9852e702c032e789cb0c60333bafb45774dc"
+        },
+        {
+          "raw": "dated 14.08.2019",
+          "codes": [
+            "DATE_CUE_UNPARSED_REVIEW"
+          ],
+          "line_confidence": 96.0,
+          "source_bbox": {
+            "x0": 87.36,
+            "top": 293.9109360799758,
+            "x1": 513.84,
+            "bottom": 305.90730081793396
+          },
+          "source_crop_sha256": "e3592d5dac13d74874472179932709725fe34d24ee3847591acaa7d0d3143025"
+        }
+      ]
+    },
+    {
+      "id": "f95677aefb37-p1-unchanged-eng-3",
+      "title": "Circular 15/2025",
+      "variant": "Unchanged · eng · layout 3",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "image_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "raw_sha256": "a4f0d566f32a90a98073d9c1844cf6ed37431d0a3fd059eaa70ea841dfd7e00b",
+      "state": "REVIEW_REQUIRED",
+      "clean": null,
+      "warnings": [
+        {
+          "raw": "datedgq Detober, 2025",
+          "codes": [
+            "DATE_CUE_UNPARSED_REVIEW"
+          ],
+          "line_confidence": 69.0,
+          "source_bbox": {
+            "x0": 372.71999999999997,
+            "top": 166.32,
+            "x1": 542.88,
+            "bottom": 190.55999999999997
+          },
+          "source_crop_sha256": "99e97b173f2da7972640cecca652a64c4ac8d1abbe461a55fdc6803f0b556f9c"
+        },
+        {
+          "raw": "10\" December, 2025",
+          "codes": [
+            "DATE_SUFFIX_MARK_REVIEW"
+          ],
+          "line_confidence": 94.0,
+          "source_bbox": {
+            "x0": 71.28,
+            "top": 326.4,
+            "x1": 525.1199999999999,
+            "bottom": 338.4
+          },
+          "source_crop_sha256": "d6ee25629bbac3e6d6e7b18696d1a5d72008833fe94c7bb2d297ea3ebef7b104"
+        }
+      ]
+    },
+    {
+      "id": "f95677aefb37-p1-unchanged-eng+hin-3",
+      "title": "Circular 15/2025",
+      "variant": "Unchanged · eng+hin · layout 3",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "image_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "raw_sha256": "5a4fa561e1a5cef9c69597f471c38193bf73d4172f9a67402a22a1b00e1773df",
+      "state": "REVIEW_REQUIRED",
+      "clean": null,
+      "warnings": [
+        {
+          "raw": "datedgq Detober, 2025",
+          "codes": [
+            "DATE_CUE_UNPARSED_REVIEW"
+          ],
+          "line_confidence": 69.0,
+          "source_bbox": {
+            "x0": 372.71999999999997,
+            "top": 166.32,
+            "x1": 542.88,
+            "bottom": 190.55999999999997
+          },
+          "source_crop_sha256": "99e97b173f2da7972640cecca652a64c4ac8d1abbe461a55fdc6803f0b556f9c"
+        }
+      ]
+    },
+    {
+      "id": "f95677aefb37-p1-unchanged-flattened",
+      "title": "Circular 15/2025",
+      "variant": "Flattened · English · layout 3",
+      "source_sha256": "f95677aefb3701ec5654e679cda5a06d096eab9167461a7546a19e5509eaf3f9",
+      "source_render_sha256": "ae6f787656c91a7a0f0ba4c1cf67b1362056a3fb9630f6ba4304644a0f068724",
+      "image_sha256": "1610e6d243143e1cc4d49627b68545f39115d5f2d2a9136d5c08ae222b827f1c",
+      "raw_sha256": "982580925bd7237fda2eeb18e06427f07ffd8b3ca9c7504f3426f36ade152c28",
+      "state": "REVIEW_REQUIRED",
+      "clean": null,
+      "warnings": [
+        {
+          "raw": "datedgq Detober, 2025",
+          "codes": [
+            "DATE_CUE_UNPARSED_REVIEW"
+          ],
+          "line_confidence": 74.0,
+          "source_bbox": {
+            "x0": 372.71999999999997,
+            "top": 166.32,
+            "x1": 542.88,
+            "bottom": 190.55999999999997
+          },
+          "source_crop_sha256": "99e97b173f2da7972640cecca652a64c4ac8d1abbe461a55fdc6803f0b556f9c"
+        },
+        {
+          "raw": "10\" December, 2025",
+          "codes": [
+            "DATE_SUFFIX_MARK_REVIEW"
+          ],
+          "line_confidence": 94.0,
+          "source_bbox": {
+            "x0": 71.28,
+            "top": 326.4,
+            "x1": 525.1199999999999,
+            "bottom": 338.4
+          },
+          "source_crop_sha256": "d6ee25629bbac3e6d6e7b18696d1a5d72008833fe94c7bb2d297ea3ebef7b104"
+        }
+      ]
+    }
+  ],
+  "agent_visual_checks": [
+    {
+      "scope": "Circular 15 printed body ordinal only",
+      "raw": "10\" December, 2025",
+      "visible_source": "10th December, 2025",
+      "line_confidence": 94,
+      "result": "Initial suffix rule correctly requested source comparison; no automatic correction applied."
+    },
+    {
+      "scope": "Circular 15 handwritten header only",
+      "raw": "datedgq Detober, 2025",
+      "visible_source": "29th October, 2025",
+      "result": "Initial detector missed the unparseable date. Later date-cue warning flags it without attempting to read the handwriting."
+    }
+  ],
+  "known_limitations": [
+    "7 final warnings are correlated hints across three variants of one fresh page plus one tuned control, not seven distinct errors or an accuracy score.",
+    "The date-cue rule also flags a valid numeric reference date, dated 14.08.2019, in the control. It is an abstention/review warning, not a claim that this date is wrong.",
+    "31* at a line end followed by October on the next line is missed by line-scoped named-month parsing. The bilingual raw 1070 December, 2025 is also outside the one/two-digit day pattern. Both remain uncorrected and unverified.",
+    "Clean-looking digit substitutions, broader scripts, numeric date interpretation, layout relationships and legal date roles remain unmeasured.",
+    "Selected Circular 13 and 14 downloads failed and remain failures. The successful page has embedded text and is not a demonstrated real image-only source. No new-template or blind evaluation claim.",
+    "No newly verified full-page references, accepted extractions, RAG writes or production changes. No paid OCR calls or model downloads."
+  ],
+  "reproducibility": {
+    "driver": "work/pdf-lab/demo-v2/run-date-transfer-v1.py",
+    "driver_sha256": "9d6675a2360d26506cc4032569f39dfdfcc9061dda02714abb25ce1ef1a45a08",
+    "input_manifest": "work/pdf-lab/demo-v2/date-warning-inputs-v1.json",
+    "input_manifest_sha256": "863787abec79ab3fee1176e7f4a7a377c3bb75bd5b36664a3dcf13edbcacb839",
+    "command": "tax-pdf review-dates MANIFEST --out FRESH_OUTPUT"
+  }
+}

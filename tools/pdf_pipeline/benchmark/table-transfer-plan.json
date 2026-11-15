@@ -1,0 +1,65 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-11",
+  "scope": "Fresh source bytes selected after original-page inspection and before provider runs. Related government circular/form families have prior exposure; engineering transfer only, no held-out accuracy claim.",
+  "dpi": 300,
+  "preprocessing": "none",
+  "providers": [
+    "docling-image-en",
+    "tesseract-image-eng+hin-psm3"
+  ],
+  "prior_source_inventory_sha256": "0ffc81ab493fe0fe1917dfad1f0c7c83e19abad3163f5ef8f445a293176c904a",
+  "acquisition_manifest_sha256": "31039fec57c194fd1c805b4cf3ac75450770691ce4b8723182d5d27b14906c46",
+  "documents": [
+    {
+      "sha256": "95ba5fe0bac7ae71e60f93919dae8b3b93124483349db2987f7780dd16c70685",
+      "kind": "official",
+      "template_group": "gazette-audit-report-forms",
+      "split": "engineering",
+      "prior_family_exposure": true,
+      "prior_source_bytes_exposure": false,
+      "expected_pages": 24,
+      "pages": [
+        3,
+        4
+      ],
+      "image_kind": "rasterized_native_control_not_a_real_scan",
+      "checks": [
+        "Nested audit sub-tables, rotated row-group labels, boxed identifiers/dates, checkboxes and blank entry fields; preserve notes and choices without filling them.",
+        "Adjacent pages remain separately identified; no continuation inferred from row numbers or similar grids."
+      ]
+    },
+    {
+      "sha256": "c69e098e34a32236d035bfcf093ef55f766407bc41c0c74e0f7cd97cdd2e4c09",
+      "kind": "official",
+      "template_group": "salary-tds-circular",
+      "split": "engineering",
+      "prior_family_exposure": true,
+      "prior_source_bytes_exposure": false,
+      "expected_pages": 16,
+      "pages": [
+        2,
+        3
+      ],
+      "image_kind": "genuine_scan_with_embedded_ocr",
+      "checks": [
+        "Thin-sheet bleed-through, wrapped income conditions, percent/range critical characters and same-page narrative.",
+        "Surcharge rows cross the page boundary; keep the old-regime context distinct from the separate new-regime table. No automatic joining or current-law approval."
+      ]
+    }
+  ],
+  "budgets": {
+    "selected_pages": 4,
+    "provider_attempts": 8,
+    "page_pixels": 16000000,
+    "provider_timeout_seconds": 180,
+    "total_timeout_seconds": 1200
+  },
+  "coverage_gaps": [
+    "No Hindi-body table in the acquired audit-form PDF: Hindi appears in the running header only. Do not count this as Hindi table validation.",
+    "The native audit pages are rasterized comparison controls; they do not establish real-scan quality.",
+    "Scanned circular contains an OCR layer, withheld from image providers; real image-only originals remain absent.",
+    "No accepted references, filled taxpayer examples, handwriting, broad script coverage or general table accuracy."
+  ],
+  "policy": "No provider receives source text, native table geometry, expected counts, correction examples or owner feedback. Preserve all failures and unchanged raw output. No auto-join, engine selection or publication."
+}

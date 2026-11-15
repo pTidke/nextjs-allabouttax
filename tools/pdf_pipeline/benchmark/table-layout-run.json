@@ -1,0 +1,367 @@
+{
+  "schema_version": "0.1.0",
+  "recorded_on": "2026-11-07",
+  "state": "NATIVE_TABLE_LAYOUT_ENGINEERING_NOT_ACCEPTED",
+  "publication_eligible": false,
+  "local_output": "work/pdf-lab/demo-v2/benchmarks/table-layout-v1",
+  "plan_sha256": "d33cc50264fa523037ae8c85dbfeacc1aadd5ef611988beb25ee27e22021200a",
+  "source_manifest_sha256": "5e043240b6af054cf052982ed51b6ce255a34e7e99e4b98909ae1edaa65053bb",
+  "report_sha256": "322b42829f42bf3fe3c70c5692c6f147ac894e728d9cd4e878197976f1740d07",
+  "structure_notes_sha256": "cebbe4d130a647de3d83ce6292a6290f4ff861703ada9e657673fa0ff991c386",
+  "file_ledger_sha256": "6c38a3ba7127a55e0dd480b22ce75a26b573f0e77d1a4dedfd56195cc3485074",
+  "code_sha256": {
+    "benchmark.py": "d7a6ffd0571b74ec3372cdbf7ec4777a33eb0d2ffceec5aacc94faf6aa4b5cf0",
+    "runner.py": "32a8fdc0bd4fc1495559a2bbbdcf87f93a6c98764f9a0316e89160626747f1c3",
+    "worker.py": "4c1242d5d2f08212cf2de00d1fc8b4b6bbaba57ebb9329cb99360a627c52165c",
+    "models.py": "8681d495fd77a205b30edfd2b7a55f59d1fdd536d97ff38f650b9ac4a7fcd8da",
+    "table_review.py": "0b933bc45a281045d8b04e665eb3fff6df229a9aff2af30ce118531601543647",
+    "table_projection.py": "51125f541b8dd769bfe0876bdd6419cf5229ccdb3196717851e24690b211bc89"
+  },
+  "summary": {
+    "documents": 3,
+    "expected_pages": 62,
+    "selected_pages": 7,
+    "processed_pages": 7,
+    "accounted_documents": 3,
+    "integrity_verified_documents": 3,
+    "fully_processed_documents": 0,
+    "failed_runs": 0,
+    "table_candidates": 12,
+    "wall_seconds": 2.287,
+    "source_cells_preserved": 894,
+    "all_draft_cells_unreviewed": true,
+    "geometric_containment_hints": 4,
+    "adjacent_page_pairs_checked": 4,
+    "reviewed_control_values_matched": 9,
+    "tables_joined": 0,
+    "accepted_tables": 0
+  },
+  "documents": [
+    {
+      "title": "Form 49A and instructions (historical specimen)",
+      "source_url": "https://www.incometaxindia.gov.in/documents/d/guest/103120000000007917-pdf-2",
+      "kind": "official",
+      "template_group": "reviewed-character-box-control",
+      "split": "engineering",
+      "source_sha256": "fbe3a013d4eae664403272dbb80f8cd11dcf0014667ca5d77a7be1e71a7c009f",
+      "artifact_sha256": "7b33f356a6b7c25d7a069d50a837e71f8de6fe3b497e0be059a9403436dd2f47",
+      "fingerprint": "a64c8476e8e29c315befa1200212769adec0ae4d867eda89afe61cf4f22feca8",
+      "engine_versions": {
+        "pypdf": "6.21.4",
+        "pdfplumber": "0.11.9",
+        "pdfminer-six": "20251230",
+        "pypdfium2": "5.14.0",
+        "pydantic": "2.14.1",
+        "Pillow": "13.0.0",
+        "python": "3.12.14",
+        "platform": "Darwin-arm64"
+      },
+      "config": {
+        "dpi": 120,
+        "page_limit": 1000,
+        "page_timeout_seconds": 50,
+        "total_timeout_seconds": 180,
+        "max_bytes": 104857600,
+        "max_render_pixels": 16000000,
+        "max_processed_pages": 20,
+        "max_glyphs": 250000,
+        "engine": "native-baseline",
+        "pipeline_code_sha256": "9036bf3233bdeab852226d7f1972ac3f48c67fea08c210b7398269311765709d",
+        "os_memory_limit_enforced": false,
+        "network_sandbox_enforced": false,
+        "selected_pages": "4"
+      },
+      "expected_pages": 8,
+      "observed_pages": 8,
+      "page_count_matches_plan": true,
+      "selected_pages": [
+        4
+      ],
+      "manifest_entries": 8,
+      "page_accounting_complete": true,
+      "integrity_verified": true,
+      "rendered_pages": 1,
+      "processed_pages": 1,
+      "status_counts": {
+        "not_processed": 7,
+        "native_candidate": 1
+      },
+      "table_candidates": 5,
+      "text_blocks": 45,
+      "fully_processed": false,
+      "state": "BLOCKED",
+      "issues": [
+        "PAGE_NOT_PROCESSED",
+        "PAGE_PROCESSING_INCOMPLETE",
+        "READING_ORDER_UNVERIFIED",
+        "TABLE_STRUCTURE_UNVERIFIED"
+      ],
+      "wall_seconds": 0.398,
+      "publication_eligible": false,
+      "package": "packages/fbe3a013d4ea-1794039857619378000"
+    },
+    {
+      "title": "ITR-2 validation rules AY 2024-25",
+      "source_url": "https://www.incometax.gov.in/iec/foportal/sites/default/files/2024-06/CBDT_e-Filing_ITR%202_Validation%20Rules%20for%20AY%202024-25.pdf",
+      "kind": "official",
+      "template_group": "adjacent-validation-rule-grids",
+      "split": "engineering",
+      "source_sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "artifact_sha256": "05e92558e5f516c3f5f33681ecf29a872d7f637b866705fb9897b00b93dd2aa5",
+      "fingerprint": "ed5c159049a91d98d76a7f8304eca5e46e014c83a6477fa19a1de48da710a437",
+      "engine_versions": {
+        "pypdf": "6.21.4",
+        "pdfplumber": "0.11.9",
+        "pdfminer-six": "20251230",
+        "pypdfium2": "5.14.0",
+        "pydantic": "2.14.1",
+        "Pillow": "13.0.0",
+        "python": "3.12.14",
+        "platform": "Darwin-arm64"
+      },
+      "config": {
+        "dpi": 120,
+        "page_limit": 1000,
+        "page_timeout_seconds": 50,
+        "total_timeout_seconds": 180,
+        "max_bytes": 104857600,
+        "max_render_pixels": 16000000,
+        "max_processed_pages": 20,
+        "max_glyphs": 250000,
+        "engine": "native-baseline",
+        "pipeline_code_sha256": "9036bf3233bdeab852226d7f1972ac3f48c67fea08c210b7398269311765709d",
+        "os_memory_limit_enforced": false,
+        "network_sandbox_enforced": false,
+        "selected_pages": "20,21,22"
+      },
+      "expected_pages": 41,
+      "observed_pages": 41,
+      "page_count_matches_plan": true,
+      "selected_pages": [
+        20,
+        21,
+        22
+      ],
+      "manifest_entries": 41,
+      "page_accounting_complete": true,
+      "integrity_verified": true,
+      "rendered_pages": 3,
+      "processed_pages": 3,
+      "status_counts": {
+        "not_processed": 38,
+        "native_candidate": 3
+      },
+      "table_candidates": 3,
+      "text_blocks": 148,
+      "fully_processed": false,
+      "state": "BLOCKED",
+      "issues": [
+        "PAGE_NOT_PROCESSED",
+        "PAGE_PROCESSING_INCOMPLETE",
+        "READING_ORDER_UNVERIFIED",
+        "TABLE_STRUCTURE_UNVERIFIED"
+      ],
+      "wall_seconds": 0.899,
+      "publication_eligible": false,
+      "package": "packages/045b8b91e32c-1794039858026181000"
+    },
+    {
+      "title": "Notification No. 97/2026 [F. No. 370142/11/2026-TPL] / GSR 656(E) : Income-tax (Third Amendment) Rules, 2026 : Notification of Income Tax Return (Block assessment) under section 294",
+      "source_url": "https://www.incometaxindia.gov.in/documents/d/guest/notification-97-2026-pdf",
+      "kind": "official",
+      "template_group": "complex-form-adjacent-pages",
+      "split": "engineering",
+      "source_sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+      "artifact_sha256": "762c28731ef5fbf01f0d5c6c00bef87b77cb54ac17b18d49b3875f962f279174",
+      "fingerprint": "981994bb2a624cd5f90070827b467574a8b325a3410eb5f4e71869dfabf5b143",
+      "engine_versions": {
+        "pypdf": "6.21.4",
+        "pdfplumber": "0.11.9",
+        "pdfminer-six": "20251230",
+        "pypdfium2": "5.14.0",
+        "pydantic": "2.14.1",
+        "Pillow": "13.0.0",
+        "python": "3.12.14",
+        "platform": "Darwin-arm64"
+      },
+      "config": {
+        "dpi": 120,
+        "page_limit": 1000,
+        "page_timeout_seconds": 50,
+        "total_timeout_seconds": 180,
+        "max_bytes": 104857600,
+        "max_render_pixels": 16000000,
+        "max_processed_pages": 20,
+        "max_glyphs": 250000,
+        "engine": "native-baseline",
+        "pipeline_code_sha256": "9036bf3233bdeab852226d7f1972ac3f48c67fea08c210b7398269311765709d",
+        "os_memory_limit_enforced": false,
+        "network_sandbox_enforced": false,
+        "selected_pages": "6,7,8"
+      },
+      "expected_pages": 13,
+      "observed_pages": 13,
+      "page_count_matches_plan": true,
+      "selected_pages": [
+        6,
+        7,
+        8
+      ],
+      "manifest_entries": 13,
+      "page_accounting_complete": true,
+      "integrity_verified": true,
+      "rendered_pages": 3,
+      "processed_pages": 3,
+      "status_counts": {
+        "not_processed": 10,
+        "native_candidate": 3
+      },
+      "table_candidates": 4,
+      "text_blocks": 139,
+      "fully_processed": false,
+      "state": "BLOCKED",
+      "issues": [
+        "PAGE_NOT_PROCESSED",
+        "PAGE_PROCESSING_INCOMPLETE",
+        "READING_ORDER_UNVERIFIED",
+        "TABLE_STRUCTURE_UNVERIFIED"
+      ],
+      "wall_seconds": 0.99,
+      "publication_eligible": false,
+      "package": "packages/e228528d7afc-1794039858956568000"
+    }
+  ],
+  "adjacent_page_checks": [
+    {
+      "source_sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "pages": [
+        20,
+        21
+      ],
+      "left_grids": [
+        {
+          "id": "p20-t1",
+          "columns": 2,
+          "rows": 18
+        }
+      ],
+      "right_grids": [
+        {
+          "id": "p21-t1",
+          "columns": 2,
+          "rows": 18
+        }
+      ],
+      "state": "ADJACENT_PAGE_RELATIONSHIPS_UNVERIFIED",
+      "tables_joined": false,
+      "note": "Matching column counts are not sufficient for continuity. Different layouts and nested tables are retained; no rows, headers or footnotes are linked automatically."
+    },
+    {
+      "source_sha256": "045b8b91e32c79c04d4d01503c5aa710c2368383bd1abbe83fc0bfc9b0b1d6c8",
+      "pages": [
+        21,
+        22
+      ],
+      "left_grids": [
+        {
+          "id": "p21-t1",
+          "columns": 2,
+          "rows": 18
+        }
+      ],
+      "right_grids": [
+        {
+          "id": "p22-t1",
+          "columns": 2,
+          "rows": 18
+        }
+      ],
+      "state": "ADJACENT_PAGE_RELATIONSHIPS_UNVERIFIED",
+      "tables_joined": false,
+      "note": "Matching column counts are not sufficient for continuity. Different layouts and nested tables are retained; no rows, headers or footnotes are linked automatically."
+    },
+    {
+      "source_sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+      "pages": [
+        6,
+        7
+      ],
+      "left_grids": [
+        {
+          "id": "p6-t1",
+          "columns": 11,
+          "rows": 7
+        }
+      ],
+      "right_grids": [
+        {
+          "id": "p7-t1",
+          "columns": 11,
+          "rows": 8
+        },
+        {
+          "id": "p7-t2",
+          "columns": 10,
+          "rows": 2
+        }
+      ],
+      "state": "ADJACENT_PAGE_RELATIONSHIPS_UNVERIFIED",
+      "tables_joined": false,
+      "note": "Matching column counts are not sufficient for continuity. Different layouts and nested tables are retained; no rows, headers or footnotes are linked automatically."
+    },
+    {
+      "source_sha256": "e228528d7afcfd9c4217b2269b1dd2824f50d39dc0c889ede99f5398741926c8",
+      "pages": [
+        7,
+        8
+      ],
+      "left_grids": [
+        {
+          "id": "p7-t1",
+          "columns": 11,
+          "rows": 8
+        },
+        {
+          "id": "p7-t2",
+          "columns": 10,
+          "rows": 2
+        }
+      ],
+      "right_grids": [
+        {
+          "id": "p8-t1",
+          "columns": 20,
+          "rows": 14
+        }
+      ],
+      "state": "ADJACENT_PAGE_RELATIONSHIPS_UNVERIFIED",
+      "tables_joined": false,
+      "note": "Matching column counts are not sufficient for continuity. Different layouts and nested tables are retained; no rows, headers or footnotes are linked automatically."
+    }
+  ],
+  "reviewed_control_feedback_sha256": "6766ef3698f0c648e9617db828e321ce62cdc56455328022f6aa95a3bbd736ac",
+  "checks": {
+    "all_originals_and_renders_verified": true,
+    "complete_original_page_accounting": true,
+    "all_12_grids_and_894_cells_preserved": true,
+    "all_three_source_artifacts_blocked": true,
+    "nine_control_values_match_exact_native_table_revisions": true,
+    "browser_all_12_options_available": true,
+    "browser_ITR_page20_source_and_cell_highlight_verified": true,
+    "browser_zero_review_choices_and_saved_revisions": true,
+    "browser_no_overflow_or_logged_errors": true
+  },
+  "accuracy": null,
+  "new_full_page_references_verified": 0,
+  "tax_review_completed": false,
+  "rag_index_modified": false,
+  "production_ingestion_modified": false,
+  "limitations": [
+    "Three previously seen originals, selected pages frozen before this run; this is a native extraction/layout trial, not unseen-source or OCR accuracy.",
+    "Seven processed pages out of 62 source pages; all unprocessed pages remain accounted and held.",
+    "Grid counts and geometric containment do not verify merged cells, header/footnote relationships, semantics or reading order.",
+    "Four adjacent-page pairs are inspected as inventories only. Matching two-column ITR grids are not automatically continued; the longer form changes column counts and contains multiple grids.",
+    "The nine Form 49A control values compare against previously confirmed fields on the same original and identical native table revisions. They do not approve the new render or the other grids.",
+    "All twelve table drafts and their 894 cells remain unreviewed. No whole-table/page reference or production approval is created."
+  ]
+}

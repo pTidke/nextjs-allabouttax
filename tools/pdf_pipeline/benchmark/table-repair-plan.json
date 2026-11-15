@@ -1,0 +1,20 @@
+{
+  "schema_version":"0.1.0",
+  "recorded_on":"2026-11-11",
+  "state":"AGENT_RECONSTRUCTION_EXAMPLES_NOT_ACCEPTED",
+  "publication_eligible":false,
+  "owner_verified":false,
+  "scope":"Two source-informed engineering examples, not automatic table recovery or owner-confirmed references. Coordinates were inspected using original/native grid aids; only the scoped bands are reconstructed. All original provider cells remain available.",
+  "examples":[
+    {"case_id":"3756112e45b5-p5","raw_sha256":"89ae7e234ec1f953919636aaebaf5f3ac0034ca8210213b8f446f28f215aa070",
+     "title":"Scanned investment form — restore the Amount column",
+     "x":[86.58,130.74,188.94,243.3,316.74,369.64,423.84,464.76,506.352],
+     "y":[286.32,298.56,322.92,370.74,383.04,395.4,419.76,432.12],
+     "scope_note":"Part C only. Part A/B, notes, verification, blank entry fields and the whole page remain unreviewed. Agent-prepared source geometry/transcriptions; not an automatic repair or approved extraction."},
+    {"case_id":"e228528d7afc-p6","raw_sha256":"be270890fcd25323f2cdab70bc80498c85f1e324a5732d53737c04909a56fbcf",
+     "title":"Complex form — restore Amount / Section under B and C",
+     "x":[136.580005,208.58,257.44999,302.090005,345.410005,395.810005,489.55922,597.56213,712.77999,813.45602],
+     "y":[482.740005,495.09602,519.387446],
+     "scope_note":"Only the letter-label/subheading band. Long statutory headings, conditions, references, shaded entry cells and the rest of the page remain outside this scoped reconstruction and unreviewed. Agent proposal; no tax applicability approval."}
+  ]
+}

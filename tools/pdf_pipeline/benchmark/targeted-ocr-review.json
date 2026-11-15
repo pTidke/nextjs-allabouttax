@@ -1,0 +1,182 @@
+{
+  "schema_version": "0.1.0",
+  "reviewed_on": "2026-11-06",
+  "reviewer_role": "product_owner",
+  "user_statement": "Independent OCR looks largely correct compared to other! in first section\nflattened · full_page · layout 3\nlooks best of all except just one thing 31st is written as 31* else everything else look good!",
+  "report_sha256": "ce413a675eecdd5bf8758e45b42bb1ab1fc73e6f711728f7c41730c2b1d779bc",
+  "local_report": "work/pdf-lab/demo-v2/benchmarks/targeted-ocr-v2/trials.json",
+  "source_scan_report_sha256": "a8c2a223cb86cfb7253dc36544f47dff8f611f29e0f4eb0831d8567484c033ac",
+  "findings": [
+    {
+      "id": "c7-independent-preference",
+      "kind": "comparative_preference",
+      "finding_id": "c7-number-column",
+      "case_id": "62e34ef5e8c8-p1-unchanged",
+      "engine": "EasyOCR",
+      "raw_sha256": "de0b90885b54d2ec64f5ad4d5c7ec994badd80d567c9a1d0e021b75d8b5318a5",
+      "source_title": "Circular No. 7/2026",
+      "rows": [
+        {
+          "id": "glyph-0",
+          "text": "1.",
+          "parsed_label": {
+            "digits": "1",
+            "delimiter": ".",
+            "raw": "1."
+          },
+          "image_sha256": "d76784e306ef8a25e5829da085de71a4805843f38942f614ee182418fb0074a6"
+        },
+        {
+          "id": "glyph-1",
+          "text": "2",
+          "parsed_label": {
+            "digits": "2",
+            "delimiter": "",
+            "raw": "2"
+          },
+          "image_sha256": "9aad3fa698f53c1dd1dcd6d3cdd042dc0e42cc97144ba96fc65350fc6f134775"
+        },
+        {
+          "id": "glyph-2",
+          "text": "3_",
+          "parsed_label": null,
+          "image_sha256": "3e3358e17239fce59f90d3fb4ae44497850c5c139e861ec239fc6d84a3f2adb2"
+        },
+        {
+          "id": "glyph-3",
+          "text": "4",
+          "parsed_label": {
+            "digits": "4",
+            "delimiter": "",
+            "raw": "4"
+          },
+          "image_sha256": "77ea56debd0a041c9a0d8a502187cfb5c335c54d20d45c7711f848fed2fb968d"
+        },
+        {
+          "id": "glyph-4",
+          "text": "5_",
+          "parsed_label": null,
+          "image_sha256": "98e548b661380389cb7cfc83d601008e1727fbe295601ed7c9dbb616f6eaafdc"
+        },
+        {
+          "id": "glyph-5",
+          "text": "6_",
+          "parsed_label": null,
+          "image_sha256": "80d81fdfd770440934a3cf7b84d4ccea828f3ffdef9f490c9b088abeb190e3f8"
+        },
+        {
+          "id": "glyph-6",
+          "text": "7",
+          "parsed_label": {
+            "digits": "7",
+            "delimiter": "",
+            "raw": "7"
+          },
+          "image_sha256": "b9dfc705cf7007edcab6a121975d3f5da3edec0b3ddfd517730b35e86fe14086"
+        },
+        {
+          "id": "glyph-7",
+          "text": "8_",
+          "parsed_label": null,
+          "image_sha256": "07a5cea6eba0ff4b18b5b40a61876ea869a7c22f9c4c77fcdd22a2d3e4012dc2"
+        },
+        {
+          "id": "glyph-8",
+          "text": "9",
+          "parsed_label": {
+            "digits": "9",
+            "delimiter": "",
+            "raw": "9"
+          },
+          "image_sha256": "fb151beafc9ff865ecdae35b864b410a68d9639345aa51cc239ba1ac85db516f"
+        }
+      ],
+      "statement": "Independent OCR looks largely correct compared to other! in first section",
+      "scope": "Comparative positive feedback for the first number column. No exact punctuation correction or complete sequence verification supplied.",
+      "automatic_engine_selection_authorized": false
+    },
+    {
+      "id": "c4-flattened-date",
+      "kind": "reviewer_correction",
+      "case_id": "ffa0e21cd3db-p1-unchanged",
+      "source_sha256": "ffa0e21cd3db036707a4850414aa2e7d673d4be28ee1991a1fd3f1c1222c5e78",
+      "source_image_sha256": "e898e04666d151ca8dd005c4416a351f124fed7f8f8327526d66c57b6164c5e0",
+      "candidate_image_sha256": "2f1899c6151c9a8dd3fe12e8cc2d65013503b2abf42e9e5b4785ecbf3068844d",
+      "candidate_raw_sha256": "c2e403742017876a2f2104de4459296bcaf6c797e1577a9bfaed7e956f892008",
+      "variant": {
+        "preprocessing": "flattened",
+        "scope": "full_page",
+        "psm": 3,
+        "languages": [
+          "eng"
+        ]
+      },
+      "page_feedback": "Preferred displayed candidate; user reports the rest looks good. No separate complete canonical reference created.",
+      "source_line": {
+        "id": "p1-ocr-eng-7",
+        "text": "New Delhi, dated the 31* March, 2026\n\n",
+        "confidence": 94.0,
+        "low_confidence": false,
+        "bbox": {
+          "x0": 336.24,
+          "top": 147.79521357164495,
+          "x1": 516.48,
+          "bottom": 158.59194183580732
+        },
+        "order_verified": false
+      },
+      "source_word": {
+        "text": "31*",
+        "confidence": 89,
+        "image_bbox": {
+          "x0": 1848,
+          "y0": 616,
+          "x1": 1886,
+          "y1": 654
+        }
+      },
+      "correction": {
+        "raw_text": "31*",
+        "reviewer_text": "31st",
+        "scope": "date ordinal suffix only",
+        "occurrences": 1,
+        "candidate_text_span": [
+          161,
+          164
+        ]
+      },
+      "corrected_line": "New Delhi, dated the 31st March, 2026\n\n",
+      "verification": {
+        "user_supplied_correction": true,
+        "agent_compared_original_pixels": true,
+        "original_image_crop": [
+          1390,
+          585,
+          2170,
+          690
+        ]
+      },
+      "quality_gate_regression": {
+        "issue": "Wrong ordinal suffix received high OCR confidence",
+        "line_confidence": 94.0,
+        "word_confidence": 89,
+        "asterisk_symbol_confidence": 98,
+        "required_behavior": "Flag suspicious punctuation/superscript in a date for source comparison, regardless of high confidence. Never globally replace asterisks or infer an ordinal from context alone.",
+        "automated_detector_implemented": false
+      }
+    }
+  ],
+  "raw_ocr_modified": false,
+  "original_modified": false,
+  "automatic_variant_selected": false,
+  "new_full_page_reference_verified": false,
+  "tax_review_completed": false,
+  "publication_eligible": false,
+  "reviewed_preview": "work/pdf-lab/demo-v2/comparisons/targeted-ocr-review-v1/index.html",
+  "corrected_candidate_sha256": "e000b3e375fda927160006cfb84c1aa98a80200a7363ea10b92e5a7ae1b59a37",
+  "limits": [
+    "Only the explicitly supplied date token is corrected in a separate preview. All original text, geometry and outputs remain unchanged.",
+    "Comparative preferences do not create an automatic engine or preprocessing policy.",
+    "The date example is retained as a regression case; confidence alone misses this error. No new accuracy score, acceptance or RAG publication is inferred."
+  ]
+}
