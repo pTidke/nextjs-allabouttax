@@ -28,6 +28,7 @@ model User {
   questionsToday   Int               @default(0)
   lastQuestionAt   DateTime          @default(now())
   taxReviewDrafts  TaxReviewDraft[]
+  reviewerGrants   ReviewerGrant[]
   taxConversations TaxConversation[]
   dailyUsage       DailyUsage[]
   threadId         String?
@@ -100,15 +101,15 @@ model TaxDocument {
 }
 
 model TaxVersion {
-  id                String           @id @default(cuid())
+  id                String             @id @default(cuid())
   documentId        String
   hash              String
   originalHash      String
   original          Bytes
   contentType       String
   text              String
-  fetchedAt         DateTime         @default(now())
-  status            String           @default("PENDING")
+  fetchedAt         DateTime           @default(now())
+  status            String             @default("PENDING")
   reviewNote        String?
   reviewedBy        String?
   reviewedAt        DateTime?
@@ -116,7 +117,7 @@ model TaxVersion {
   legalStatus       String?
   publishedAt       DateTime?
   period            String? // Used only for SINGLE_PERIOD reviews.
-  periodMode        String           @default("SINGLE_PERIOD")
+  periodMode        String             @default("SINGLE_PERIOD")
   applicabilityNote String?
   entityName        String?
   investmentFrom    DateTime?
@@ -124,9 +125,10 @@ model TaxVersion {
   jurisdiction      String?
   effectiveFrom     DateTime?
   effectiveTo       DateTime?
-  document          TaxDocument      @relation(fields: [documentId], references: [id])
+  document          TaxDocument        @relation(fields: [documentId], references: [id])
   drafts            TaxReviewDraft[]
   chunks            TaxChunk[]
+  extractionReviews ExtractionReview[]
 
   @@unique([documentId, hash])
 }
@@ -249,4 +251,33 @@ model TaxReviewDraft {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([versionId, userId])
+}
+
+// Who may review what. EXTRACTION: check extracted text against the original.
+// TAX: decide legal applicability and publish. Granted by an administrator; a
+// revoked grant keeps its row with revokedAt set.
+model ReviewerGrant {
+  id        String    @id @default(cuid())
+  userId    String
+  role      String // EXTRACTION or TAX
+  grantedBy String
+  grantedAt DateTime  @default(now())
+  revokedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+}
+
+// A reviewer's verdict on whether a version's extracted text matches its original.
+// Append-only: the newest row for a version is its current state.
+model ExtractionReview {
+  id         String     @id @default(cuid())
+  versionId  String
+  reviewerId String
+  decision   String // ACCEPTED or NEEDS_CHANGES
+  note       String
+  createdAt  DateTime   @default(now())
+  version    TaxVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId, createdAt])
 }

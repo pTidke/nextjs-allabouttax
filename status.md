@@ -14,7 +14,8 @@ For how the platform is built and why, see [brain.md](brain.md). For what should
 - **Chatbot fixes.** Period labels for the same income year now reach the same evidence, and a follow-up question is searched together with the earlier questions of its chat. Both have regression tests in `tests/tax-retrieval.test.ts`.
 - **More chat fixes.** Clarifying questions now reach the user, unanswered questions are saved and listed without identity at `/admin/inbox`, refusals no longer use up a daily question, the chat shows how many questions are left, and the contact form stores messages for `/admin/inbox`. Migration `202611150001_answer_outcomes_and_contact` must be applied before this code runs; the **Apply database migrations** workflow does that.
 - **No year picker.** The chat no longer asks for FY, AY or TY. A year named in the question, or earlier in the chat, narrows the search; otherwise every year is searched and the answer says which year it applies to. Replies that did not count toward the daily limit say so.
-- **Next.** The rest of roadmap M1 (an answer evaluation set and a stored trace per answer), and M2: the verified reference pages that the engine's decision thresholds need.
+- **Review workspace.** `/review` replaces review in `/admin/knowledge`: reviewer roles granted at `/review/team`, a queue with filters, the original beside its extracted passages, a text check (owner and accountant), tax review gated on it (accountant only), and PDF upload of up to 4 MB. Needs migration `202611150002_reviewer_roles`. Next: line-level review with the engine (roadmap R2), then carrying over the staging work (R3).
+- **Next.** Roadmap R2 and R3, then the rest of M1 (an answer evaluation set and a stored trace per answer), and M2: the verified reference pages that the engine's decision thresholds need.
 
 ## Current flow
 

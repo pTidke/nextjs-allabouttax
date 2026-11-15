@@ -36,6 +36,8 @@ Without a local database connection, use the **Apply database migrations** workf
 
 Apply a migration before merging code that uses it: Vercel deploys `main` straight away and does not run migrations. Keep migrations additive so the code already running keeps working once they are applied.
 
+`202611150002_reviewer_roles` is additive: new `ReviewerGrant` and `ExtractionReview` tables. Until it is applied, `/review` returns an error; the chatbot and the rest of the site are unaffected.
+
 `202611150001_answer_outcomes_and_contact` is additive: a nullable `outcome` column on `TaxMessage`, and new `TaxContentGap` and `ContactMessage` tables.
 
 ## Existing-account migration to Neon

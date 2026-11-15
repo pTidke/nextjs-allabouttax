@@ -13,9 +13,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User } from "lucide-react";
+import { reviewerAccess } from "@/lib/review/roles";
 
 export default async function Navbar() {
   const session = await auth();
+  // A failure here must not break every page, for example before a migration
+  // that adds the reviewer tables has been applied.
+  const review = session?.user?.id
+    ? await reviewerAccess(session.user.id)
+        .then((access) => access.admin || access.extraction || access.tax)
+        .catch(() => false)
+    : false;
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
       <div className="container mx-auto flex h-18 items-center justify-between px-6 relative">
@@ -96,6 +104,11 @@ export default async function Navbar() {
                 {session.user.role === "ADMIN" && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/inbox">Inbox</Link>
+                  </DropdownMenuItem>
+                )}
+                {review && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/review">Review documents</Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />

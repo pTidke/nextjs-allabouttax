@@ -54,6 +54,15 @@ In the engine repository, [`pTidke/benzeneblack`](https://github.com/pTidke/benz
 - [x] Licence: Apache 2.0
 - [ ] First release to PyPI
 
+## R. The document review workspace
+
+Decided 15 November 2026: the owner and the chartered accountant both check extracted text; only the accountant does tax review; documents come from the CBDT listings and from uploads; staging work is carried over.
+
+- [x] **R1.** `/review`: reviewer roles, one queue, the original beside its passages, text check, tax review gated on it, PDF upload, publish to the live library. Review actions removed from `/admin/knowledge`.
+- [ ] **R2.** Line-level review: run the engine on each new or changed PDF, store its `document.json`, render the page with the flagged lines highlighted, let reviewers type corrections, and treat lines accepted by rule as checked (with an audit sample). Scanned PDFs get OCR here. Larger uploads go straight to storage instead of through the 4 MB request limit.
+- [ ] **R3.** Carry over the staging work: Notification 1/2026's accepted extraction and Circular 3/2026's saved review, with their history, from the staging database into the live review records. Needs R2's line-level storage, and an operator run with the staging database credentials. Then retire `/staging`.
+- [ ] **R4.** Withdraw a published decision and roll back a release (D3); show reviewer history per document.
+
 ## M4. Unattended extraction on the free tier
 
 - [ ] `extract` workflow in GitHub Actions: for each new or changed document, run `pdfanchor convert`, upload the evidence, import to staging (L1)

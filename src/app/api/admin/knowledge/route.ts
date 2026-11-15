@@ -1,4 +1,3 @@
-import { saveReviewDraft } from "@/lib/tax/review-drafts";
 import { createHash } from "node:crypto";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -10,14 +9,6 @@ import {
 } from "@/lib/tax/ingestion";
 import { discoveryStartYear } from "@/lib/tax/cbdt";
 import { officialUrl } from "@/lib/tax/registry";
-import { pendingReviewPage } from "@/lib/tax/review-queue";
-import { reviewSections } from "@/lib/tax/review-sections";
-import { suggestedReview } from "@/lib/tax/review-suggestions";
-import {
-  reviewVersion,
-  validateReview,
-  type ReviewInput,
-} from "@/lib/tax/review";
 
 async function admin() {
   const session = await auth();
@@ -27,15 +18,11 @@ async function admin() {
     throw new HttpError(403, "Administrator access is required.");
   return user;
 }
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const user = await admin();
-    const page = Number(new URL(req.url).searchParams.get("reviewPage") || "0");
-    if (!Number.isSafeInteger(page) || page < 0 || page > 10000)
-      throw new HttpError(400, "Invalid review page.");
+    await admin();
     const [
       sources,
-      pending,
       jobs,
       release,
       worker,
@@ -44,7 +31,6 @@ export async function GET(req: Request) {
       nextRetry,
     ] = await Promise.all([
       prisma.taxSource.findMany({ orderBy: { name: "asc" } }),
-      pendingReviewPage(page),
       prisma.ingestionJob.findMany({
         orderBy: { createdAt: "desc" },
         take: 20,
@@ -65,18 +51,6 @@ export async function GET(req: Request) {
         _min: { availableAt: true },
       }),
     ]);
-    const drafts = await prisma.taxReviewDraft.findMany({
-      where: {
-        userId: user.id,
-        versionId: { in: pending.versions.map((v) => v.id) },
-      },
-      select: {
-        versionId: true,
-        fields: true,
-        revision: true,
-        updatedAt: true,
-      },
-    });
     return Response.json(
       {
         sources: sources.map((source) => ({
@@ -97,14 +71,6 @@ export async function GET(req: Request) {
           return counts;
         }, {}),
         discoveryStartYear: discoveryStartYear(),
-        reviewPage: pending.page,
-        hasMoreReviews: pending.hasMore,
-        pending: pending.versions.map((v) => ({
-          ...v,
-          sections: reviewSections(v.text),
-          draft: drafts.find((d) => d.versionId === v.id) ?? null,
-          suggestion: suggestedReview(v.document.url, v.text),
-        })),
         jobs,
         release,
       },
@@ -117,18 +83,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     sameOrigin(req);
-    const user = await admin();
+    await admin();
     const input = await readJson(req);
-    if (input.action === "saveDraft") {
-      return Response.json(
-        await saveReviewDraft(
-          input.versionId as string,
-          user.id,
-          input.draft,
-          input.revision as number,
-        ),
+    // Reviews moved to /review, where tax approval needs a checked text first.
+    if (["saveDraft", "approve", "reject"].includes(String(input.action)))
+      throw new HttpError(
+        410,
+        "Document review has moved to the Review workspace at /review.",
       );
-    }
     if (input.action === "initialize") {
       await registerSources();
       return Response.json({ ok: true });
@@ -164,6 +126,7 @@ export async function POST(req: Request) {
       const sources = await prisma.taxSource.findMany({
         where: {
           enabled: true,
+          kind: { not: "UPLOAD" },
           ...(typeof input.sourceId === "string" ? { id: input.sourceId } : {}),
         },
       });
@@ -173,29 +136,6 @@ export async function POST(req: Request) {
         results[result.outcome]++;
       }
       return Response.json(results);
-    }
-    if (input.action === "approve" || input.action === "reject") {
-      const review = input as unknown as ReviewInput;
-      try {
-        validateReview(review);
-      } catch (error) {
-        throw new HttpError(400, (error as Error).message);
-      }
-      try {
-        return Response.json(await reviewVersion(review, user.id));
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          /Selected source section/.test(error.message)
-        )
-          throw new HttpError(400, error.message);
-        if (
-          error instanceof Error &&
-          /newer version|already been reviewed/.test(error.message)
-        )
-          throw new HttpError(409, error.message);
-        throw error;
-      }
     }
     throw new HttpError(400, "Unknown action.");
   } catch (error) {

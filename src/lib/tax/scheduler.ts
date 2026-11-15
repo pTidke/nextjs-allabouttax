@@ -13,7 +13,10 @@ export function weeklyBucket(now: Date) {
 }
 export async function scheduleRefreshes(now = new Date()) {
   await registerSources();
-  const sources = await prisma.taxSource.findMany({ where: { enabled: true } });
+  // Uploaded copies are fixed snapshots and are never re-fetched.
+  const sources = await prisma.taxSource.findMany({
+    where: { enabled: true, kind: { not: "UPLOAD" } },
+  });
   const week = weeklyBucket(now);
   for (const source of sources) {
     const weekly = await prisma.ingestionJob.findUnique({

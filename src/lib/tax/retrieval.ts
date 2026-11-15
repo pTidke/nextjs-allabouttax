@@ -104,7 +104,8 @@ export async function retrieveEvidence(
         in ${` ${normalizeEntity(question)} `}
       ) > 0)
       AND v.jurisdiction = 'IN-CENTRAL' 
-      AND d."latestVersionId" = v.id AND d."verifiedAt" >= ${freshSince}
+      AND d."latestVersionId" = v.id
+      AND (d."verifiedAt" >= ${freshSince} OR s.kind = 'UPLOAD')
       AND d."lastError" IS NULL
       AND s.enabled = true AND s."lastError" IS NULL
       AND ${text} @@ ${match}

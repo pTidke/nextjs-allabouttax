@@ -28,7 +28,7 @@ export async function knowledgeCoverage(period: string | null) {
     ? []
     : await prisma.$queryRaw<Row[]>(Prisma.sql`
     SELECT d.title, d.url, d."verifiedAt" AS "checkedAt", v."entityName",
-      (d."verifiedAt" >= ${new Date(Date.now() - MAX_FRESHNESS_MS)}
+      ((d."verifiedAt" >= ${new Date(Date.now() - MAX_FRESHNESS_MS)} OR s.kind = 'UPLOAD')
        AND d."lastError" IS NULL AND s."lastError" IS NULL) AS available
     FROM "TaxVersion" v JOIN "TaxDocument" d ON d.id = v."documentId"
     JOIN "TaxSource" s ON s.id = d."sourceId"

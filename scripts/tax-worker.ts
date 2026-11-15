@@ -43,7 +43,7 @@ async function main() {
     if (!["daily", "weekly"].includes(mode))
       throw new Error("Expected daily or weekly.");
     const sources = await prisma.taxSource.findMany({
-      where: { enabled: true },
+      where: { enabled: true, kind: { not: "UPLOAD" } },
     });
     for (const source of sources)
       await enqueueRefresh(

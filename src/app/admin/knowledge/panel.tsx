@@ -1,11 +1,9 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import ReviewCard, { type PendingReview } from "./review-card";
+import Link from "next/link";
 
 type State = {
-  reviewPage: number;
   nextRetryAt: string | null;
-  hasMoreReviews: boolean;
   worker: { heartbeatAt: string; mode: string } | null;
   failedDocuments: {
     id: string;
@@ -24,7 +22,6 @@ type State = {
     checkedAt: string | null;
     lastError: string | null;
   }[];
-  pending: PendingReview[];
   jobs: {
     id: string;
     sourceId: string;
@@ -42,8 +39,8 @@ export default function KnowledgeAdmin() {
   const [busy, setBusy] = useState(false);
   const [reloading, setReloading] = useState(false);
   const [loadedAt, setLoadedAt] = useState<string | null>(null);
-  const reload = useCallback(async (page = 0) => {
-    const response = await fetch(`/api/admin/knowledge?reviewPage=${page}`, {
+  const reload = useCallback(async () => {
+    const response = await fetch("/api/admin/knowledge", {
       cache: "no-store",
     });
     const body = await response.json();
@@ -72,7 +69,7 @@ export default function KnowledgeAdmin() {
     setBusy(true);
     setMessage("");
     try {
-      await reload(state?.reviewPage ?? 0);
+      await reload();
       setMessage("Status updated. No new downloads were requested.");
     } catch (error) {
       setMessage(
@@ -99,13 +96,9 @@ export default function KnowledgeAdmin() {
           ? `${result.queued} new source checks queued. ${result.active} already queued or running. ${result.recent} checked/requested recently (five-minute cooldown). Use Reload status to see progress.`
           : body.action === "add"
             ? "Fetch requested. The worker will process it."
-            : body.action === "approve"
-              ? `Selected sections published. ${body.periodMode === "MULTI_PERIOD" ? "Choose a period within the reviewed effective dates." : `In chat, choose ${body.period}.`} Ask a question addressed by the approved sections.`
-              : body.action === "saveDraft"
-                ? "Draft saved. It remains outside chat until approved."
-                : "Saved.",
+            : "Saved.",
       );
-      await reload(body.action === "saveDraft" ? (state?.reviewPage ?? 0) : 0);
+      await reload();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Request failed.");
     } finally {
@@ -280,55 +273,15 @@ export default function KnowledgeAdmin() {
           ))}
         </section>
       )}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Awaiting tax review</h2>
-        <p className="text-sm text-slate-500 mb-4">
-          Select the sections you have reviewed, then specify one tax period or
-          coverage across periods. Draft suggestions fill known details for you
-          to check; they do not publish anything until you approve.
+      <section className="border rounded-xl p-5 space-y-2">
+        <h2 className="text-xl font-semibold">Document review</h2>
+        <p className="text-sm text-slate-600">
+          Checking extracted text and tax review now happen in the Review
+          workspace, together with uploaded documents.
         </p>
-        <div className="flex items-center gap-4 mb-4 text-sm">
-          <button
-            type="button"
-            className={button}
-            disabled={busy || !state?.reviewPage}
-            onClick={() => {
-              setBusy(true);
-              void reload((state?.reviewPage ?? 0) - 1)
-                .catch((e) => setMessage(e.message))
-                .finally(() => setBusy(false));
-            }}
-          >
-            Previous page
-          </button>
-          <span>Review page {(state?.reviewPage ?? 0) + 1}</span>
-          <button
-            type="button"
-            className={button}
-            disabled={busy || !state?.hasMoreReviews}
-            onClick={() => {
-              setBusy(true);
-              void reload((state?.reviewPage ?? 0) + 1)
-                .catch((e) => setMessage(e.message))
-                .finally(() => setBusy(false));
-            }}
-          >
-            Next page
-          </button>
-        </div>
-        {!state?.pending.length && (
-          <p className="text-slate-500">No pending documents.</p>
-        )}
-        <div className="space-y-5">
-          {state?.pending.map((version) => (
-            <ReviewCard
-              key={`${version.id}:${version.draft?.revision ?? 0}`}
-              version={version}
-              busy={busy}
-              act={act}
-            />
-          ))}
-        </div>
+        <Link href="/review" className="underline text-emerald-700">
+          Open the Review workspace
+        </Link>
       </section>
       <section>
         <h2 className="text-xl font-semibold mb-4">Recent refresh jobs</h2>
