@@ -211,7 +211,7 @@ export default function LineReviewer({
   linesUrl,
   pages,
   runId,
-  queue,
+  lines: allLines,
   canDecide,
   versionId,
   onChanged,
@@ -220,12 +220,20 @@ export default function LineReviewer({
   linesUrl: string;
   pages: PageSize[];
   runId: string;
-  // Every line that needs a decision, in reading order.
-  queue: QueueEntry[];
+  // Every line a person can check, in reading order; "required" marks those
+  // that need a decision before the text can be accepted.
+  lines: QueueEntry[];
   canDecide: boolean;
   versionId: string;
   onChanged: () => void;
 }) {
+  // The lines the engine asks about, or, on request, every line.
+  const [everyLine, setEveryLine] = useState(false);
+  const required = useMemo(
+    () => allLines.filter((entry) => entry.required),
+    [allLines],
+  );
+  const queue = everyLine ? allLines : required;
   // Decisions saved here but not yet in the page's data.
   const [saved, setSaved] = useState<Record<string, Decision>>({});
   const decided = useCallback(
@@ -276,8 +284,9 @@ export default function LineReviewer({
   const [error, setError] = useState("");
   const [page, setPage] = useState(entry?.page ?? 1);
   const decidedCount = queue.filter(decided).length;
-  const unreadable = queue.filter((e) => decided(e) === "UNREADABLE").length;
-  const allDecided = !!queue.length && decidedCount === queue.length;
+  const unreadable = required.filter((e) => decided(e) === "UNREADABLE").length;
+  // Acceptance needs only the required lines.
+  const allDecided = !!required.length && required.every(decided);
 
   const go = useCallback(
     (to: number) => {
@@ -388,8 +397,47 @@ export default function LineReviewer({
     </kbd>
   );
 
+  function switchTo(all: boolean) {
+    setEveryLine(all);
+    setEditing(false);
+    setError("");
+    const list = all ? allLines : required;
+    if (list.some((e) => e.id === currentId)) return;
+    const next = list.find((e) => !decided(e)) ?? list[0];
+    if (next) {
+      setCurrentId(next.id);
+      setPage(next.page);
+    }
+  }
+  const tab = (active: boolean) =>
+    `rounded-md px-3 py-1 text-sm ${active ? "bg-white shadow-sm font-medium" : "text-slate-600 hover:text-slate-900"}`;
+
   return (
     <div className="space-y-4">
+      {allLines.length > required.length && (
+        <div
+          role="group"
+          aria-label="Which lines to go through"
+          className="inline-flex rounded-lg bg-slate-100 p-1"
+        >
+          <button
+            type="button"
+            aria-pressed={!everyLine}
+            className={tab(!everyLine)}
+            onClick={() => switchTo(false)}
+          >
+            Lines to check ({required.length})
+          </button>
+          <button
+            type="button"
+            aria-pressed={everyLine}
+            className={tab(everyLine)}
+            onClick={() => switchTo(true)}
+          >
+            Every line ({allLines.length})
+          </button>
+        </div>
+      )}
       {!entry ? (
         <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
           Every line passed the engine&rsquo;s checks and there is nothing to
@@ -402,8 +450,11 @@ export default function LineReviewer({
               Line {index + 1} of {queue.length}
               <span className="ml-2 text-sm font-normal text-slate-500">
                 page {entry.page}
-                {entry.spotCheck &&
-                  " · spot check of a line the engine accepted"}
+                {entry.spotCheck
+                  ? " · spot check of a line the engine accepted"
+                  : !entry.required
+                    ? " · accepted by the engine; checking it is optional"
+                    : ""}
               </span>
             </h2>
             <div className="flex items-center gap-2">

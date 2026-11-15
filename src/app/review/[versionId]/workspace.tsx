@@ -101,11 +101,14 @@ type CarriedOver = {
 export default function Workspace({
   access,
   carriedOver,
+  changedSinceAcceptance,
   engine,
   version,
 }: {
   access: { extraction: boolean; tax: boolean };
   carriedOver: CarriedOver[];
+  // Line decisions made after the text was last accepted.
+  changedSinceAcceptance: number;
   engine: EngineOverview | null;
   version: Version;
 }) {
@@ -120,6 +123,8 @@ export default function Workspace({
   const [note, setNote] = useState("");
   const latest = version.textChecks[0];
   const textAccepted = latest?.decision === "ACCEPTED";
+  // Accepted, and nothing checked since: the passages include every decision.
+  const textCurrent = textAccepted && !changedSinceAcceptance;
   const open = version.current && version.status === "PENDING";
   const linesReady = engine?.status !== "OK" || engine.progress.complete;
   const canAcceptText = version.chunks.length > 0 || engine?.status === "OK";
@@ -226,8 +231,8 @@ export default function Workspace({
               linesUrl={`/api/review/${version.id}/lines`}
               pages={engine.pages}
               runId={engine.runId}
-              queue={engine.queue}
-              canDecide={open && access.extraction && !textAccepted}
+              lines={engine.queue}
+              canDecide={open && access.extraction}
               versionId={version.id}
               onChanged={() => router.refresh()}
             />
@@ -322,14 +327,24 @@ export default function Workspace({
             )}
             {open && access.extraction ? (
               <div className="space-y-3">
-                {!textAccepted && engine?.status === "OK" && !linesReady && (
+                {textAccepted && !textCurrent && (
+                  <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-900">
+                    {changedSinceAcceptance} line
+                    {changedSinceAcceptance === 1 ? " was" : "s were"} checked
+                    after the text was accepted. Accept it again, so the
+                    chatbot&rsquo;s passages include{" "}
+                    {changedSinceAcceptance === 1 ? "it" : "them"}; tax review
+                    waits until then.
+                  </p>
+                )}
+                {!textCurrent && engine?.status === "OK" && !linesReady && (
                   <p className="text-sm text-amber-800">
                     {engine.progress.unreadable
                       ? `${engine.progress.unreadable} line(s) are marked unreadable. Report the problem below instead of accepting.`
                       : `Decide the ${engine.progress.undecided} remaining line(s) beside the original before accepting.`}
                   </p>
                 )}
-                {!textAccepted && (
+                {!textCurrent && (
                   <>
                     <label className="block text-sm">
                       Note (optional when the text matches)
@@ -354,7 +369,9 @@ export default function Workspace({
                         }
                         className="rounded-lg bg-emerald-700 text-white px-4 py-2 text-sm disabled:opacity-40"
                       >
-                        Text matches the original
+                        {textAccepted
+                          ? "Accept the text again"
+                          : "Text matches the original"}
                       </button>
                     </div>
                   </>
@@ -420,10 +437,11 @@ export default function Workspace({
               <p className="text-sm text-slate-500">
                 A tax reviewer decides this part.
               </p>
-            ) : !textAccepted ? (
+            ) : !textCurrent ? (
               <p className="text-sm text-slate-500">
-                Waiting for the text check. You can do it above if you have text
-                check access.
+                {textAccepted
+                  ? "Lines were checked after the text was accepted. Waiting for the text to be accepted again."
+                  : "Waiting for the text check. You can do it above if you have text check access."}
               </p>
             ) : (
               <TaxReviewForm
