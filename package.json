@@ -14,6 +14,7 @@
     "tax:probe": "tsx scripts/tax-probe.ts",
     "tax:health": "tsx scripts/tax-health.ts",
     "tax:evaluate": "tsx scripts/tax-evaluate.ts",
+    "tax:extract": "tsx scripts/extract-documents.ts",
     "tax:corpus": "tsx scripts/tax-corpus.ts",
     "extraction:staging": "tsx scripts/extraction-staging.ts",
     "extraction:ocr-worker": "node --import tsx scripts/extraction-ocr-worker.ts"
@@ -41,6 +42,7 @@
     "next": "^16.4.5",
     "next-auth": "^5.0.0-beta.30",
     "openai": "^4.104.0",
+    "pdfjs-dist": "6.4.299",
     "pg": "^8.16.3",
     "react": "19.2.1",
     "react-dom": "19.2.1",

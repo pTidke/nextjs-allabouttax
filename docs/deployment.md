@@ -36,6 +36,10 @@ Without a local database connection, use the **Apply database migrations** workf
 
 Apply a migration before merging code that uses it: Vercel deploys `main` straight away and does not run migrations. Keep migrations additive so the code already running keeps working once they are applied.
 
+`202611150003_extraction_runs` is additive: a new `ExtractionRun` table for the engine's results. Until it is applied, the extract workflow fails and document pages show no line boxes.
+
+**Extraction engine.** `.github/workflows/extract.yml` runs every two hours (and on demand) in the `tax-worker` environment, with the same `DATABASE_URL` and the `TAX_WORKER_ENABLED` switch as the knowledge worker. It installs pdfanchor from `github.com/pTidke/benzeneblack` at the commit in `PDFANCHOR_REF`. To upgrade the engine, change that commit in the workflow; every pending PDF is then read again by the new version, and earlier runs are kept.
+
 `202611150002_reviewer_roles` is additive: new `ReviewerGrant` and `ExtractionReview` tables. Until it is applied, `/review` returns an error; the chatbot and the rest of the site are unaffected.
 
 `202611150001_answer_outcomes_and_contact` is additive: a nullable `outcome` column on `TaxMessage`, and new `TaxContentGap` and `ContactMessage` tables.

@@ -59,7 +59,9 @@ In the engine repository, [`pTidke/benzeneblack`](https://github.com/pTidke/benz
 Decided 15 November 2026: the owner and the chartered accountant both check extracted text; only the accountant does tax review; documents come from the CBDT listings and from uploads; staging work is carried over.
 
 - [x] **R1.** `/review`: reviewer roles, one queue, the original beside its passages, text check, tax review gated on it, PDF upload, publish to the live library. Review actions removed from `/admin/knowledge`.
-- [ ] **R2.** Line-level review: run the engine on each new or changed PDF, store its `document.json`, render the page with the flagged lines highlighted, let reviewers type corrections, and treat lines accepted by rule as checked (with an audit sample). Scanned PDFs get OCR here. Larger uploads go straight to storage instead of through the 4 MB request limit.
+- [x] **R2a.** The engine runs every two hours over pending PDFs and its results are stored per version; a pdf.js page viewer with the engine's line boxes, flagged lines highlighted, and a list of lines that need a look with each reading side by side.
+- [ ] **R2b.** Line decisions: confirm a flagged line or type its correction; lines accepted by rule count as checked, with an audit sample; the corrected text becomes the passages the chatbot uses.
+- [ ] **R2c.** Scanned PDFs through OCR end to end, and uploads above 4 MB sent straight to storage.
 - [ ] **R3.** Carry over the staging work: Notification 1/2026's accepted extraction and Circular 3/2026's saved review, with their history, from the staging database into the live review records. Needs R2's line-level storage, and an operator run with the staging database credentials. Then retire `/staging`.
 - [ ] **R4.** Withdraw a published decision and roll back a release (D3); show reviewer history per document.
 

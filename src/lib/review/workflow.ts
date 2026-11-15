@@ -6,6 +6,7 @@ import { suggestedReview } from "../tax/review-suggestions";
 import { reviewVersion, validateReview, type ReviewInput } from "../tax/review";
 import { saveReviewDraft } from "../tax/review-drafts";
 import { requireReviewer } from "./roles";
+import { runOverview } from "./extraction-runs";
 
 // Two gates before anything reaches the chatbot:
 //   1. text check: someone with EXTRACTION access confirms the extracted text
@@ -238,6 +239,7 @@ export async function reviewDocument(userId: string, versionId: string) {
     where: { id: { in: version.extractionReviews.map((r) => r.reviewerId) } },
     select: { id: true, name: true, email: true },
   });
+  const engine = await runOverview(versionId);
   const draft = access.tax
     ? await prisma.taxReviewDraft.findUnique({
         where: { versionId_userId: { versionId, userId } },
@@ -246,6 +248,7 @@ export async function reviewDocument(userId: string, versionId: string) {
     : null;
   return {
     access,
+    engine,
     version: {
       ...version,
       current: version.document.latestVersionId === version.id,

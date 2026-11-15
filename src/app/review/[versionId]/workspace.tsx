@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import TaxReviewForm, {
   type PendingReview,
 } from "@/components/review/TaxReviewForm";
+import PageViewer from "@/components/review/PageViewer";
+import type { LineForReview } from "@/lib/review/extraction-runs";
 
 type Check = {
   id: string;
@@ -35,15 +37,51 @@ type Version = Omit<PendingReview, "document" | "draft" | "suggestion"> & {
 const pageOf = (anchor: string) =>
   Number(anchor.match(/^Page (\d+)/)?.[1] ?? 1);
 
+export type EngineOverview =
+  | {
+      status: "OK";
+      engine: string;
+      createdAt: string;
+      summary: Record<string, number>;
+      pages: {
+        number: number;
+        width: number;
+        height: number;
+        rotation: number;
+        kind: string;
+      }[];
+      attention: LineForReview[];
+      attentionTotal: number;
+    }
+  | {
+      status: "FAILED";
+      engine: string;
+      createdAt: string;
+      error: string | null;
+    };
+
+const readers: Record<string, string> = {
+  native: "PDF text layer",
+  "ocr:tesseract": "OCR",
+  "ocr:easyocr": "Second OCR",
+};
+
 export default function Workspace({
   access,
+  engine,
   version,
 }: {
   access: { extraction: boolean; tax: boolean };
+  engine: EngineOverview | null;
   version: Version;
 }) {
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<string | null>(null);
+  const focus = (line: LineForReview) => {
+    setPage(line.page);
+    setSelected(line.id);
+  };
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{
     text: string;
@@ -149,11 +187,21 @@ export default function Workspace({
             </a>
           </div>
           {version.isPdf ? (
-            <iframe
-              key={page}
-              title="Original document"
-              src={`/api/review/${version.id}/original#page=${page}`}
-              className="w-full h-[75vh] border rounded-xl bg-slate-50"
+            <PageViewer
+              src={`/api/review/${version.id}/original`}
+              linesUrl={
+                engine?.status === "OK"
+                  ? `/api/review/${version.id}/lines`
+                  : null
+              }
+              pages={engine?.status === "OK" ? engine.pages : null}
+              page={page}
+              onPage={(next) => {
+                setPage(next);
+                setSelected(null);
+              }}
+              selected={selected}
+              onSelect={(line) => setSelected(line.id)}
             />
           ) : (
             <p className="border rounded-xl p-4 text-sm text-slate-600">
@@ -172,6 +220,13 @@ export default function Workspace({
         </section>
 
         <section className="space-y-6">
+          <EngineSummary
+            engine={engine}
+            isPdf={version.isPdf}
+            selected={selected}
+            onFocus={focus}
+          />
+
           <div className="space-y-2">
             <h2 className="font-semibold">
               Extracted text ({version.chunks.length}{" "}
@@ -331,6 +386,106 @@ export default function Workspace({
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+function EngineSummary({
+  engine,
+  isPdf,
+  selected,
+  onFocus,
+}: {
+  engine: EngineOverview | null;
+  isPdf: boolean;
+  selected: string | null;
+  onFocus: (line: LineForReview) => void;
+}) {
+  if (!isPdf) return null;
+  if (!engine)
+    return (
+      <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+        The extraction engine has not read this document yet. It runs every two
+        hours. Until then, check the passages below against the page.
+      </p>
+    );
+  if (engine.status === "FAILED")
+    return (
+      <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
+        The extraction engine could not read this document:{" "}
+        {engine.error ?? "unknown error"}
+      </p>
+    );
+  const s = engine.summary;
+  return (
+    <div className="border rounded-xl p-4 space-y-3">
+      <div className="space-y-1">
+        <h2 className="font-semibold">
+          Lines that need a look ({engine.attentionTotal})
+        </h2>
+        <p className="text-xs text-slate-500">
+          Read by {engine.engine} on{" "}
+          {new Date(engine.createdAt).toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+          })}
+          . {s.accepted ?? 0} of {s.lines ?? 0} lines passed every rule
+          {s.excluded
+            ? `; ${s.excluded} Hindi lines kept as evidence only`
+            : ""}
+          {s.tables ? `; ${s.tables} tables to check` : ""}
+          {s.pages_scanned
+            ? `; ${s.pages_scanned} scanned pages read by OCR`
+            : ""}
+          . Click a line to find it on the page.
+        </p>
+      </div>
+      {!engine.attentionTotal ? (
+        <p className="text-sm text-emerald-800">
+          Every line passed the engine&rsquo;s checks.
+        </p>
+      ) : (
+        <ol className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+          {engine.attention.map((line) => (
+            <li key={line.id}>
+              <button
+                type="button"
+                onClick={() => onFocus(line)}
+                className={`w-full text-left rounded-lg border p-3 text-sm space-y-1 ${
+                  line.id === selected
+                    ? "border-sky-500 bg-sky-50"
+                    : "hover:bg-slate-50"
+                } ${line.status === "blocked" ? "border-red-300" : "border-amber-300"}`}
+              >
+                <span className="block text-xs text-slate-500">
+                  Page {line.page} ·{" "}
+                  {line.flags.map((flag) => flag.message).join(" ")}
+                </span>
+                <span className="block">
+                  <span className="text-xs text-slate-500">
+                    {readers[line.source] ?? line.source}:{" "}
+                  </span>
+                  {line.text || <em className="text-slate-400">nothing</em>}
+                </span>
+                {line.other.map((reading) => (
+                  <span key={reading.source} className="block">
+                    <span className="text-xs text-slate-500">
+                      {readers[reading.source] ?? reading.source}:{" "}
+                    </span>
+                    {reading.text || (
+                      <em className="text-slate-400">nothing</em>
+                    )}
+                  </span>
+                ))}
+              </button>
+            </li>
+          ))}
+          {engine.attentionTotal > engine.attention.length && (
+            <li className="text-xs text-slate-500">
+              Showing the first {engine.attention.length}.
+            </li>
+          )}
+        </ol>
+      )}
     </div>
   );
 }

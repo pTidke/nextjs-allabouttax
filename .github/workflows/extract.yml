@@ -1,0 +1,43 @@
+name: Extract pending documents
+# Runs the pdfanchor engine over pending PDFs and stores each result for review.
+# It only adds ExtractionRun rows; it never approves or publishes anything.
+on:
+  schedule:
+    - cron: "47 */2 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: extract-documents
+  cancel-in-progress: false
+jobs:
+  extract:
+    if: vars.TAX_WORKER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: tax-worker
+    timeout-minutes: 30
+    env:
+      # The engine release this app is tested with. Update both together.
+      PDFANCHOR_REF: 5ef157f20f7c3f5dc7ac77121b310235fb01774e
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci --legacy-peer-deps
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install the engine and Tesseract (English and Hindi)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q tesseract-ocr tesseract-ocr-hin
+          pip install "pdfanchor @ git+https://github.com/pTidke/benzeneblack@${PDFANCHOR_REF}"
+          pdfanchor engines
+      - name: Extract
+        run: npm run tax:extract
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          EXTRACT_MAX: "60"
+          EXTRACT_BUDGET_MINUTES: "20"
