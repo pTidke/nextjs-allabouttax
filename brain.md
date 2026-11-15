@@ -3,7 +3,7 @@
 Single source of truth for what this platform is, how it is built, and why it is built that way.
 Read this before changing architecture. Update it in the same change whenever a decision here stops being true.
 
-- The repository holds three things: the **live product** (chatbot, ingestion, admin review), the **extraction lab and staging review** (merged from `codex/pdf-processing-lab` on 15 November 2026; staging is switched off by default), and the **`pdfanchor` engine package**, the start of the open-source extraction library. Sections 1–7.5 describe the live product, 7.6 the lab and staging, 7.7 the engine.
+- The project has three parts: the **live product** (chatbot, ingestion, admin review), the **extraction lab and staging review** (merged from `codex/pdf-processing-lab` on 15 November 2026; staging is switched off by default), and, in its own repository, the **`pdfanchor` engine** ([`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack)), the start of the open-source extraction library. Sections 1–7.5 describe the live product, 7.6 the lab and staging, 7.7 the engine.
 - Verified on 15 November 2026 by reading the source and running the tests: 34/34 on the live code before the merge; 328/328 Python tests in the lab; 30/30 in `pdfanchor`. After the merge the Node suite shows 62 passed and 3 cancelled on Node 22.23, all in `tests/extraction-storage.test.ts`; CI uses Node 24.
 - Production and staging figures (user counts, corpus counts, deployment state) are quoted from `docs/` and `status.md`; they were not re-read from the live databases.
 - `status.md` is the day-to-day status log, and `AGENTS.md` says to read it first. This file is the architectural reference. [`docs/improvement-areas.md`](docs/improvement-areas.md) explains what should change and why; [`docs/roadmap.md`](docs/roadmap.md) lists the work in order.
@@ -33,7 +33,7 @@ The first is under way as a local extraction lab, a hosted staging review screen
 | Sources | CBDT circulars, CBDT notifications (current calendar year only), one e-filing FAQ page. |
 | PDF handling (live) | Text-layer extraction only. No OCR in the live path. Scanned or >8 MB PDFs are rejected. |
 | PDF extraction lab | Python lab, run by hand on a developer machine: native text with source geometry, Tesseract (English, Hindi) and EasyOCR (English) comparisons, scan recovery, table proposals. Nothing is selected or accepted automatically. |
-| Engine package | `packages/pdfanchor`: a working skeleton of the open-source engine. PDF in; `document.json`, Markdown and RAG chunks out, with a rule-based accepted / flagged / blocked verdict per line. Not yet at parity with the lab. |
+| Engine (separate repository) | `pdfanchor` in [`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack): a working skeleton of the open-source engine. PDF in; `document.json`, Markdown and RAG chunks out, with a rule-based accepted / flagged / blocked verdict per line. Not yet at parity with the lab. |
 | Staging review | Hosted on a protected Vercel preview with its own Neon databases: extraction inbox, tax-review screen, and an OCR repair worker that sends flagged crops to the Azure chat model. No handoff to the live library. |
 | Retrieval | PostgreSQL full-text search. No embeddings, no reranking. |
 | Orchestration | Plain TypeScript functions in one route handler. No LangChain or LangGraph. |
@@ -127,7 +127,6 @@ tools/pdf_pipeline/           the Python extraction lab (CLI `tax-pdf`), its ben
 tools/extraction-staging/     SQL for the isolated staging database
 src/lib/extraction-staging/   staging store, contract, repair worker
 src/app/staging/              extraction inbox and tax-review screens
-packages/pdfanchor/           the open-source engine package (Python)
 ```
 
 ## 6. Data model
@@ -251,9 +250,9 @@ This is a separate system, developed on the `codex/pdf-processing-lab` branch an
 
 Recorded state (`status.md`, 14 November 2026): Notification 1/2026 has an accepted extraction awaiting its first tax review; Circular 3/2026 has a saved recheck draft and is blocked by its partial table scope.
 
-### 7.7 The `pdfanchor` engine (`packages/pdfanchor/`)
+### 7.7 The `pdfanchor` engine (repository `pTidke/benzeneblack`)
 
-The planned open-source library: given any PDF, produce output a language model can read and a vector index can ingest. Character recognition is one stage inside it. It is a self-contained Python package with no imports from the rest of the repository, so it can move to its own repository with `git subtree split`. The name is a working name.
+The planned open-source library: given any PDF, produce output a language model can read and a vector index can ingest. Character recognition is one stage inside it. It is a self-contained Python package in its own repository, https://github.com/pTidke/benzeneblack, with no dependency on this one. This application will use it as an installed dependency (`pip install "pdfanchor @ git+https://github.com/pTidke/benzeneblack"`) and treat it as a black box that produces `document.json`. No licence has been chosen yet, so it is not ready to publish.
 
 ```
 PDF ─▶ preflight ─▶ text layer + geometry ─▶ OCR (scan, or cross-check)
@@ -268,11 +267,11 @@ PDF ─▶ preflight ─▶ text layer + geometry ─▶ OCR (scan, or cross-che
 - `export/` writes Markdown (page breaks and flags as HTML comments) and chunks (one JSON object per line with `embedding_text`, `anchors` to page boxes, `status` and `rules`). A chunk never splits a paragraph, may cross a page break, and a table is its own chunk.
 - `pipeline.convert()` runs the stages; `cli.py` exposes `pdfanchor convert file.pdf --out dir` with exit codes 0 (all accepted), 2 (needs a person), 1 (failed).
 
-It is a skeleton, about 1,000 lines plus tests. Process isolation, pinned weights, scan recovery, table structure and large-document handling are still only in the lab; `packages/pdfanchor/docs/porting-from-the-lab.md` lists the order for bringing them across. The policy thresholds are uncalibrated.
+It is a skeleton, about 1,000 lines plus tests. Process isolation, pinned weights, scan recovery, table structure and large-document handling are still only in the lab; `docs/porting-from-the-lab.md` in the engine repository lists the order for bringing them across. The policy thresholds are uncalibrated.
 
 ## 8. Architectural decisions
 
-Each entry records the decision, the reason, and the consequence that matters for future work. AD-01 to AD-25 concern the live product; AD-26 to AD-33 the lab and staging; AD-34 onward the engine package.
+Each entry records the decision, the reason, and the consequence that matters for future work. AD-01 to AD-25 concern the live product; AD-26 to AD-33 the lab and staging; AD-34 onward the engine.
 
 | # | Decision | Why | Consequence |
 | --- | --- | --- | --- |
@@ -386,7 +385,7 @@ Unused leftovers: `src/sanity/client.ts` and the `@sanity/client` dependency; th
 | Hosting | Pilot stays on free tiers: Vercel, Neon, GitHub Actions. The repository is public. |
 | Audience and scope | Everyone and all tax material, as the destination. |
 | Reviewers | The owner for extraction; a chartered accountant for tax applicability, one to two hours a day. |
-| Extraction engine | To be open-sourced as a separate library. Scaffolded in `packages/pdfanchor`. |
+| Extraction engine | Open-sourced as a separate library named `pdfanchor`, in [`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack). |
 | Languages | Python for extraction, TypeScript for everything online. |
 | Forms product | Parked. |
 

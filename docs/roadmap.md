@@ -36,7 +36,7 @@ Done when: "accepted" has a measured error rate per class.
 
 ## M3. The engine, to parity with the lab
 
-Work through `packages/pdfanchor/docs/porting-from-the-lab.md`:
+In the engine repository, [`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack). Work through its `docs/porting-from-the-lab.md`:
 
 - [x] Skeleton: contract, text layer, Tesseract, cross-check, validators, policy, Markdown, chunks, CLI, tests
 - [ ] Per-page process isolation and budgets
@@ -46,7 +46,8 @@ Work through `packages/pdfanchor/docs/porting-from-the-lab.md`:
 - [ ] More validators: split dates, amounts, section references
 - [ ] Table structure: header paths, merged cells, scanned tables
 - [ ] Page-group processing for large documents (L8)
-- [ ] Choose a name and a licence; move to its own repository; first release
+- [x] Name (`pdfanchor`) and its own repository
+- [ ] Choose a licence; first release to PyPI
 
 ## M4. Unattended extraction on the free tier
 

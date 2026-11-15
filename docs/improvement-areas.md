@@ -36,7 +36,7 @@ The Python lab itself calls no language model. Tesseract, EasyOCR and Docling al
 | **Free tier; the repository is public.** | Extraction runs in GitHub Actions, where minutes are unmetered for public repositories. No always-on worker, no paid OCR service. |
 | **Everyone and everything.** | A destination. Order the corpus by value (C8). |
 | **One chartered accountant, one to two hours a day, for tax review.** | Roughly 7 to 14 reviewer hours a week. Every automation choice should be judged by the minutes it saves per document. |
-| **The engine becomes an open-source library.** | Scaffolded as `packages/pdfanchor`, generic and standalone; tax-specific rules stay in the application (10.1). |
+| **The engine becomes an open-source library.** | It is `pdfanchor`, in its own repository ([`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack)), generic and standalone; tax-specific rules stay in the application (10.1). |
 | **Python for extraction, TypeScript online.** | See 10.4. |
 | **Forms product parked.** | Section 10.5 is a short note only. |
 
@@ -203,7 +203,7 @@ No amends, supersedes, clarifies or refers-to links. A superseded circular stays
 
 **L1. The pipeline has no driver. P0.**
 About thirty subcommands, each run by hand with a hand-made manifest and a fresh output directory, on a developer machine. Bundles are then planned, uploaded and imported by an operator. Nothing is scheduled and nothing connects a newly discovered document to an extraction run.
-Fix: one supported command that runs the whole path, and a scheduled runner. The command now exists in skeleton form as `pdfanchor convert` (`packages/pdfanchor`); it needs the lab's capabilities ported in and a staging importer for its output. The runner calls it for every new or changed document and imports the result. Under the free-tier decision that runner is a GitHub Actions workflow; the existing lab CI job already builds the locked Python environment there.
+Fix: one supported command that runs the whole path, and a scheduled runner. The command now exists in skeleton form as `pdfanchor convert` (in the engine repository); it needs the lab's capabilities ported in and a staging importer for its output. The runner calls it for every new or changed document and imports the result. Under the free-tier decision that runner is a GitHub Actions workflow; the existing lab CI job already builds the locked Python environment there.
 
 **L2. Nothing ever decides. P0.**
 Reports carry `selected_engine: None`. `assess()` blocks any artifact with a page that is not `native_candidate`. Acceptance needs every region ticked (53 for a one-page notification) plus three attestations. This is why the process needs a person, or an assistant, at every step.
@@ -433,8 +433,8 @@ Steps 1 and 2 can run in parallel; they need different people. Step 8 can start 
 
 ## 12. Still open
 
-1. **Name and licence for the engine.** `pdfanchor` is a working name, free on PyPI when checked. A licence must be chosen before publishing; the engines it builds on are permissively licensed, so a permissive licence is possible.
-2. **A separate repository for the engine.** It lives in `packages/pdfanchor` for now and can be split out with its history once a repository exists.
+1. **Licence for the engine.** The name `pdfanchor` is settled and the code is in `pTidke/benzeneblack`. A licence must be chosen before it can be reused or published to PyPI; the engines it builds on are permissively licensed, so a permissive licence is possible.
+2. **How this application pins the engine.** By commit from the repository for now; by released version once it is on PyPI.
 3. **Redistribution of test documents.** Whether official PDFs may be shipped as a public test set with the library, or whether it should carry synthetic fixtures only.
 4. **Merging to `main`.** Approved in principle; it deploys to production, so it should go through a pull request with the preview checked.
 5. **Model-proposed metadata.** Parked as a possible later assist (section 2); revisit once the accountant has reviewed a few dozen documents and the time per document is known.
