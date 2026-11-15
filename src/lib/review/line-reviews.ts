@@ -5,7 +5,7 @@ import { HttpError } from "../http";
 import {
   forReview,
   latestRun,
-  runOverview,
+  overviewOf,
   type EngineDocument,
   type EngineLine,
   type LineForReview,
@@ -160,6 +160,8 @@ export async function recordLineDecision(
 }
 
 export type ReviewLine = LineForReview & {
+  // Where the line falls in reading order across the whole document.
+  position: number;
   decision: {
     decision: LineDecision;
     text: string | null;
@@ -171,9 +173,10 @@ export type ReviewLine = LineForReview & {
 // What the review page shows: the engine overview, every line that needs a
 // decision with its current decision, and how far along the check is.
 export async function lineReviewOverview(versionId: string) {
-  const overview = await runOverview(versionId);
-  if (overview?.status !== "OK") return overview;
+  // The run's document can be several megabytes, so it is read once.
   const run = await latestRun(versionId);
+  const overview = overviewOf(run);
+  if (overview?.status !== "OK") return overview;
   const document = run!.document as unknown as EngineDocument;
   const required = requiredLines(run!.id, document);
   const decisions = await lineDecisions(run!.id);
@@ -189,10 +192,12 @@ export async function lineReviewOverview(versionId: string) {
       })
     ).map((user) => [user.id, user.name ?? user.email]),
   );
+  const position = new Map(lines(document).map((line, i) => [line.id, i]));
   const withDecision = (line: EngineLine): ReviewLine => {
     const found = decisions.get(line.id);
     return {
       ...forReview(line),
+      position: position.get(line.id) ?? 0,
       decision: found
         ? {
             decision: found.decision,

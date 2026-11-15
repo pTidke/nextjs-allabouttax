@@ -5,7 +5,8 @@ import { originalDocument } from "@/lib/review/workflow";
 export const runtime = "nodejs";
 
 // The stored original, for reviewers to read beside the extracted text. Shown
-// inline so the browser's own PDF viewer opens it, and never cached.
+// inline so the browser's own PDF viewer opens it. A version's original never
+// changes, so the reviewer's own browser may keep it (never a shared cache).
 export async function GET(
   _req: Request,
   ctx: RouteContext<"/api/review/[versionId]/original">,
@@ -20,7 +21,7 @@ export async function GET(
         // HTML originals are shown as text, never run as a page on this site.
         "Content-Type": pdf ? "application/pdf" : "text/plain; charset=utf-8",
         "Content-Disposition": `inline; filename="document-${versionId}.${pdf ? "pdf" : "txt"}"`,
-        "Cache-Control": "private, no-store",
+        "Cache-Control": "private, max-age=86400, immutable",
         "X-Content-Type-Options": "nosniff",
       },
     });

@@ -174,6 +174,13 @@ test("every flagged line and the spot check must be decided before the text is a
     ["p1-l2"],
     "the one rule-accepted line is the spot check",
   );
+  // The screen walks the lines in reading order, spot checks included.
+  assert.deepEqual(
+    [...overview.attention, ...overview.sample]
+      .sort((a, b) => a.position - b.position)
+      .map((l) => l.id),
+    ["p1-l1", "p1-l2", "p2-l1"],
+  );
   assert.deepEqual(overview.progress, {
     required: 3,
     decided: 0,
