@@ -183,17 +183,17 @@ Section-level selection exists only for consecutively numbered FAQ pages (`revie
 One SQL query against the latest release. A chunk is eligible only if all of these hold:
 
 - its version is in the release manifest, `APPROVED`, legal status `EFFECTIVE` or `GUIDANCE`, jurisdiction `IN-CENTRAL`;
-- period matches: `SINGLE_PERIOD` requires the stored period string to equal the user's selected string exactly; `MULTI_PERIOD` requires an applicability note;
+- period matches: `SINGLE_PERIOD` requires the stored period to name the same income year as the user's selection (FY 2026-27, TY 2026-27 and AY 2027-28 are one year; `equivalentPeriods` in `registry.ts`); `MULTI_PERIOD` requires an applicability note;
 - effective dates overlap the selected period's April–March range;
 - if the version names an entity, the user's question contains that full normalised name;
 - the version is still the document's latest, the document was fetched successfully within 48 hours, and neither the document nor its source has an error.
 
-Matching is `to_tsquery('english', …)` over up to 24 lower-cased question terms joined with OR, ranked by `ts_rank_cd`, top 6.
+Matching is `to_tsquery('english', …)` over up to 24 lower-cased question terms joined with OR, ranked by `ts_rank_cd`, top 6. The terms of the last three questions in the same conversation also match, at half the weight of the current question, so a follow-up with no subject of its own ("and how long is it?") still finds its topic. The entity rule above still looks at the current message only.
 
 ### 7.4 Answer generation (`api/assistant/route.ts`, `lib/chat/*`)
 
 1. Same-origin check, session check, input validation (message ≤ 6,000 characters, valid period, body ≤ 16 kB).
-2. Load the conversation if an id was sent; it must belong to the user and have the same period.
+2. Load the conversation if an id was sent; it must belong to the user and have the same period. Load its last three user questions as search context.
 3. Retrieve evidence. **If none, return a fixed limitation message immediately**: no model call, no quota use, nothing saved.
 4. Reserve one question from the daily quota (atomic upsert keyed on the IST date).
 5. Create the conversation if needed, load the last 8 messages as history.
@@ -252,7 +252,7 @@ Recorded state (`status.md`, 14 November 2026): Notification 1/2026 has an accep
 
 ### 7.7 The `pdfanchor` engine (repository `pTidke/benzeneblack`)
 
-The planned open-source library: given any PDF, produce output a language model can read and a vector index can ingest. Character recognition is one stage inside it. It is a self-contained Python package in its own repository, https://github.com/pTidke/benzeneblack, with no dependency on this one. This application will use it as an installed dependency (`pip install "pdfanchor @ git+https://github.com/pTidke/benzeneblack"`) and treat it as a black box that produces `document.json`. No licence has been chosen yet, so it is not ready to publish.
+The planned open-source library: given any PDF, produce output a language model can read and a vector index can ingest. Character recognition is one stage inside it. It is a self-contained Python package in its own repository, https://github.com/pTidke/benzeneblack, with no dependency on this one. This application will use it as an installed dependency (`pip install "pdfanchor @ git+https://github.com/pTidke/benzeneblack"`) and treat it as a black box that produces `document.json`. It is licensed under Apache 2.0 and has not been released to PyPI yet.
 
 ```
 PDF ─▶ preflight ─▶ text layer + geometry ─▶ OCR (scan, or cross-check)
@@ -279,7 +279,7 @@ Each entry records the decision, the reason, and the consequence that matters fo
 | AD-02 | **Human approval gate.** Refresh and discovery never approve anything. | An imported notification is not automatically applicable law. | Review throughput is the bottleneck on coverage. |
 | AD-03 | **Immutable originals with content-hash versions.** Changed content becomes a new `PENDING` version and the old approval stops being eligible. | Old approvals must not silently carry over to changed text. | Any change to a document removes it from answers until re-reviewed. Version identity is also tied to extractor output for HTML. |
 | AD-04 | **Releases are full, numbered manifests** created under one advisory lock. | Every answer can record exactly which knowledge set produced it (`TaxMessage.releaseId`). | Retrieval still also checks live flags, so a release is not a pure snapshot. No rollback action exists. |
-| AD-05 | **The user states the tax period; one period per conversation.** | Tax rules are period-specific and the model must not guess. | Extra step before the first question; period labels are matched as strings. |
+| AD-05 | **The user states the tax period; one period per conversation.** | Tax rules are period-specific and the model must not guess. | Extra step before the first question. Labels for the same income year are treated as equal. |
 | AD-06 | **Freshness and health gates at query time** (48 h since last successful fetch; no document or source error). | Do not cite something that may have been withdrawn. | A stalled worker or a broken listing removes evidence from answers. |
 | AD-07 | **Lexical retrieval in Postgres** (FTS, OR query, top 6). | Simplest thing that works with one database and a tiny corpus. | Weak on synonyms, follow-ups, non-English and multi-document questions. |
 | AD-08 | **One non-streamed model call with strict structured output, validated before display.** | Never show unchecked fragments. | Slower perceived response; a formatting slip by the model is a hard error. |

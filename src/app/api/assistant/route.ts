@@ -50,9 +50,19 @@ export async function POST(req: Request) {
       user.id,
       input.period,
     );
+    // Earlier questions give a short follow-up something to search with.
+    const earlier = existing
+      ? await prisma.taxMessage.findMany({
+          where: { conversationId: existing.id, role: "user" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          take: 3,
+          select: { content: true },
+        })
+      : [];
     const { evidence, releaseId } = await retrieveEvidence(
       input.message,
       input.period,
+      earlier.map((message) => message.content),
     );
     // An empty corpus is an explicit limitation; never silently answer from model memory.
     if (!evidence.length)
