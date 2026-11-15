@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { prisma } from "../src/lib/db";
 import { retrieveEvidence } from "../src/lib/tax/retrieval";
 import { generateAnswer } from "../src/lib/chat/generate";
+import { resolvePeriod } from "../src/lib/tax/registry";
 
 async function main() {
   const live = process.argv.includes("--live");
@@ -13,7 +14,8 @@ async function main() {
     ),
   ) as {
     id: string;
-    period: string;
+    // Omit to ask without naming a year, as the chat now does.
+    period?: string;
     question: string;
     // Earlier questions of the same chat, oldest first, for follow-up cases.
     context?: string[];
@@ -28,10 +30,13 @@ async function main() {
   let failures = 0;
   for (const item of cases) {
     try {
+      // Resolve the year the same way the chat route does.
+      const earlier = [...(item.context ?? [])].reverse();
+      const period = resolvePeriod(item.period, item.question, earlier);
       const { evidence } = await retrieveEvidence(
         item.question,
-        item.period,
-        [...(item.context ?? [])].reverse(),
+        period,
+        earlier,
       );
       if (!live) {
         if (item.supported && !evidence.length)
@@ -43,7 +48,7 @@ async function main() {
       }
       const result = await generateAnswer({
         question: item.question,
-        period: item.period,
+        period,
         history: (item.context ?? []).map((content) => ({
           role: "user",
           content,

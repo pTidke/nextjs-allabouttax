@@ -55,8 +55,8 @@ export default async function InboxPage() {
           <article key={gap.id} className="border rounded-xl p-4 space-y-1">
             <p className="whitespace-pre-wrap">{gap.question}</p>
             <p className="text-xs text-slate-500">
-              {gap.period} · {reasons[gap.reason] ?? gap.reason} ·{" "}
-              {when(gap.createdAt)}
+              {gap.period === "AUTO" ? "No year named" : gap.period} ·{" "}
+              {reasons[gap.reason] ?? gap.reason} · {when(gap.createdAt)}
             </p>
           </article>
         ))}

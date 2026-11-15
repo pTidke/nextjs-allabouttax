@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import type { Citation, Outcome } from "./answer";
+import { ANY_PERIOD } from "../tax/registry";
 
 export const DAILY_LIMIT = { USER: 10, ADMIN: 1000 } as const;
 
@@ -52,7 +53,8 @@ export async function saveTurn(input: {
       input.conversationId ??
       (
         await tx.taxConversation.create({
-          data: { userId: input.userId, period: input.period },
+          // A conversation can cover several tax years; each answer names its own.
+          data: { userId: input.userId, period: ANY_PERIOD },
         })
       ).id;
     const asked = await tx.taxMessage.create({

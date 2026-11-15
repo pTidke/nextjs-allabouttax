@@ -2,8 +2,17 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { MAX_FRESHNESS_MS, equivalentPeriods, periodRange } from "./registry";
 
-export async function knowledgeCoverage(period: string) {
-  const range = periodRange(period);
+// `period` null: everything currently retrievable, for any tax year.
+export async function knowledgeCoverage(period: string | null) {
+  const scope = period
+    ? (() => {
+        const range = periodRange(period);
+        return Prisma.sql`((v."periodMode" = 'SINGLE_PERIOD' AND v.period IN (${Prisma.join(equivalentPeriods(period))}))
+        OR (v."periodMode" = 'MULTI_PERIOD' AND v.period IS NULL AND length(trim(v."applicabilityNote")) > 0))
+      AND v."effectiveFrom" < ${range.end} AND (v."effectiveTo" IS NULL OR v."effectiveTo" > ${range.start})`;
+      })()
+    : Prisma.sql`((v."periodMode" = 'SINGLE_PERIOD' AND v.period IS NOT NULL)
+        OR (v."periodMode" = 'MULTI_PERIOD' AND v.period IS NULL AND length(trim(v."applicabilityNote")) > 0))`;
   const release = await prisma.knowledgeRelease.findFirst({
     orderBy: { sequence: "desc" },
     select: { id: true, versionIds: true },
@@ -25,9 +34,7 @@ export async function knowledgeCoverage(period: string) {
     JOIN "TaxSource" s ON s.id = d."sourceId"
     WHERE v.id IN (${Prisma.join(release.versionIds)}) AND v.status = 'APPROVED'
       AND v."legalStatus" IN ('EFFECTIVE', 'GUIDANCE') AND v.jurisdiction = 'IN-CENTRAL'
-      AND ((v."periodMode" = 'SINGLE_PERIOD' AND v.period IN (${Prisma.join(equivalentPeriods(period))}))
-        OR (v."periodMode" = 'MULTI_PERIOD' AND v.period IS NULL AND length(trim(v."applicabilityNote")) > 0))
-      AND v."effectiveFrom" < ${range.end} AND (v."effectiveTo" IS NULL OR v."effectiveTo" > ${range.start})
+      AND ${scope}
       AND d."latestVersionId" = v.id AND s.enabled = true
     ORDER BY d.title, d.id`);
   const available = documents.filter((d) => d.available === true);

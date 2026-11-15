@@ -122,7 +122,7 @@ Slabs, limits, due dates and rates are not stored as data, and the model is forb
 
 ## 5. Chat experience (behaviour, `main`)
 
-**B1. Fifteen period options before the first question. P1.**
+**B1. Fifteen period options before the first question. P1. Fixed differently.** The picker is gone. The year comes from the question or the chat; with none named, all years are searched and the answer must say which year it is for (AD-05). The original finding:
 FY, AY and TY across five years, with no default; changing it wipes the conversation. With A1 fixed, offer one list of income years ("April 2026 – March 2027 · FY 2026-27 · AY 2027-28"), default to the current one, and infer the year from the question when it is stated.
 
 **B2. Unanswered questions vanish. P1. Fixed.**

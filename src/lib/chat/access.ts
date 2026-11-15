@@ -4,15 +4,12 @@ import { HttpError } from "../http";
 export async function ownedConversation(
   id: string | undefined,
   userId: string,
-  period: string,
 ) {
   if (!id) return null;
   const conversation = await prisma.taxConversation.findFirst({
     where: { id, userId },
   });
   if (!conversation) throw new HttpError(404, "Conversation not found.");
-  if (conversation.period !== period)
-    throw new HttpError(400, "Start a new chat to change the tax period.");
   return conversation;
 }
 export async function reserveQuestion(

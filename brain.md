@@ -185,17 +185,17 @@ Section-level selection exists only for consecutively numbered FAQ pages (`revie
 One SQL query against the latest release. A chunk is eligible only if all of these hold:
 
 - its version is in the release manifest, `APPROVED`, legal status `EFFECTIVE` or `GUIDANCE`, jurisdiction `IN-CENTRAL`;
-- period matches: `SINGLE_PERIOD` requires the stored period to name the same income year as the user's selection (FY 2026-27, TY 2026-27 and AY 2027-28 are one year; `equivalentPeriods` in `registry.ts`); `MULTI_PERIOD` requires an applicability note;
+- period matches. The tax year is resolved by `resolvePeriod` in `registry.ts`: a year named in the question ("FY 2025-26", "AY 2026-27", "tax year 2026-27"; a bare "2025-26" does not count, being ambiguous), else the most recent one named earlier in the chat, else none. With a year, `SINGLE_PERIOD` requires the stored period to name the same income year (FY 2026-27, TY 2026-27 and AY 2027-28 are one year; `equivalentPeriods`) and effective dates must overlap it. With none, every year is searched and each passage carries its own period. `MULTI_PERIOD` always requires an applicability note;
 - effective dates overlap the selected period's April–March range;
 - if the version names an entity, the user's question contains that full normalised name;
 - the version is still the document's latest, the document was fetched successfully within 48 hours, and neither the document nor its source has an error.
 
-Matching is `to_tsquery('english', …)` over up to 24 lower-cased question terms joined with OR, ranked by `ts_rank_cd`, top 6. The terms of the last three questions in the same conversation also match, at half the weight of the current question, so a follow-up with no subject of its own ("and how long is it?") still finds its topic. The entity rule above still looks at the current message only.
+Matching is `to_tsquery('english', …)` over up to 24 lower-cased question terms joined with OR, ranked by `ts_rank_cd` and then by newest effective date, top 6. The terms of the last three questions in the same conversation also match, at half the weight of the current question, so a follow-up with no subject of its own ("and how long is it?") still finds its topic. The entity rule above still looks at the current message only.
 
 ### 7.4 Answer generation (`api/assistant/route.ts`, `lib/chat/*`)
 
 1. Same-origin check, session check, input validation (message ≤ 6,000 characters, valid period, body ≤ 16 kB).
-2. Load the conversation if an id was sent; it must belong to the user and have the same period. Load its last three user questions as search context.
+2. Load the conversation if an id was sent; it must belong to the user. Load its last three user questions as search context, and resolve the tax year from the question or those questions (or none).
 3. Retrieve evidence. **If none, reply with a fixed limitation message**: no model call and no quota use, but both messages are saved (outcome `NO_EVIDENCE`) and the question is logged as a content gap.
 4. Reserve one question from the daily quota (atomic upsert keyed on the IST date).
 5. Load the last 8 messages as history.
@@ -208,7 +208,7 @@ The response is returned whole; nothing is streamed.
 
 ### 7.5 Client
 
-`ChatContext` holds chat state in memory only (never `localStorage`) and is remounted when the signed-in identity changes. The chat opens as a full-screen dialog from a floating widget on every page. The user must pick a period (FY, AY or TY × five years) before sending; changing it starts a new chat. `/chats` lists, reopens, exports (streamed JSON) and deletes conversations. `/library` and the in-chat coverage notice show which released documents are currently available for a period.
+`ChatContext` holds chat state in memory only (never `localStorage`) and is remounted when the signed-in identity changes. The chat opens as a full-screen dialog from a floating widget on every page. There is no year picker: the user names a year in the question when it matters, and each answer says which year it applies to. A reply that did not count toward the daily limit says so. `/chats` lists, reopens, exports (streamed JSON) and deletes conversations. `/library` and the in-chat coverage notice show which released documents are currently available, for all years or, in the library, for one year.
 
 ### 7.6 Extraction lab and staging review
 
@@ -282,7 +282,7 @@ Each entry records the decision, the reason, and the consequence that matters fo
 | AD-02 | **Human approval gate.** Refresh and discovery never approve anything. | An imported notification is not automatically applicable law. | Review throughput is the bottleneck on coverage. |
 | AD-03 | **Immutable originals with content-hash versions.** Changed content becomes a new `PENDING` version and the old approval stops being eligible. | Old approvals must not silently carry over to changed text. | Any change to a document removes it from answers until re-reviewed. Version identity is also tied to extractor output for HTML. |
 | AD-04 | **Releases are full, numbered manifests** created under one advisory lock. | Every answer can record exactly which knowledge set produced it (`TaxMessage.releaseId`). | Retrieval still also checks live flags, so a release is not a pure snapshot. No rollback action exists. |
-| AD-05 | **The user states the tax period; one period per conversation.** | Tax rules are period-specific and the model must not guess. | Extra step before the first question. Labels for the same income year are treated as equal. |
+| AD-05 | **The tax year comes from the question, not a picker** (since 15 November 2026; previously the user chose one period per conversation). A year named in the question or earlier in the chat narrows the search; with none, every year is searched, each passage is labelled with its year, and the model must say which year the answer applies to or ask. | The picker was a barrier before the first question; most people do not know FY from AY. | Answers can mix years if the model ignores the labels; the citations show each source's year, and the evaluation set must cover it. A conversation is stored with period `AUTO`. |
 | AD-06 | **Freshness and health gates at query time** (48 h since last successful fetch; no document or source error). | Do not cite something that may have been withdrawn. | A stalled worker or a broken listing removes evidence from answers. |
 | AD-07 | **Lexical retrieval in Postgres** (FTS, OR query, top 6). | Simplest thing that works with one database and a tiny corpus. | Weak on synonyms, follow-ups, non-English and multi-document questions. |
 | AD-08 | **One non-streamed model call with strict structured output, validated before display.** | Never show unchecked fragments. | Slower perceived response; a formatting slip by the model is a hard error. |

@@ -4,7 +4,11 @@ import { readdir, readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { PrismaPGlite } from "pglite-prisma-adapter";
 import { PrismaClient } from "@prisma/client";
-import { equivalentPeriods } from "../src/lib/tax/registry";
+import {
+  detectPeriod,
+  equivalentPeriods,
+  resolvePeriod,
+} from "../src/lib/tax/registry";
 
 const database = new PGlite();
 const db = new PrismaClient({ adapter: new PrismaPGlite(database) });
@@ -30,7 +34,12 @@ after(async () => {
 });
 
 // Publish one synthetic document for a single period and return its version id.
-async function publish(id: string, text: string, period: string) {
+async function publish(
+  id: string,
+  text: string,
+  period: string,
+  effectiveFrom = "2026-04-01",
+) {
   const url = `https://www.incometax.gov.in/${id}`;
   await db.taxSource.create({
     data: { id, name: id, url, kind: "DOCUMENT" },
@@ -54,14 +63,18 @@ async function publish(id: string, text: string, period: string) {
       documentType: "GUIDANCE",
       legalStatus: "GUIDANCE",
       period,
-      effectiveFrom: "2026-04-01",
+      effectiveFrom,
       note: "Synthetic reviewed test only.",
     },
     "reviewer",
   );
   return version.id;
 }
-const found = async (question: string, period: string, earlier?: string[]) =>
+const found = async (
+  question: string,
+  period: string | null,
+  earlier?: string[],
+) =>
   (await retrieval.retrieveEvidence(question, period, earlier)).evidence.map(
     (e) => e.versionId,
   );
@@ -163,4 +176,81 @@ test("search terms drop filler words and anything already in the current questio
     "previous",
   );
   assert.equal(retrieval.searchTerms("टैक्स ईयर क्या है?"), "");
+});
+
+test("a tax year named in the question is recognised in its common forms", () => {
+  const year = "FY 2026-27";
+  for (const text of [
+    "What is the limit for FY 2026-27?",
+    "fy 26-27 limit",
+    "In TY 2026-27, how long is a tax year?",
+    "For AY 2027-28 what is due?",
+    "assessment year 2027-28",
+    "financial year 2026-2027",
+    "previous year 2026-27",
+    "for the tax year: 2026–27",
+    "FY 2026-27 or TY 2026-27, same thing?",
+  ])
+    assert.equal(detectPeriod(text), year, text);
+  for (const text of [
+    "What is a tax year?",
+    "for 2026-27", // bare years are ambiguous between income and assessment year
+    "FY 2026-28",
+    "compare FY 2025-26 with FY 2026-27",
+    "section 80C(2) and rule 2026",
+  ])
+    assert.equal(detectPeriod(text), null, text);
+});
+
+test("the year comes from the question, then from earlier in the chat", () => {
+  assert.equal(resolvePeriod(undefined, "What is a tax year?", []), null);
+  assert.equal(
+    resolvePeriod(undefined, "And for AY 2026-27?", ["Limit in FY 2026-27?"]),
+    "FY 2025-26",
+    "the current question wins",
+  );
+  assert.equal(
+    resolvePeriod(undefined, "and how long is it?", [
+      "What about TY 2026-27?",
+      "Earlier: FY 2024-25",
+    ]),
+    "FY 2026-27",
+    "otherwise the most recent year named in the chat",
+  );
+  assert.equal(
+    resolvePeriod("TY 2026-27", "for FY 2024-25", []),
+    "TY 2026-27",
+    "an explicit choice from the caller wins",
+  );
+});
+
+test("with no year named, every year is searched and each passage says its own year", async () => {
+  const older = await publish(
+    "older-limit-guidance",
+    "The deduction limit applies to contributions made during the previous financial year. ",
+    "FY 2025-26",
+    "2025-04-01",
+  );
+  const all = (
+    await retrieval.retrieveEvidence("deduction limit contributions", null)
+  ).evidence;
+  assert.ok(all.some((e) => e.versionId === older));
+  assert.equal(all.find((e) => e.versionId === older)!.period, "FY 2025-26");
+  assert.ok(
+    (await found("What is a tax year?", null)).includes(taxYear),
+    "documents of other years are found too",
+  );
+  // Naming a year still narrows the search to it.
+  assert.deepEqual(
+    await found("deduction limit contributions", "TY 2026-27"),
+    [],
+  );
+  assert.ok(
+    (await found("deduction limit contributions", "AY 2026-27")).includes(
+      older,
+    ),
+  );
+  const library = await coverage.knowledgeCoverage(null);
+  assert.ok(library.availableDocuments >= 3);
+  assert.equal(library.period, null);
 });
