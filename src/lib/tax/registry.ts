@@ -51,6 +51,15 @@ export function validPeriod(value: unknown): value is string {
   return Number(value.slice(-2)) === (year + 1) % 100;
 }
 
+// FY, TY and AY are three labels for one April–March income year: FY 2026-27,
+// TY 2026-27 and AY 2027-28 all name April 2026 to March 2027.
+export function equivalentPeriods(period: string): string[] {
+  const start = periodRange(period).start.getUTCFullYear();
+  const label = (year: number) =>
+    `${year}-${String((year + 1) % 100).padStart(2, "0")}`;
+  return [`FY ${label(start)}`, `TY ${label(start)}`, `AY ${label(start + 1)}`];
+}
+
 export function periodRange(period: string) {
   if (!validPeriod(period)) throw new Error("Invalid tax period.");
   const year = Number(period.slice(3, 7)) - (period.startsWith("AY") ? 1 : 0);

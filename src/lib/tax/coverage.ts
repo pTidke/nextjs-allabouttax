@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
-import { MAX_FRESHNESS_MS, periodRange } from "./registry";
+import { MAX_FRESHNESS_MS, equivalentPeriods, periodRange } from "./registry";
 
 export async function knowledgeCoverage(period: string) {
   const range = periodRange(period);
@@ -25,7 +25,7 @@ export async function knowledgeCoverage(period: string) {
     JOIN "TaxSource" s ON s.id = d."sourceId"
     WHERE v.id IN (${Prisma.join(release.versionIds)}) AND v.status = 'APPROVED'
       AND v."legalStatus" IN ('EFFECTIVE', 'GUIDANCE') AND v.jurisdiction = 'IN-CENTRAL'
-      AND ((v."periodMode" = 'SINGLE_PERIOD' AND v.period = ${period})
+      AND ((v."periodMode" = 'SINGLE_PERIOD' AND v.period IN (${Prisma.join(equivalentPeriods(period))}))
         OR (v."periodMode" = 'MULTI_PERIOD' AND v.period IS NULL AND length(trim(v."applicabilityNote")) > 0))
       AND v."effectiveFrom" < ${range.end} AND (v."effectiveTo" IS NULL OR v."effectiveTo" > ${range.start})
       AND d."latestVersionId" = v.id AND s.enabled = true

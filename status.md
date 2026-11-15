@@ -8,10 +8,11 @@ For how the platform is built and why, see [brain.md](brain.md). For what should
 
 - **Direction.** Rules only in ingestion, with rules allowed to accept easy pages and a person auditing. The Azure OCR repair worker is to be retired as the default and kept as a switched-off backup. English text is indexed; Hindi is kept as evidence. Hindi and Hinglish questions are deferred. The pilot stays on free tiers. The forms product is parked.
 - **Reviewers.** The owner reviews extraction. A chartered accountant reviews tax applicability for one to two hours a day.
-- **Engine.** `pdfanchor`, in its own repository ([pTidke/benzeneblack](https://github.com/pTidke/benzeneblack)), is the start of the open-source extraction library: PDF in; `document.json`, Markdown and RAG chunks out, with an accepted / flagged / blocked verdict per line. It is a tested skeleton (30 tests, including a real Tesseract run), not yet at parity with the lab. No licence is chosen yet. [README](https://github.com/pTidke/benzeneblack#readme) · [Porting plan](https://github.com/pTidke/benzeneblack/blob/main/docs/porting-from-the-lab.md)
-- **Branches.** `codex/pdf-processing-lab` is merged into `claude/trusting-hypatia-l5qg4h` together with the new docs. A pull request to `main` is open.
+- **Engine.** `pdfanchor`, in its own repository ([pTidke/benzeneblack](https://github.com/pTidke/benzeneblack)), is the start of the open-source extraction library: PDF in; `document.json`, Markdown and RAG chunks out, with an accepted / flagged / blocked verdict per line. It is a tested skeleton (30 tests, including a real Tesseract run), not yet at parity with the lab. Licensed under Apache 2.0. [README](https://github.com/pTidke/benzeneblack#readme) · [Porting plan](https://github.com/pTidke/benzeneblack/blob/main/docs/porting-from-the-lab.md)
+- **Branches.** `codex/pdf-processing-lab` is merged into `claude/trusting-hypatia-l5qg4h` together with the new docs, and that branch was merged into `main` the same day (pull request 6). The chatbot was confirmed working in production afterwards.
 - **Known issue.** On Node 22.23, three tests in `tests/extraction-storage.test.ts` are cancelled; the rest of the suite passes. CI runs Node 24.
-- **Next.** Roadmap M0 to M2: merge to `main` through a pull request, fix the two reproduced chatbot bugs, and build the verified reference pages that the engine's decision thresholds need.
+- **Chatbot fixes.** Period labels for the same income year now reach the same evidence, and a follow-up question is searched together with the earlier questions of its chat. Both have regression tests in `tests/tax-retrieval.test.ts`.
+- **Next.** The rest of roadmap M1 (clarifying questions, saving unanswered questions, quota refunds, an answer evaluation set), and M2: the verified reference pages that the engine's decision thresholds need.
 
 ## Current flow
 

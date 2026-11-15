@@ -15,6 +15,8 @@ async function main() {
     id: string;
     period: string;
     question: string;
+    // Earlier questions of the same chat, oldest first, for follow-up cases.
+    context?: string[];
     supported: boolean;
     mustMatch?: string;
   }[];
@@ -26,7 +28,11 @@ async function main() {
   let failures = 0;
   for (const item of cases) {
     try {
-      const { evidence } = await retrieveEvidence(item.question, item.period);
+      const { evidence } = await retrieveEvidence(
+        item.question,
+        item.period,
+        [...(item.context ?? [])].reverse(),
+      );
       if (!live) {
         if (item.supported && !evidence.length)
           throw new Error("Missing reviewed evidence");
@@ -38,6 +44,10 @@ async function main() {
       const result = await generateAnswer({
         question: item.question,
         period: item.period,
+        history: (item.context ?? []).map((content) => ({
+          role: "user",
+          content,
+        })),
         evidence,
       });
       const pass =

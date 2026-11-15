@@ -9,14 +9,14 @@ People: the owner reviews extraction; a chartered accountant reviews tax applica
 ## M0. One codebase
 
 - [x] Merge `codex/pdf-processing-lab` into the working branch (staging stays off by default)
-- [ ] Merge the working branch into `main` and confirm the production deployment is unchanged
+- [x] Merge into `main` (pull request 6) and confirm the chatbot still works in production
 - [ ] Find out why three tests in `tests/extraction-storage.test.ts` are cancelled on Node 22.23 (`engines` allows Node 22; CI uses 24)
 - [ ] Remove leftovers (H1)
 
 ## M1. Chatbot fixes and an answer yardstick
 
-- [ ] Match periods by income-year dates, not label strings (A1)
-- [ ] Rewrite follow-up questions into standalone ones before retrieval (A2)
+- [x] Treat labels for the same income year as equal (A1)
+- [x] Search follow-up questions together with the earlier questions of the chat (A2). A keyword-level fix; a real rewrite comes with M8
 - [ ] Let clarifying questions through as a third outcome (A3)
 - [ ] Save unanswered questions and log them as content gaps (B2)
 - [ ] Refund the quota on refusals; show what remains (B3, B4)
@@ -47,7 +47,8 @@ In the engine repository, [`pTidke/benzeneblack`](https://github.com/pTidke/benz
 - [ ] Table structure: header paths, merged cells, scanned tables
 - [ ] Page-group processing for large documents (L8)
 - [x] Name (`pdfanchor`) and its own repository
-- [ ] Choose a licence; first release to PyPI
+- [x] Licence: Apache 2.0
+- [ ] First release to PyPI
 
 ## M4. Unattended extraction on the free tier
 

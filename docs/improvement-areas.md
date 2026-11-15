@@ -57,8 +57,8 @@ For comparison, embeddings for retrieval are far cheaper again (about $0.02 per 
 
 | # | Item | Priority |
 | --- | --- | --- |
-| 1 | Same income year under a different label returns nothing (A1) | P0, verified |
-| 2 | Follow-up questions dead-end without reaching the model (A2) | P0, verified |
+| 1 | Same income year under a different label returns nothing (A1) | Fixed |
+| 2 | Follow-up questions dead-end without reaching the model (A2) | Fixed |
 | 3 | The model is told to ask clarifying questions, then its question is thrown away (A3) | P0 |
 | 4 | Extraction has no driver; it runs by hand on one machine (L1) | P0 |
 | 5 | Nothing in extraction ever decides, so a person checks everything (L2) | P0 |
@@ -74,11 +74,13 @@ For comparison, embeddings for retrieval are far cheaper again (about $0.02 per 
 
 ## 4. Answer correctness and retrieval (`main`)
 
-**A1. Period labels are compared as strings. P0, verified.**
+**A1. Period labels are compared as strings. P0, verified. Fixed.**
+Fixed by matching every label of the same income year (`equivalentPeriods`), in retrieval and coverage, with regression tests in `tests/tax-retrieval.test.ts`. The picker no longer offers Tax Year before 2026-27. The original finding:
 `retrieval.ts:66` requires `v.period = <selected string>`. A document approved for `TY 2026-27` returned 1 passage for `TY 2026-27` and 0 for `FY 2026-27` and `AY 2027-28`, although all three name April 2026 to March 2027. `periodRange()` in `registry.ts` already computes the canonical range, and `coverage.ts` has the same string comparison.
 Fix: store and match on the income-year start date (or the range), and treat the label as display only. The picker in `ChatInterface.tsx` also offers Tax Year for years before the concept exists.
 
-**A2. Retrieval ignores conversation history. P0, verified.**
+**A2. Retrieval ignores conversation history. P0, verified. Fixed, lexically.**
+Fixed without an extra model call: the last three questions of the conversation are searched too, at half weight. This is a keyword-level fix; it will be replaced by a proper standalone-question rewrite when the answer graph is built (10.3). A6 is unchanged: an entity's full name must still be in the current message. The original finding:
 Only the current message is searched. After "What is a tax year?", the follow-up "and how long is it?" produced the query `long | is | it`, matched nothing, and `route.ts:59` returned the fixed "no approved source" reply without calling the model. History is loaded later, only for generation.
 Fix: rewrite the message into a standalone question using recent turns before retrieval, and carry forward named entities and section references.
 
@@ -315,11 +317,11 @@ Add request ids and stable error codes that carry no user text.
 **H1. Leftovers. P2.**
 `src/sanity/client.ts` and `@sanity/client`; `User.questionsToday`, `lastQuestionAt`, `threadId`; `--legacy-peer-deps`; NextAuth on a beta release; a typo in the JSON-LD description in `layout.tsx`.
 
-**H2. The lab branch is merged into the working branch, not yet into `main`. P1.**
-Staging is feature-flagged off by default. Merging to `main` triggers a production deployment and adds `vercel.json` function settings, so check the preview deployment first.
+**H2. The lab branch was merged into `main` on 15 November 2026. Done.**
+Staging stays feature-flagged off by default.
 
 **H3. Three storage tests are cancelled on Node 22. P2.**
-`tests/extraction-storage.test.ts` reports "Promise resolution is still pending but the event loop has already resolved" on Node 22.23, which `package.json` allows; CI runs Node 24.
+`tests/extraction-storage.test.ts` reports "Promise resolution is still pending but the event loop has already resolved" on Node 22.23, which `package.json` allows. The same tests pass in CI on Node 24.
 
 ---
 
@@ -436,5 +438,4 @@ Steps 1 and 2 can run in parallel; they need different people. Step 8 can start 
 1. **Licence for the engine.** The name `pdfanchor` is settled and the code is in `pTidke/benzeneblack`. A licence must be chosen before it can be reused or published to PyPI; the engines it builds on are permissively licensed, so a permissive licence is possible.
 2. **How this application pins the engine.** By commit from the repository for now; by released version once it is on PyPI.
 3. **Redistribution of test documents.** Whether official PDFs may be shipped as a public test set with the library, or whether it should carry synthetic fixtures only.
-4. **Merging to `main`.** Approved in principle; it deploys to production, so it should go through a pull request with the preview checked.
-5. **Model-proposed metadata.** Parked as a possible later assist (section 2); revisit once the accountant has reviewed a few dozen documents and the time per document is known.
+4. **Model-proposed metadata.** Parked as a possible later assist (section 2); revisit once the accountant has reviewed a few dozen documents and the time per document is known.

@@ -118,20 +118,23 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
                       : "Tax year"
                 }
               >
-                {years.map((year) => {
-                  const value = `${kind} ${year}-${String((year + 1) % 100).padStart(2, "0")}`;
-                  return (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  );
-                })}
+                {/* "Tax year" exists only from 1 April 2026. */}
+                {years
+                  .filter((year) => kind !== "TY" || year >= 2026)
+                  .map((year) => {
+                    const value = `${kind} ${year}-${String((year + 1) % 100).padStart(2, "0")}`;
+                    return (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    );
+                  })}
               </optgroup>
             ))}
           </select>
           <span className="text-xs text-slate-500">
-            Changing the period starts a new chat. Coverage depends on approved
-            sources.
+            FY 2026-27, TY 2026-27 and AY 2027-28 are the same income year.
+            Changing the period starts a new chat.
           </span>
         </div>
         <CoverageNotice period={period} />
