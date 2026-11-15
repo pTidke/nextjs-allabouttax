@@ -6,6 +6,7 @@ import TaxReviewForm, {
 } from "@/components/review/TaxReviewForm";
 import PageViewer from "@/components/review/PageViewer";
 import type { LineForReview } from "@/lib/review/extraction-runs";
+import type { ReviewLine } from "@/lib/review/line-reviews";
 
 type Check = {
   id: string;
@@ -50,8 +51,17 @@ export type EngineOverview =
         rotation: number;
         kind: string;
       }[];
-      attention: LineForReview[];
+      runId: string;
+      attention: ReviewLine[];
       attentionTotal: number;
+      sample: ReviewLine[];
+      progress: {
+        required: number;
+        decided: number;
+        undecided: number;
+        unreadable: number;
+        complete: boolean;
+      };
     }
   | {
       status: "FAILED";
@@ -92,6 +102,8 @@ export default function Workspace({
   const latest = version.textChecks[0];
   const textAccepted = latest?.decision === "ACCEPTED";
   const open = version.current && version.status === "PENDING";
+  const linesReady = engine?.status !== "OK" || engine.progress.complete;
+  const canAcceptText = version.chunks.length > 0 || engine?.status === "OK";
 
   async function act(body: Record<string, unknown>) {
     setBusy(true);
@@ -225,13 +237,21 @@ export default function Workspace({
             isPdf={version.isPdf}
             selected={selected}
             onFocus={focus}
+            canDecide={open && access.extraction}
+            versionId={version.id}
+            onChanged={() => router.refresh()}
           />
 
           <div className="space-y-2">
             <h2 className="font-semibold">
-              Extracted text ({version.chunks.length}{" "}
-              {version.chunks.length === 1 ? "passage" : "passages"})
+              Passages the chatbot will use ({version.chunks.length})
             </h2>
+            {version.isPdf && (
+              <p className="text-xs text-slate-500">
+                When the text is accepted, these are rebuilt from the checked
+                lines, with your corrections.
+              </p>
+            )}
             {!version.chunks.length && (
               <p className="text-sm text-slate-500">
                 No text could be read from this file. It needs OCR before it can
@@ -280,6 +300,13 @@ export default function Workspace({
             )}
             {open && access.extraction ? (
               <div className="space-y-3">
+                {!textAccepted && engine?.status === "OK" && !linesReady && (
+                  <p className="text-sm text-amber-800">
+                    {engine.progress.unreadable
+                      ? `${engine.progress.unreadable} line(s) are marked unreadable. Report the problem below instead of accepting.`
+                      : `Decide the ${engine.progress.undecided} remaining line(s) above before accepting.`}
+                  </p>
+                )}
                 {!textAccepted && (
                   <>
                     <label className="block text-sm">
@@ -295,7 +322,7 @@ export default function Workspace({
                     <div className="flex flex-wrap gap-3">
                       <button
                         type="button"
-                        disabled={busy || !version.chunks.length}
+                        disabled={busy || !canAcceptText || !linesReady}
                         onClick={() =>
                           void act({
                             action: "textCheck",
@@ -395,11 +422,17 @@ function EngineSummary({
   isPdf,
   selected,
   onFocus,
+  canDecide,
+  versionId,
+  onChanged,
 }: {
   engine: EngineOverview | null;
   isPdf: boolean;
   selected: string | null;
   onFocus: (line: LineForReview) => void;
+  canDecide: boolean;
+  versionId: string;
+  onChanged: () => void;
 }) {
   if (!isPdf) return null;
   if (!engine)
@@ -417,12 +450,23 @@ function EngineSummary({
       </p>
     );
   const s = engine.summary;
+  const p = engine.progress;
+  const card = (line: ReviewLine) => (
+    <LineCard
+      key={line.id}
+      line={line}
+      runId={engine.runId}
+      versionId={versionId}
+      selected={line.id === selected}
+      canDecide={canDecide}
+      onFocus={onFocus}
+      onChanged={onChanged}
+    />
+  );
   return (
-    <div className="border rounded-xl p-4 space-y-3">
+    <div className="border rounded-xl p-4 space-y-4">
       <div className="space-y-1">
-        <h2 className="font-semibold">
-          Lines that need a look ({engine.attentionTotal})
-        </h2>
+        <h2 className="font-semibold">Check the lines</h2>
         <p className="text-xs text-slate-500">
           Read by {engine.engine} on{" "}
           {new Date(engine.createdAt).toLocaleString("en-IN", {
@@ -436,56 +480,239 @@ function EngineSummary({
           {s.pages_scanned
             ? `; ${s.pages_scanned} scanned pages read by OCR`
             : ""}
-          . Click a line to find it on the page.
+          .
+        </p>
+        <p
+          className={`text-sm ${p.complete ? "text-emerald-800" : "text-slate-700"}`}
+        >
+          {p.decided} of {p.required} lines decided
+          {p.unreadable ? ` · ${p.unreadable} unreadable` : ""}
+          {p.complete ? " · ready to accept below" : ""}
         </p>
       </div>
-      {!engine.attentionTotal ? (
-        <p className="text-sm text-emerald-800">
-          Every line passed the engine&rsquo;s checks.
-        </p>
-      ) : (
-        <ol className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-          {engine.attention.map((line) => (
-            <li key={line.id}>
-              <button
-                type="button"
-                onClick={() => onFocus(line)}
-                className={`w-full text-left rounded-lg border p-3 text-sm space-y-1 ${
-                  line.id === selected
-                    ? "border-sky-500 bg-sky-50"
-                    : "hover:bg-slate-50"
-                } ${line.status === "blocked" ? "border-red-300" : "border-amber-300"}`}
-              >
-                <span className="block text-xs text-slate-500">
-                  Page {line.page} ·{" "}
-                  {line.flags.map((flag) => flag.message).join(" ")}
-                </span>
-                <span className="block">
-                  <span className="text-xs text-slate-500">
-                    {readers[line.source] ?? line.source}:{" "}
-                  </span>
-                  {line.text || <em className="text-slate-400">nothing</em>}
-                </span>
-                {line.other.map((reading) => (
-                  <span key={reading.source} className="block">
-                    <span className="text-xs text-slate-500">
-                      {readers[reading.source] ?? reading.source}:{" "}
-                    </span>
-                    {reading.text || (
-                      <em className="text-slate-400">nothing</em>
-                    )}
-                  </span>
-                ))}
-              </button>
-            </li>
-          ))}
-          {engine.attentionTotal > engine.attention.length && (
-            <li className="text-xs text-slate-500">
-              Showing the first {engine.attention.length}.
-            </li>
-          )}
-        </ol>
+      <section className="space-y-2">
+        <h3 className="text-sm font-semibold">
+          Lines that need a look ({engine.attentionTotal})
+        </h3>
+        {!engine.attentionTotal ? (
+          <p className="text-sm text-emerald-800">
+            Every line passed the engine&rsquo;s checks.
+          </p>
+        ) : (
+          <ol className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+            {engine.attention.map(card)}
+          </ol>
+        )}
+        {engine.attentionTotal > engine.attention.length && (
+          <p className="text-xs text-slate-500">
+            Showing the first {engine.attention.length}.
+          </p>
+        )}
+      </section>
+      {!!engine.sample.length && (
+        <section className="space-y-2">
+          <h3 className="text-sm font-semibold">
+            Spot check ({engine.sample.length} lines the engine accepted)
+          </h3>
+          <p className="text-xs text-slate-500">
+            A fixed sample, so a mistake in the rules gets noticed.
+          </p>
+          <ol className="space-y-2">{engine.sample.map(card)}</ol>
+        </section>
       )}
     </div>
+  );
+}
+
+const decisionText: Record<string, string> = {
+  CONFIRMED: "Confirmed",
+  CORRECTED: "Corrected",
+  UNREADABLE: "Marked unreadable",
+};
+
+function LineCard({
+  line,
+  runId,
+  versionId,
+  selected,
+  canDecide,
+  onFocus,
+  onChanged,
+}: {
+  line: ReviewLine;
+  runId: string;
+  versionId: string;
+  selected: boolean;
+  canDecide: boolean;
+  onFocus: (line: LineForReview) => void;
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [changing, setChanging] = useState(false);
+  const [draft, setDraft] = useState(line.decision?.text ?? line.text);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const ocr = line.other.find(
+    (reading) => reading.text.trim() && reading.text !== line.text,
+  );
+  async function decide(decision: string, text?: string) {
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/review/${versionId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "line",
+          runId,
+          lineId: line.id,
+          decision,
+          text,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "That did not save.");
+      setEditing(false);
+      setChanging(false);
+      onChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "That did not save.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  const tone = line.decision
+    ? line.decision.decision === "UNREADABLE"
+      ? "border-red-300 bg-red-50/40"
+      : "border-emerald-300 bg-emerald-50/40"
+    : line.status === "blocked"
+      ? "border-red-300"
+      : "border-amber-300";
+  const small =
+    "rounded-md border px-2 py-1 text-xs bg-white disabled:opacity-40";
+  return (
+    <li
+      className={`rounded-lg border p-3 text-sm space-y-2 ${tone} ${selected ? "ring-2 ring-sky-500" : ""}`}
+    >
+      <button
+        type="button"
+        onClick={() => onFocus(line)}
+        className="w-full text-left space-y-1"
+      >
+        <span className="block text-xs text-slate-500">
+          Page {line.page}
+          {line.flags.length
+            ? ` · ${line.flags.map((flag) => flag.message).join(" ")}`
+            : ""}
+        </span>
+        <span className="block">
+          <span className="text-xs text-slate-500">
+            {readers[line.source] ?? line.source}:{" "}
+          </span>
+          {line.text || <em className="text-slate-400">nothing</em>}
+        </span>
+        {line.other.map((reading) => (
+          <span key={reading.source} className="block">
+            <span className="text-xs text-slate-500">
+              {readers[reading.source] ?? reading.source}:{" "}
+            </span>
+            {reading.text || <em className="text-slate-400">nothing</em>}
+          </span>
+        ))}
+      </button>
+      {line.decision && (
+        <p className="text-xs text-slate-600">
+          {decisionText[line.decision.decision]}
+          {line.decision.decision === "CORRECTED" && (
+            <> to &ldquo;{line.decision.text}&rdquo;</>
+          )}{" "}
+          by {line.decision.reviewer}
+        </p>
+      )}
+      {canDecide && !editing && line.decision && !changing && (
+        <button
+          type="button"
+          className="text-xs underline text-slate-600"
+          onClick={() => setChanging(true)}
+        >
+          Change
+        </button>
+      )}
+      {canDecide && !editing && (!line.decision || changing) && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            className={small}
+            onClick={() => void decide("CONFIRMED")}
+          >
+            Text is right
+          </button>
+          {ocr && (
+            <button
+              type="button"
+              disabled={busy}
+              className={small}
+              onClick={() => void decide("CORRECTED", ocr.text)}
+            >
+              Use the {readers[ocr.source] ?? ocr.source} reading
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={busy}
+            className={small}
+            onClick={() => setEditing(true)}
+          >
+            Type a correction
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            className={`${small} text-red-700`}
+            onClick={() => void decide("UNREADABLE")}
+          >
+            Can&rsquo;t read
+          </button>
+        </div>
+      )}
+      {canDecide && editing && (
+        <form
+          className="space-y-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void decide("CORRECTED", draft);
+          }}
+        >
+          <label className="block text-xs text-slate-600">
+            What the page says
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              maxLength={2000}
+              rows={2}
+              autoFocus
+              className="block w-full border rounded-md p-2 mt-1 text-sm"
+            />
+          </label>
+          <div className="flex gap-2">
+            <button
+              disabled={busy || !draft.trim()}
+              className={`${small} bg-emerald-700 text-white`}
+            >
+              Save correction
+            </button>
+            <button
+              type="button"
+              className={small}
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+      {error && <p className="text-xs text-red-700">{error}</p>}
+    </li>
   );
 }

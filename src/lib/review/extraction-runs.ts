@@ -97,13 +97,17 @@ export async function engineIdentity(bin: string, ref?: string) {
   return `pdfanchor ${stdout.trim()}${ref ? `@${ref.slice(0, 12)}` : ""}`;
 }
 
-// Current PDF versions awaiting review that this engine has not read yet.
+// Current PDF versions awaiting review that this engine has not read yet, and
+// whose text nobody has accepted.
 export async function versionsToExtract(engine: string, limit: number) {
   return prisma.$queryRaw<{ id: string; originalHash: string }[]>(Prisma.sql`
     SELECT v.id, v."originalHash" FROM "TaxVersion" v
     JOIN "TaxDocument" d ON d."latestVersionId" = v.id
     WHERE v.status = 'PENDING' AND v."contentType" LIKE '%pdf%'
       AND NOT EXISTS (SELECT 1 FROM "ExtractionRun" r WHERE r."versionId" = v.id AND r.engine = ${engine})
+      -- Once a person has accepted the text, a newer engine does not reopen it.
+      AND COALESCE((SELECT e.decision FROM "ExtractionReview" e WHERE e."versionId" = v.id
+        ORDER BY e."createdAt" DESC, e.id DESC LIMIT 1), '') <> 'ACCEPTED'
     ORDER BY v."fetchedAt" DESC, v.id DESC
     LIMIT ${limit}`);
 }
@@ -202,7 +206,7 @@ export async function extractPending(options: {
 
 // ---- Reading runs for the review screens -----------------------------------
 
-async function latestRun(versionId: string) {
+export async function latestRun(versionId: string) {
   return prisma.extractionRun.findFirst({
     where: { versionId },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -222,7 +226,7 @@ export type LineForReview = Pick<
   | "role"
 > & { other: { source: string; text: string }[] };
 
-function forReview(line: EngineLine): LineForReview {
+export function forReview(line: EngineLine): LineForReview {
   return {
     id: line.id,
     page: line.page,
