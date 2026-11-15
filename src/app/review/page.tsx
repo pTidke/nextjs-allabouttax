@@ -24,7 +24,7 @@ const order: QueueFilter[] = ["text", "tax", "ocr", "uploads", "all"];
 function status(
   item: Awaited<ReturnType<typeof reviewQueue>>["items"][number],
 ) {
-  if (!item.chunks)
+  if (!item.chunks && !item.hasRun)
     return { text: "Needs OCR", tone: "bg-amber-100 text-amber-900" };
   if (item.textDecision === "ACCEPTED")
     return {

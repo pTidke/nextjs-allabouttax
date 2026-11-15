@@ -6,7 +6,7 @@ import { suggestedReview } from "../tax/review-suggestions";
 import { reviewVersion, validateReview, type ReviewInput } from "../tax/review";
 import { saveReviewDraft } from "../tax/review-drafts";
 import { requireReviewer } from "./roles";
-import { runOverview } from "./extraction-runs";
+import { applyReviewedLines, lineReviewOverview } from "./line-reviews";
 
 // Two gates before anything reaches the chatbot:
 //   1. text check: someone with EXTRACTION access confirms the extracted text
@@ -16,7 +16,7 @@ import { runOverview } from "./extraction-runs";
 
 export type TextDecision = "ACCEPTED" | "NEEDS_CHANGES";
 
-async function reviewableVersion(versionId: string) {
+export async function reviewableVersion(versionId: string) {
   const version = await prisma.taxVersion.findUnique({
     where: { id: versionId },
     select: {
@@ -57,13 +57,34 @@ export async function recordTextCheck(
   if (decision === "NEEDS_CHANGES" && !text)
     throw new HttpError(400, "Describe what does not match.");
   const version = await reviewableVersion(versionId);
-  if (decision === "ACCEPTED" && !version._count.chunks)
-    throw new HttpError(
-      409,
-      "There is no extracted text to accept. This document needs OCR first.",
-    );
-  return prisma.extractionReview.create({
-    data: { versionId, reviewerId: userId, decision, note: text },
+  if (decision === "NEEDS_CHANGES")
+    return prisma.extractionReview.create({
+      data: { versionId, reviewerId: userId, decision, note: text },
+    });
+  return prisma.$transaction(async (tx) => {
+    // With an engine run, the reviewed lines become the passages the chatbot
+    // uses. Without one, the existing passages are accepted as they are.
+    const rebuilt = await applyReviewedLines(tx, versionId);
+    if (rebuilt === null && !version._count.chunks)
+      throw new HttpError(
+        409,
+        "There is no extracted text to accept yet. The engine reads new documents every two hours.",
+      );
+    if (rebuilt !== null) {
+      // An uploaded scan was held back as "needs OCR"; its text now exists.
+      const document = await tx.taxDocument.findFirstOrThrow({
+        where: { latestVersionId: versionId },
+        select: { id: true, source: { select: { kind: true } } },
+      });
+      if (document.source.kind === "UPLOAD")
+        await tx.taxDocument.update({
+          where: { id: document.id },
+          data: { lastError: null },
+        });
+    }
+    return tx.extractionReview.create({
+      data: { versionId, reviewerId: userId, decision, note: text },
+    });
   });
 }
 
@@ -121,6 +142,7 @@ export type QueueItem = {
   chunks: number;
   textDecision: TextDecision | null;
   textNote: string | null;
+  hasRun: boolean;
 };
 
 // Current pending versions with their review state, newest first, ten a page.
@@ -135,9 +157,9 @@ export async function reviewQueue(filter: QueueFilter, page: number) {
     throw new HttpError(400, "Invalid page.");
   const where = {
     all: Prisma.sql`TRUE`,
-    text: Prisma.sql`chunks > 0 AND "textDecision" IS DISTINCT FROM 'ACCEPTED'`,
+    text: Prisma.sql`(chunks > 0 OR "hasRun") AND "textDecision" IS DISTINCT FROM 'ACCEPTED'`,
     tax: Prisma.sql`"textDecision" = 'ACCEPTED'`,
-    ocr: Prisma.sql`chunks = 0`,
+    ocr: Prisma.sql`chunks = 0 AND NOT "hasRun"`,
     uploads: Prisma.sql`"sourceKind" = 'UPLOAD'`,
   }[filter];
   const rows = await prisma.$queryRaw<QueueItem[]>(Prisma.sql`
@@ -145,7 +167,8 @@ export async function reviewQueue(filter: QueueFilter, page: number) {
       SELECT v.id AS "versionId", d.title, d.url, s.kind AS "sourceKind",
         s.name AS "sourceName", v."fetchedAt", d."issuedAt", d."lastError",
         (SELECT count(*)::int FROM "TaxChunk" c WHERE c."versionId" = v.id) AS chunks,
-        r.decision AS "textDecision", r.note AS "textNote"
+        r.decision AS "textDecision", r.note AS "textNote",
+        EXISTS (SELECT 1 FROM "ExtractionRun" x WHERE x."versionId" = v.id AND x.status = 'OK') AS "hasRun"
       FROM "TaxVersion" v
       JOIN "TaxDocument" d ON d."latestVersionId" = v.id
       JOIN "TaxSource" s ON s.id = d."sourceId"
@@ -162,15 +185,16 @@ export async function reviewQueue(filter: QueueFilter, page: number) {
     { text: number; tax: number; ocr: number; uploads: number; all: number }[]
   >(Prisma.sql`
     SELECT count(*)::int AS all,
-      count(*) FILTER (WHERE chunks > 0 AND decision IS DISTINCT FROM 'ACCEPTED')::int AS text,
+      count(*) FILTER (WHERE (chunks > 0 OR "hasRun") AND decision IS DISTINCT FROM 'ACCEPTED')::int AS text,
       count(*) FILTER (WHERE decision = 'ACCEPTED')::int AS tax,
-      count(*) FILTER (WHERE chunks = 0)::int AS ocr,
+      count(*) FILTER (WHERE chunks = 0 AND NOT "hasRun")::int AS ocr,
       count(*) FILTER (WHERE kind = 'UPLOAD')::int AS uploads
     FROM (
       SELECT s.kind,
         (SELECT count(*) FROM "TaxChunk" c WHERE c."versionId" = v.id) AS chunks,
         (SELECT e.decision FROM "ExtractionReview" e WHERE e."versionId" = v.id
-          ORDER BY e."createdAt" DESC, e.id DESC LIMIT 1) AS decision
+          ORDER BY e."createdAt" DESC, e.id DESC LIMIT 1) AS decision,
+        EXISTS (SELECT 1 FROM "ExtractionRun" x WHERE x."versionId" = v.id AND x.status = 'OK') AS "hasRun"
       FROM "TaxVersion" v
       JOIN "TaxDocument" d ON d."latestVersionId" = v.id
       JOIN "TaxSource" s ON s.id = d."sourceId"
@@ -239,7 +263,7 @@ export async function reviewDocument(userId: string, versionId: string) {
     where: { id: { in: version.extractionReviews.map((r) => r.reviewerId) } },
     select: { id: true, name: true, email: true },
   });
-  const engine = await runOverview(versionId);
+  const engine = await lineReviewOverview(versionId);
   const draft = access.tax
     ? await prisma.taxReviewDraft.findUnique({
         where: { versionId_userId: { versionId, userId } },
