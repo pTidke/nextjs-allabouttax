@@ -95,6 +95,25 @@ function stagingFor(sourceHash: string): StagingData {
         }),
         head: sha("rev-3"),
       },
+      // A repair pilot on the same file, created later, whose draft would
+      // change a line of the accepted text.
+      {
+        id: sha("pilot"),
+        payload: candidate(sha("pilot"), {
+          title: "OCR pilot test",
+          regions: [
+            {
+              id: "p1",
+              page: 1,
+              raw: "NOTIFICATION",
+              proposed: "NOTIFICATION.",
+              state: "pending",
+              box,
+            },
+          ],
+        }),
+        head: sha("rev-pilot"),
+      },
       {
         id: sha("elsewhere"),
         payload: candidate(sha("elsewhere"), { sourceHash: sha("other file") }),
@@ -120,6 +139,17 @@ function stagingFor(sourceHash: string): StagingData {
         action: "SAVE_DRAFT",
         created_at: new Date("2026-11-13T10:00:00Z"),
         payload: { action: "SAVE_DRAFT", note: "", checks: checks.slice(0, 1) },
+      },
+      {
+        id: sha("rev-pilot"),
+        candidate_id: sha("pilot"),
+        action: "SAVE_DRAFT",
+        created_at: new Date("2026-11-15T01:00:00Z"),
+        payload: {
+          action: "SAVE_DRAFT",
+          note: "",
+          checks: [{ regionId: "p1", state: "checked" }],
+        },
       },
       {
         id: sha("rev-3"),
@@ -174,7 +204,7 @@ test("an accepted staging extraction becomes accepted live text, with its histor
   const early = await apply.carryOver(data, { write: true });
   assert.deepEqual(
     early.map((r) => r.outcome),
-    ["written", "no pending live copy of this file"],
+    ["written", "written", "no pending live copy of this file"],
     "one document per repair lineage; the other file is not in the library",
   );
   assert.equal(await db.lineReview.count(), 0);
@@ -207,6 +237,12 @@ test("an accepted staging extraction becomes accepted live text, with its histor
     },
   );
   assert.equal(await db.lineReview.count(), 0, "plan writes nothing");
+  // The accepted review comes first, and the plan already counts the acceptance
+  // it would write: the pilot's draft adds history only.
+  assert.equal(
+    "lineDecisions" in plan[1] && plan[1].lineDecisions,
+    "none: the live text is already accepted; history only",
+  );
 
   const written = await apply.carryOver(data, { write: true });
   assert.equal(written[0].outcome, "written");
@@ -223,7 +259,9 @@ test("an accepted staging extraction becomes accepted live text, with its histor
     ["MINISTRY OF FINANCE NOTIFICATION", "Annexure A"],
   );
   // The history covers the whole lineage, with notes, and the tax review.
-  const history = page.carriedOver[0].history as {
+  const history = page.carriedOver.find(
+    (c) => c.title === "Notification No. 1/2026",
+  )!.history as {
     revisions: { action: string; note: string | null }[];
     taxReviews: unknown[];
   };
