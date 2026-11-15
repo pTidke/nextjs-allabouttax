@@ -12,7 +12,8 @@ For how the platform is built and why, see [brain.md](brain.md). For what should
 - **Branches.** `codex/pdf-processing-lab` is merged into `claude/trusting-hypatia-l5qg4h` together with the new docs, and that branch was merged into `main` the same day (pull request 6). The chatbot was confirmed working in production afterwards.
 - **Known issue.** On Node 22.23, three tests in `tests/extraction-storage.test.ts` are cancelled; the rest of the suite passes. CI runs Node 24.
 - **Chatbot fixes.** Period labels for the same income year now reach the same evidence, and a follow-up question is searched together with the earlier questions of its chat. Both have regression tests in `tests/tax-retrieval.test.ts`.
-- **Next.** The rest of roadmap M1 (clarifying questions, saving unanswered questions, quota refunds, an answer evaluation set), and M2: the verified reference pages that the engine's decision thresholds need.
+- **More chat fixes.** Clarifying questions now reach the user, unanswered questions are saved and listed without identity at `/admin/inbox`, refusals no longer use up a daily question, the chat shows how many questions are left, and the contact form stores messages for `/admin/inbox`. Migration `202611150001_answer_outcomes_and_contact` must be applied before this code runs; the **Apply database migrations** workflow does that.
+- **Next.** The rest of roadmap M1 (an answer evaluation set and a stored trace per answer), and M2: the verified reference pages that the engine's decision thresholds need.
 
 ## Current flow
 

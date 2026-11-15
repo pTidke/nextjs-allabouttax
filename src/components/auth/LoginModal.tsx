@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
+import LegalModals from "@/components/modals/LegalModals";
 
 export default function LoginModal() {
   const router = useRouter();
@@ -95,19 +96,29 @@ export default function LoginModal() {
         <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
           <p className="text-xs text-slate-400 max-w-[300px] mx-auto leading-relaxed">
             By continuing, you agree to our{" "}
-            <a
-              href="#"
-              className="underline hover:text-emerald-600 transition-colors"
-            >
-              Terms of Service
-            </a>{" "}
+            <LegalModals
+              type="terms"
+              trigger={
+                <button
+                  type="button"
+                  className="underline hover:text-emerald-600 transition-colors"
+                >
+                  Terms of Service
+                </button>
+              }
+            />{" "}
             and{" "}
-            <a
-              href="#"
-              className="underline hover:text-emerald-600 transition-colors"
-            >
-              Privacy Policy
-            </a>
+            <LegalModals
+              type="privacy"
+              trigger={
+                <button
+                  type="button"
+                  className="underline hover:text-emerald-600 transition-colors"
+                >
+                  Privacy Policy
+                </button>
+              }
+            />
             .
           </p>
         </div>

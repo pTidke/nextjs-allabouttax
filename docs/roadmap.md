@@ -17,11 +17,13 @@ People: the owner reviews extraction; a chartered accountant reviews tax applica
 
 - [x] Treat labels for the same income year as equal (A1)
 - [x] Search follow-up questions together with the earlier questions of the chat (A2). A keyword-level fix; a real rewrite comes with M8
-- [ ] Let clarifying questions through as a third outcome (A3)
-- [ ] Save unanswered questions and log them as content gaps (B2)
-- [ ] Refund the quota on refusals; show what remains (B3, B4)
+- [x] Let clarifying questions through as a third outcome (A3)
+- [x] Save unanswered questions and log them as content gaps (B2); list them at `/admin/inbox`
+- [x] Refund the quota on refusals; show what remains (B3, B4)
+- [x] No empty conversations after a failed answer (B8)
 - [ ] Evaluation set with expected source passages and expected refusals; store a trace per answer (G1, G2)
-- [ ] Fix the contact form and the consent links (B11, B12)
+- [x] Fix the contact form and the consent links (B11, B12)
+- [ ] Notify the admin of new contact messages (needs an e-mail service; deferred)
 
 Done when: the two verified failures have regression tests, and a change to retrieval or prompt can be scored in one command.
 

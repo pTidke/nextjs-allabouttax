@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { HttpError, errorResponse, readJson, sameOrigin } from "@/lib/http";
@@ -6,7 +5,8 @@ import { ownedConversation, reserveQuestion } from "@/lib/chat/access";
 import { generateAnswer } from "@/lib/chat/generate";
 import { validPeriod } from "@/lib/tax/registry";
 import { retrieveEvidence } from "@/lib/tax/retrieval";
-import { PROMPT_VERSION } from "@/lib/chat/answer";
+import { NO_EVIDENCE_MESSAGE, PROMPT_VERSION } from "@/lib/chat/answer";
+import { DAILY_LIMIT, indiaDay, saveTurn } from "@/lib/chat/turn";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -45,10 +45,12 @@ export async function POST(req: Request) {
       where: { id: session.user.id },
     });
     if (!user) throw new HttpError(401, "Please sign in again.");
+    const question = input.message.trim();
+    const period = input.period;
     const existing = await ownedConversation(
       input.conversationId as string | undefined,
       user.id,
-      input.period,
+      period,
     );
     // Earlier questions give a short follow-up something to search with.
     const earlier = existing
@@ -60,76 +62,59 @@ export async function POST(req: Request) {
         })
       : [];
     const { evidence, releaseId } = await retrieveEvidence(
-      input.message,
-      input.period,
+      question,
+      period,
       earlier.map((message) => message.content),
     );
-    // An empty corpus is an explicit limitation; never silently answer from model memory.
-    if (!evidence.length)
-      return Response.json({
-        conversationId: existing?.id ?? null,
-        message: {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content:
-            "I do not have a current, approved source matching this question and tax period yet. The knowledge library may be awaiting review or refresh. For an entity-specific notification, include the full entity name in your question. Otherwise, narrow the question or consult a tax professional.",
-          citations: [],
-          releaseId,
-        },
-        suggestions: [],
+    const day = indiaDay();
+    const limit = DAILY_LIMIT[user.role];
+    const turn = {
+      userId: user.id,
+      conversationId: existing?.id ?? null,
+      period,
+      question,
+      releaseId,
+      day,
+      limit,
+    };
+    // An empty corpus is an explicit limitation; never silently answer from model
+    // memory. No model call is made, so no question is used.
+    if (!evidence.length) {
+      const saved = await saveTurn({
+        ...turn,
+        answer: NO_EVIDENCE_MESSAGE,
+        citations: [],
+        outcome: "NO_EVIDENCE",
+        charged: false,
       });
-    const day = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Kolkata",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date());
-    const limit = user.role === "ADMIN" ? 1000 : 10;
+      return Response.json({ ...saved, suggestions: [] });
+    }
     await reserveQuestion(user.id, day, limit);
     try {
-      const conversation =
-        existing ??
-        (await prisma.taxConversation.create({
-          data: { userId: user.id, period: input.period },
-        }));
-      const history = await prisma.taxMessage.findMany({
-        where: { conversationId: conversation.id },
-        orderBy: { createdAt: "desc" },
-        take: 8,
-        select: { role: true, content: true },
-      });
-      const { answer, citations, model } = await generateAnswer({
-        question: input.message.trim(),
-        period: input.period,
+      const history = existing
+        ? await prisma.taxMessage.findMany({
+            where: { conversationId: existing.id },
+            orderBy: { createdAt: "desc" },
+            take: 8,
+            select: { role: true, content: true },
+          })
+        : [];
+      const { answer, citations, model, outcome } = await generateAnswer({
+        question,
+        period,
         history: history.reverse(),
         evidence,
       });
-      const message = await prisma.$transaction(async (tx) => {
-        await tx.taxMessage.create({
-          data: {
-            conversationId: conversation.id,
-            role: "user",
-            content: input.message as string,
-            citations: [],
-          },
-        });
-        return tx.taxMessage.create({
-          data: {
-            conversationId: conversation.id,
-            role: "assistant",
-            content: answer.answer,
-            citations: citations as unknown as Prisma.InputJsonValue,
-            releaseId,
-            model,
-            promptVersion: PROMPT_VERSION,
-          },
-        });
+      const saved = await saveTurn({
+        ...turn,
+        answer: answer.answer,
+        citations,
+        outcome,
+        model,
+        promptVersion: PROMPT_VERSION,
+        charged: true,
       });
-      return Response.json({
-        conversationId: conversation.id,
-        message,
-        suggestions: answer.suggestions,
-      });
+      return Response.json({ ...saved, suggestions: answer.suggestions });
     } catch (error) {
       await prisma.dailyUsage.updateMany({
         where: { userId: user.id, day, count: { gt: 0 } },

@@ -79,12 +79,12 @@ export default function LegalModals({ type, trigger }: LegalModalProps) {
                   <LegalSection
                     icon={<Globe size={18} />}
                     title="Information We Collect"
-                    content="Google sign-in provides your name, email and profile image. We store your account, chat messages, citations and usage counters in our PostgreSQL database. Avoid including PAN, Aadhaar, bank details or other sensitive identifiers in questions."
+                    content="Google sign-in provides your name, email and profile image. We store your account, chat messages, citations and usage counters in our PostgreSQL database. If you use the contact form, we store your name, email address and message so that we can reply. Avoid including PAN, Aadhaar, bank details or other sensitive identifiers in questions."
                   />
                   <LegalSection
                     icon={<CheckCircle2 size={18} />}
                     title="How We Use Information"
-                    content="Your current question, a limited recent chat history and relevant official passages are sent to our Azure-hosted model to generate answers. The application requests responses with storage disabled at the API level; provider logging and retention follow the provider’s policies. Google supplies authentication, Neon hosts the database, and Vercel analytics components collect service usage information when enabled."
+                    content="Your current question, a limited recent chat history and relevant official passages are sent to our Azure-hosted model to generate answers. When the reviewed sources cannot answer a question, our administrator may read that question, without your name or email address, to decide which official sources to add next. The application requests responses with storage disabled at the API level; provider logging and retention follow the provider’s policies. Google supplies authentication, Neon hosts the database, and Vercel analytics components collect service usage information when enabled."
                   />
                   <LegalSection
                     icon={<ShieldCheck size={18} />}

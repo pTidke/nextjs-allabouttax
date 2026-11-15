@@ -59,7 +59,7 @@ For comparison, embeddings for retrieval are far cheaper again (about $0.02 per 
 | --- | --- | --- |
 | 1 | Same income year under a different label returns nothing (A1) | Fixed |
 | 2 | Follow-up questions dead-end without reaching the model (A2) | Fixed |
-| 3 | The model is told to ask clarifying questions, then its question is thrown away (A3) | P0 |
+| 3 | The model is told to ask clarifying questions, then its question is thrown away (A3) | Fixed |
 | 4 | Extraction has no driver; it runs by hand on one machine (L1) | P0 |
 | 5 | Nothing in extraction ever decides, so a person checks everything (L2) | P0 |
 | 6 | No accuracy measurement to base a decision rule on (L3) | P0 |
@@ -67,7 +67,7 @@ For comparison, embeddings for retrieval are far cheaper again (about $0.02 per 
 | 8 | No way to withdraw an approval in the live library (D3) | P0 before any automatic acceptance |
 | 9 | The repair path is a chat model (L5) | P1 |
 | 10 | The whole chatbot depends on a best-effort cron plus a 48-hour gate (E1, A9) | P1 |
-| 11 | Unanswered questions are not saved anywhere (B2) | P1 |
+| 11 | Unanswered questions are not saved anywhere (B2) | Fixed |
 | 12 | Primary law is absent from the corpus (C8) | P1 |
 
 ---
@@ -84,7 +84,8 @@ Fixed without an extra model call: the last three questions of the conversation 
 Only the current message is searched. After "What is a tax year?", the follow-up "and how long is it?" produced the query `long | is | it`, matched nothing, and `route.ts:59` returned the fixed "no approved source" reply without calling the model. History is loaded later, only for generation.
 Fix: rewrite the message into a standalone question using recent turns before retrieval, and carry forward named entities and section references.
 
-**A3. Clarifying questions are discarded. P0.**
+**A3. Clarifying questions are discarded. P0. Fixed.**
+The answer schema now has `needsClarification`. A clarifying question is shown only if it has a question mark, no digits, no citations and at most 400 characters; otherwise the fixed refusal is used. The original finding:
 The prompt says "Ask for missing circumstances rather than guessing". When the model does that it sets `supported: false`, and `answer.ts:59-69` replaces its text with a fixed refusal and empties the suggestions. The user never sees the question.
 Fix: add a third outcome, `needs_clarification`, whose text is shown, with a check that it makes no tax claim.
 
@@ -124,14 +125,15 @@ Slabs, limits, due dates and rates are not stored as data, and the model is forb
 **B1. Fifteen period options before the first question. P1.**
 FY, AY and TY across five years, with no default; changing it wipes the conversation. With A1 fixed, offer one list of income years ("April 2026 – March 2027 · FY 2026-27 · AY 2027-28"), default to the current one, and infer the year from the question when it is stated.
 
-**B2. Unanswered questions vanish. P1.**
+**B2. Unanswered questions vanish. P1. Fixed.**
+Both messages are now saved with outcome `NO_EVIDENCE` or `UNSUPPORTED`, and the question is logged in `TaxContentGap`, listed without identity at `/admin/inbox`. The original finding:
 When retrieval is empty, neither the question nor the reply is saved (`route.ts:59-70`), and `conversationId` is returned as `null`. They are missing after a reload, from history and from export. There is also no record of what people asked that the library could not answer, which is the best available signal for what to ingest next.
 Fix: save both messages, and log the question to a content-gap table.
 
-**B3. A refusal from the model costs one of ten daily questions. P1.**
+**B3. A refusal from the model costs one of ten daily questions. P1. Fixed.** A refusal is now refunded; a clarifying question is still charged.
 The quota is refunded on errors but not when `supported` is false.
 
-**B4. The quota is invisible until it is hit. P2.**
+**B4. The quota is invisible until it is hit. P2. Fixed.** Every reply carries the number left, shown under the input.
 
 **B5. No progress during a wait of up to 40 seconds. P1.**
 Validation before display (AD-08) can be kept while still streaming stage events: searching, reading N sources, drafting, checking citations.
@@ -142,7 +144,7 @@ The user gets a URL and "Page 3, passage 2" and must find the passage. Show the 
 **B7. Refusals do not say what is covered. P2.**
 Offer the nearest covered topics or a link into the library. The library lists titles only, has no search, and takes the period as free text matched against a regex.
 
-**B8. Failed questions leave empty conversations. P2.**
+**B8. Failed questions leave empty conversations. P2. Fixed.** The conversation is now created in the same transaction as its first messages.
 The conversation row is created before the model call (`route.ts:80-84`) and is not removed when generation fails, so `/chats` can show entries with 0 messages.
 
 **B9. Conversations have no title or search. P2.**
@@ -150,10 +152,10 @@ The conversation row is created before the model call (`route.ts:80-84`) and is 
 **B10. No feedback control. P1.**
 No thumbs up or down, no "this is wrong".
 
-**B11. The contact form does not send anything. P1.**
+**B11. The contact form does not send anything. P1. Fixed.** Messages are stored in `ContactMessage` and listed at `/admin/inbox`. Nobody is notified automatically yet.
 `contact/page.tsx:17-39` opens a Gmail compose window in a new tab and then clears the form. People without Gmail in that browser, or with a pop-up blocker, lose the message and are not told.
 
-**B12. Consent links go nowhere. P1.**
+**B12. Consent links go nowhere. P1. Fixed.** They open the existing policy dialogs.
 The sign-in dialog says "By continuing, you agree to our Terms of Service and Privacy Policy" with both links set to `#` (`LoginModal.tsx:98-110`), although the documents exist in `LegalModals.tsx`.
 
 **B13. No account-level export or deletion. P1.**
