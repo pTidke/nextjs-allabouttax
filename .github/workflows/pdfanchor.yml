@@ -1,0 +1,34 @@
+name: pdfanchor engine checks
+on:
+  pull_request:
+    paths:
+      - "packages/pdfanchor/**"
+      - ".github/workflows/pdfanchor.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/pdfanchor/**"
+      - ".github/workflows/pdfanchor.yml"
+permissions:
+  contents: read
+concurrency:
+  group: pdfanchor-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/pdfanchor
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      # The real OCR test runs only when the program is present.
+      - name: Install Tesseract with English and Hindi data
+        run: sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr tesseract-ocr-hin
+      - run: pip install -e ".[test]"
+      - run: ruff check .
+      - run: python -m pytest -q

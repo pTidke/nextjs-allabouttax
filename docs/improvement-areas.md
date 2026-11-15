@@ -2,16 +2,16 @@
 
 Logic and behavioural UX only; visual design is out of scope. Companion to [`brain.md`](../brain.md), which describes what exists today.
 
-- Covers both lines of code: `main` at `d3025cb` (live product) and `codex/pdf-processing-lab` at `868577f` (extraction lab and staging, not merged). Reviewed 15 November 2026.
+- Covers the live product and the extraction lab and staging, which were developed on `codex/pdf-processing-lab` and merged on 15 November 2026. Findings were made against `main` at `d3025cb` and the lab at `868577f`.
 - Items marked **verified** were reproduced by running the real code against the embedded test database. The rest come from reading the code and the branch's own records.
 - Priority: **P0** fix before investing in anything else, **P1** needed for the stated goals, **P2** worthwhile, not blocking.
-- Section 2 records the owner's decisions. Section 12 lists what is still open.
+- Section 2 records the owner's decisions. Section 12 lists what is still open. The work is laid out as checklists in [`roadmap.md`](roadmap.md).
 
 ---
 
 ## 1. Where things stand
 
-**Two systems that do not meet.** The live chatbot ingests documents through a text-layer-only path on `main`. The OCR work lives on a branch as a Python lab that someone runs by hand, feeding a hosted staging review screen. Nothing accepted in staging reaches the live library, so none of the OCR work affects an answer yet.
+**Two systems that do not meet.** The live chatbot ingests documents through a text-layer-only path. The OCR work is a Python lab that someone runs by hand, feeding a hosted staging review screen. Nothing accepted in staging reaches the live library, so none of the OCR work affects an answer yet.
 
 **What "depends on a chat LLM" means here.** There are three separate dependencies in the document path, and they need different fixes:
 
@@ -29,13 +29,29 @@ The Python lab itself calls no language model. Tesseract, EasyOCR and Docling al
 
 | Decision | Implication |
 | --- | --- |
-| **Rules only in ingestion; a person approves what rules cannot decide.** | The Azure repair provider is replaced by local, deterministic re-reading plus direct reviewer correction. Tax applicability stays a human decision, with rule-extracted proposals. A measured decision policy becomes the central piece of work (L2, L3). |
-| **Free tier for the pilot.** | Extraction moves from a developer machine to GitHub Actions, where the lab's CI already installs its environment. No always-on worker, no paid OCR service. Embedding storage must be sized for Neon's free allowance (10.2). |
-| **Everyone and everything.** | A destination, not a first release. With human approval and a free tier, reviewer hours are the binding constraint, so order matters: primary law and the material individuals ask about first (C8), and every automation choice should be judged by reviewer seconds saved per document. |
-| **Forms product parked.** | Section 10.5 is kept as a short note only. The facts table and rules engine (A12) stay in scope because the chatbot needs them. |
-| **TypeScript or Python?** | Recommendation in 10.4: both, split by job. |
+| **Rules only in ingestion. Rules may accept easy pages; a person audits.** | A measured decision policy is the central piece of work (L2, L3). Review shows only what rules flag, plus an audit sample. |
+| **Retire the Azure repair worker; keep it as a backup.** | A local provider becomes the default behind the same interface; the Azure provider stays in the code, switched off (L5). |
+| **Index English; keep Hindi as evidence.** | Hindi-only lines are kept in the record and left out of review and exports (L6). This is `exclude_scripts` in the engine. |
+| **Hindi and Hinglish questions deferred.** | A5 moves to "later". |
+| **Free tier; the repository is public.** | Extraction runs in GitHub Actions, where minutes are unmetered for public repositories. No always-on worker, no paid OCR service. |
+| **Everyone and everything.** | A destination. Order the corpus by value (C8). |
+| **One chartered accountant, one to two hours a day, for tax review.** | Roughly 7 to 14 reviewer hours a week. Every automation choice should be judged by the minutes it saves per document. |
+| **The engine becomes an open-source library.** | Scaffolded as `packages/pdfanchor`, generic and standalone; tax-specific rules stay in the application (10.1). |
+| **Python for extraction, TypeScript online.** | See 10.4. |
+| **Forms product parked.** | Section 10.5 is a short note only. |
 
-One consequence to state plainly: "rules only" plus "everyone and everything" plus "free tier" is achievable only if rules are allowed to accept the easy majority of pages without a person (question 2 in section 12). If a person must check every region of every document, as staging requires today, coverage will grow at the speed of one or two reviewers.
+**Should a model propose the metadata after all? Cost.** Option (b), a model called through the API that pre-fills the tax-review form for a person to approve, costs about the same per document as one chatbot answer, because it sends about the same amount of text: a typical notification or circular is 2,000 to 5,000 tokens in, and the filled form is a few hundred tokens out.
+
+| Volume | Tokens | At a low-priced model | At a high-priced model |
+| --- | --- | --- | --- |
+| One document | ~4,000 in, ~600 out | about $0.002 | about $0.02 |
+| The ~155 pending documents | ~0.6M in, ~0.1M out | about $0.30 | about $3 |
+| A year of new CBDT circulars and notifications (~150) | the same | about $0.30 | about $3 |
+| A 5,000-document backfill | ~20M in, ~3M out | about $11 | about $95 |
+
+The price columns assume $0.25 and $2.50 per million input tokens and $2 and $15 per million output tokens, the range third-party trackers show for current Azure OpenAI chat models; Microsoft's own page did not render its figures when checked, so read the real rate for your deployment in the Azure portal and scale. The conclusion does not depend on the exact rate: money is not the reason to avoid (b). The reasons are the ones behind the rules-only decision, a model in the document path whose proposals a tired reviewer may wave through. A sensible middle is to keep rules as the default and add (b) later as an optional assist for the fields rules cannot fill, clearly marked as a model proposal, if the accountant's hours turn out to be the bottleneck.
+
+For comparison, embeddings for retrieval are far cheaper again (about $0.02 per million tokens for the small embedding model, so a few cents for the whole corpus), and translating Hindi questions would cost a small fraction of a normal answer per question.
 
 ## 3. The items that matter most
 
@@ -183,15 +199,15 @@ A version has one period or date range and one entity (AD-23). Documents whose p
 **C10. No relationships between documents. P1.**
 No amends, supersedes, clarifies or refers-to links. A superseded circular stays retrievable until someone notices.
 
-## 7. Extraction lab and staging (branch)
+## 7. Extraction lab and staging
 
 **L1. The pipeline has no driver. P0.**
 About thirty subcommands, each run by hand with a hand-made manifest and a fresh output directory, on a developer machine. Bundles are then planned, uploaded and imported by an operator. Nothing is scheduled and nothing connects a newly discovered document to an extraction run.
-Fix: one supported command (`tax-pdf ingest <source>`) that runs the whole path and emits a staging bundle, and a scheduled runner that calls it for every new or changed document and imports the result. Under the free-tier decision that runner is a GitHub Actions workflow; the existing lab CI job already builds the locked Python environment there.
+Fix: one supported command that runs the whole path, and a scheduled runner. The command now exists in skeleton form as `pdfanchor convert` (`packages/pdfanchor`); it needs the lab's capabilities ported in and a staging importer for its output. The runner calls it for every new or changed document and imports the result. Under the free-tier decision that runner is a GitHub Actions workflow; the existing lab CI job already builds the locked Python environment there.
 
 **L2. Nothing ever decides. P0.**
 Reports carry `selected_engine: None`. `assess()` blocks any artifact with a page that is not `native_candidate`. Acceptance needs every region ticked (53 for a one-page notification) plus three attestations. This is why the process needs a person, or an assistant, at every step.
-Fix: a deterministic decision policy in one module, with explicit tiers (10.1), every rule recorded with the evidence that fired it. Rules produce one of three outcomes per region: accepted by rule, flagged for a person, or blocked.
+Fix: a deterministic decision policy in one module, with explicit tiers (10.1), every rule recorded with the evidence that fired it. `pdfanchor/policy.py` is the first version, uncalibrated. Rules produce one of three outcomes per region: accepted by rule, flagged for a person, or blocked.
 
 **L3. There is no measurement to base a rule on. P0.**
 One of eighteen official reference pages is human-verified, plus three individual fields. The lab's README is explicit that no accuracy claim can be made. A rule that accepts text without a person needs a measured false-accept rate, per document class.
@@ -262,7 +278,7 @@ The queue is ordered by fetch time, with no filter by type or relevance, no sear
 ## 9. Reliability, security, measurement, hygiene
 
 **E1. The worker is a single point of failure for answers. P1.**
-GitHub Actions schedules are best-effort. Automatic runs are now confirmed (branch `status.md`), but there is still no missed-run alert, and with A9 two missed days mean the chatbot answers nothing. On a free tier the mitigation is A9 (soften the gate) plus a dead-man check, rather than a paid scheduler.
+GitHub Actions schedules are best-effort. Automatic runs are now confirmed (`status.md`), but there is still no missed-run alert, and with A9 two missed days mean the chatbot answers nothing. On a free tier the mitigation is A9 (soften the gate) plus a dead-man check, rather than a paid scheduler.
 
 **E2. No alerting. P1.** `tax:health` can only fail its own workflow run.
 
@@ -299,8 +315,11 @@ Add request ids and stable error codes that carry no user text.
 **H1. Leftovers. P2.**
 `src/sanity/client.ts` and `@sanity/client`; `User.questionsToday`, `lastQuestionAt`, `threadId`; `--legacy-peer-deps`; NextAuth on a beta release; a typo in the JSON-LD description in `layout.tsx`.
 
-**H2. The branch is 54 commits ahead of `main`. P1.**
-Staging is feature-flagged off by default, so most of it can merge without changing production. The longer it stays apart, the harder C1 and L9 become.
+**H2. The lab branch is merged into the working branch, not yet into `main`. P1.**
+Staging is feature-flagged off by default. Merging to `main` triggers a production deployment and adds `vercel.json` function settings, so check the preview deployment first.
+
+**H3. Three storage tests are cancelled on Node 22. P2.**
+`tests/extraction-storage.test.ts` reports "Promise resolution is still pending but the event loop has already resolved" on Node 22.23, which `package.json` allows; CI runs Node 24.
 
 ---
 
@@ -408,16 +427,14 @@ Each step is useful by itself and makes the next one measurable.
 5. **Connect staging to the live library.** Extraction revisions in the live schema, release adapter with dry run, withdraw and rollback, one structured tax-review model (C1, L9, L10, D3). Merge the branch (H2).
 6. **Corpus in the right order** (C8), with page-group scheduling for the large documents (L8) and rule-extracted metadata proposals (D2).
 7. **Knowledge store v2**: nodes, hybrid retrieval, relationships, facts (10.2).
-8. **LangGraph answer flow** with streaming stages, quote-level citations and multilingual questions (10.3, A5).
+8. **LangGraph answer flow** with streaming stages and quote-level citations (10.3). Hindi and Hinglish questions (A5) are deferred.
 
 Steps 1 and 2 can run in parallel; they need different people. Step 8 can start once step 1's evaluation set exists, but it will only show its value after step 6 gives it something to retrieve.
 
 ## 12. Still open
 
-1. **Retire the Azure repair worker?** It is a chat model reading crops, so the rules-only decision seems to rule it out. The plan above assumes yes: local re-reading plus typed corrections become the default, and the Azure provider stays in the code but disabled. Confirm, or say if you want it kept as an optional assist that a person always rechecks.
-2. **May rules accept anything without a person?** For example a clean, born-digital page where the text layer and an independent OCR reading agree on every critical token. Today a person must tick every region. If the answer is no, the pipeline can be unattended up to review, but coverage will grow at reviewer speed.
-3. **Hindi text of bilingual documents.** Index the English text only and keep the Hindi as displayed evidence (recommended for now), or require the Hindi to be verified as well?
-4. **Does "free tier" include Azure usage?** Answers already use the Azure model. Embeddings and query translation for Hindi and Hinglish would add small per-use charges there. Acceptable, or must those be free too?
-5. **Reviewer capacity.** Who reviews extraction and who reviews tax applicability, and for roughly how many hours a week? This sets how much the decision policy must carry and how fast the corpus can grow.
-6. **Is the repository public?** GitHub Actions minutes are unmetered for public repositories and capped for private ones; the extract workflow's budget depends on it.
-7. **Merge the lab branch into `main`?** It is 54 commits ahead and staging is off by default. Merging early keeps the two lines from drifting before the release adapter is built.
+1. **Name and licence for the engine.** `pdfanchor` is a working name, free on PyPI when checked. A licence must be chosen before publishing; the engines it builds on are permissively licensed, so a permissive licence is possible.
+2. **A separate repository for the engine.** It lives in `packages/pdfanchor` for now and can be split out with its history once a repository exists.
+3. **Redistribution of test documents.** Whether official PDFs may be shipped as a public test set with the library, or whether it should carry synthetic fixtures only.
+4. **Merging to `main`.** Approved in principle; it deploys to production, so it should go through a pull request with the preview checked.
+5. **Model-proposed metadata.** Parked as a possible later assist (section 2); revisit once the accountant has reviewed a few dozen documents and the time per document is known.

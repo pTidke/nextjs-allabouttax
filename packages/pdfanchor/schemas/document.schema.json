@@ -1,0 +1,523 @@
+{
+  "$defs": {
+    "Box": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "title": "X0",
+          "type": "number"
+        },
+        "top": {
+          "title": "Top",
+          "type": "number"
+        },
+        "x1": {
+          "title": "X1",
+          "type": "number"
+        },
+        "bottom": {
+          "title": "Bottom",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "top",
+        "x1",
+        "bottom"
+      ],
+      "title": "Box",
+      "type": "object"
+    },
+    "Cell": {
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "title": "Row",
+          "type": "integer"
+        },
+        "column": {
+          "title": "Column",
+          "type": "integer"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "None means the reader gave no value, not a blank.",
+          "title": "Text"
+        },
+        "box": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Box"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "row",
+        "column",
+        "text"
+      ],
+      "title": "Cell",
+      "type": "object"
+    },
+    "Engine": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "policy_version": {
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "config_sha256": {
+          "title": "Config Sha256",
+          "type": "string"
+        },
+        "components": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Components",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "policy_version",
+        "config_sha256",
+        "components"
+      ],
+      "title": "Engine",
+      "type": "object"
+    },
+    "Flag": {
+      "additionalProperties": false,
+      "description": "Why a rule did not accept something. `rule` is a stable identifier.",
+      "properties": {
+        "rule": {
+          "title": "Rule",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "review",
+            "blocking"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "severity",
+        "message"
+      ],
+      "title": "Flag",
+      "type": "object"
+    },
+    "Line": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "page": {
+          "title": "Page",
+          "type": "integer"
+        },
+        "order": {
+          "title": "Order",
+          "type": "integer"
+        },
+        "box": {
+          "$ref": "#/$defs/Box"
+        },
+        "raw": {
+          "description": "Exactly what the reader returned.",
+          "title": "Raw",
+          "type": "string"
+        },
+        "text": {
+          "description": "NFC-normalised `raw`. No other change is ever made.",
+          "title": "Text",
+          "type": "string"
+        },
+        "source": {
+          "description": "\"native\" or \"ocr:<engine>\".",
+          "title": "Source",
+          "type": "string"
+        },
+        "readings": {
+          "items": {
+            "$ref": "#/$defs/Reading"
+          },
+          "title": "Readings",
+          "type": "array"
+        },
+        "font_size": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Font Size"
+        },
+        "bold": {
+          "default": false,
+          "title": "Bold",
+          "type": "boolean"
+        },
+        "scripts": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Scripts",
+          "type": "array"
+        },
+        "role": {
+          "default": "body",
+          "enum": [
+            "heading",
+            "body",
+            "table"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "paragraph": {
+          "default": 0,
+          "title": "Paragraph",
+          "type": "integer"
+        },
+        "table_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Table Id"
+        },
+        "status": {
+          "default": "flagged",
+          "enum": [
+            "accepted",
+            "flagged",
+            "blocked"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/Flag"
+          },
+          "title": "Flags",
+          "type": "array"
+        },
+        "excluded": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Reason this line is kept as evidence but left out of exports.",
+          "title": "Excluded"
+        }
+      },
+      "required": [
+        "id",
+        "page",
+        "order",
+        "box",
+        "raw",
+        "text",
+        "source"
+      ],
+      "title": "Line",
+      "type": "object"
+    },
+    "Page": {
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "title": "Number",
+          "type": "integer"
+        },
+        "width": {
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "title": "Height",
+          "type": "number"
+        },
+        "rotation": {
+          "default": 0,
+          "title": "Rotation",
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "native",
+            "scanned",
+            "blank",
+            "failed"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "lines": {
+          "items": {
+            "$ref": "#/$defs/Line"
+          },
+          "title": "Lines",
+          "type": "array"
+        },
+        "tables": {
+          "items": {
+            "$ref": "#/$defs/Table"
+          },
+          "title": "Tables",
+          "type": "array"
+        },
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/Flag"
+          },
+          "title": "Flags",
+          "type": "array"
+        },
+        "metrics": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Metrics",
+          "type": "object"
+        }
+      },
+      "required": [
+        "number",
+        "width",
+        "height",
+        "kind"
+      ],
+      "title": "Page",
+      "type": "object"
+    },
+    "Reading": {
+      "additionalProperties": false,
+      "description": "Another reading of the same place, kept for comparison. Never merged into `text`.",
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        }
+      },
+      "required": [
+        "source",
+        "text"
+      ],
+      "title": "Reading",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "bytes": {
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "filename": {
+          "title": "Filename",
+          "type": "string"
+        },
+        "pages": {
+          "title": "Pages",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sha256",
+        "bytes",
+        "filename",
+        "pages"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Table": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "page": {
+          "title": "Page",
+          "type": "integer"
+        },
+        "box": {
+          "$ref": "#/$defs/Box"
+        },
+        "rows": {
+          "title": "Rows",
+          "type": "integer"
+        },
+        "columns": {
+          "title": "Columns",
+          "type": "integer"
+        },
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/Cell"
+          },
+          "title": "Cells",
+          "type": "array"
+        },
+        "status": {
+          "default": "flagged",
+          "enum": [
+            "accepted",
+            "flagged",
+            "blocked"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/Flag"
+          },
+          "title": "Flags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "page",
+        "box",
+        "rows",
+        "columns",
+        "cells"
+      ],
+      "title": "Table",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0",
+      "default": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "engine": {
+      "$ref": "#/$defs/Engine"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/Page"
+      },
+      "title": "Pages",
+      "type": "array"
+    },
+    "flags": {
+      "items": {
+        "$ref": "#/$defs/Flag"
+      },
+      "title": "Flags",
+      "type": "array"
+    },
+    "summary": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Summary",
+      "type": "object"
+    }
+  },
+  "required": [
+    "source",
+    "engine",
+    "created_at",
+    "pages"
+  ],
+  "title": "Document",
+  "type": "object"
+}

@@ -1,6 +1,17 @@
 # All About Tax — project status
 
-Updated 2026-11-14. Read this first when resuming work. Use the linked runbooks for implementation details and update this file when a deployment, review outcome, or next step changes.
+Updated 2026-11-15. Read this first when resuming work. Use the linked runbooks for implementation details and update this file when a deployment, review outcome, or next step changes.
+
+For how the platform is built and why, see [brain.md](brain.md). For what should change, see [improvement areas](docs/improvement-areas.md). For the work in order, see the [roadmap](docs/roadmap.md).
+
+## Decisions and scaffold — 15 November 2026
+
+- **Direction.** Rules only in ingestion, with rules allowed to accept easy pages and a person auditing. The Azure OCR repair worker is to be retired as the default and kept as a switched-off backup. English text is indexed; Hindi is kept as evidence. Hindi and Hinglish questions are deferred. The pilot stays on free tiers. The forms product is parked.
+- **Reviewers.** The owner reviews extraction. A chartered accountant reviews tax applicability for one to two hours a day.
+- **Engine package.** `packages/pdfanchor` is the start of the open-source extraction library: PDF in; `document.json`, Markdown and RAG chunks out, with an accepted / flagged / blocked verdict per line. It is a tested skeleton (30 tests, including a real Tesseract run), not yet at parity with the lab. The name is provisional and no licence is chosen. [Package README](packages/pdfanchor/README.md) · [Porting plan](packages/pdfanchor/docs/porting-from-the-lab.md)
+- **Branches.** `codex/pdf-processing-lab` is merged into `claude/trusting-hypatia-l5qg4h` together with the new docs and the package. That branch is not yet merged into `main`.
+- **Known issue.** On Node 22.23, three tests in `tests/extraction-storage.test.ts` are cancelled; the rest of the suite passes. CI runs Node 24.
+- **Next.** Roadmap M0 to M2: merge to `main` through a pull request, fix the two reproduced chatbot bugs, and build the verified reference pages that the engine's decision thresholds need.
 
 ## Current flow
 

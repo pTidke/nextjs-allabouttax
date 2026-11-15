@@ -3,11 +3,10 @@
 Single source of truth for what this platform is, how it is built, and why it is built that way.
 Read this before changing architecture. Update it in the same change whenever a decision here stops being true.
 
-- The project has two lines of code. **`main`** (commit `d3025cb`) is the live product. **`codex/pdf-processing-lab`** (commit `868577f`, 54 commits ahead of `main`, not merged) holds the PDF extraction lab and the staging review application. Sections 1–7.5 describe `main`; section 7.6 describes the branch.
-- Verified on 15 November 2026 by reading the source on both and running both test suites: 34/34 on `main` (Node 22.23), 328/328 Python tests on the lab branch.
-- Production and staging figures (user counts, corpus counts, deployment state) are quoted from `docs/` and the branch's `status.md`; they were not re-read from the live databases.
-- Improvement areas and the forward architecture live in [`docs/improvement-areas.md`](docs/improvement-areas.md). This file describes what exists.
-- On the lab branch, `status.md` is the running status log and `AGENTS.md` says to read it first. This file is the architectural reference; `status.md` is the day-to-day state.
+- The repository holds three things: the **live product** (chatbot, ingestion, admin review), the **extraction lab and staging review** (merged from `codex/pdf-processing-lab` on 15 November 2026; staging is switched off by default), and the **`pdfanchor` engine package**, the start of the open-source extraction library. Sections 1–7.5 describe the live product, 7.6 the lab and staging, 7.7 the engine.
+- Verified on 15 November 2026 by reading the source and running the tests: 34/34 on the live code before the merge; 328/328 Python tests in the lab; 30/30 in `pdfanchor`. After the merge the Node suite shows 62 passed and 3 cancelled on Node 22.23, all in `tests/extraction-storage.test.ts`; CI uses Node 24.
+- Production and staging figures (user counts, corpus counts, deployment state) are quoted from `docs/` and `status.md`; they were not re-read from the live databases.
+- `status.md` is the day-to-day status log, and `AGENTS.md` says to read it first. This file is the architectural reference. [`docs/improvement-areas.md`](docs/improvement-areas.md) explains what should change and why; [`docs/roadmap.md`](docs/roadmap.md) lists the work in order.
 
 ---
 
@@ -23,7 +22,7 @@ The intended direction is broader:
 2. A richer knowledge store and an orchestrated retrieval flow so answers are more accurate and better cited.
 3. A separate product that helps people fill government tax forms in real time.
 
-The first is under way on the lab branch as a local extraction lab plus a hosted staging review screen; it is not connected to the live library. The second and third are not started. Section 11 lists precisely what is and is not built.
+The first is under way as a local extraction lab, a hosted staging review screen and a new engine package; none of it is connected to the live library yet. The second and third are not started. Section 11 lists precisely what is and is not built.
 
 ## 2. Current state in one table
 
@@ -33,8 +32,9 @@ The first is under way on the lab branch as a local extraction lab plus a hosted
 | Corpus | Very small. Docs record 1 approved document version and ~155 pending review (4 Nov 2026). |
 | Sources | CBDT circulars, CBDT notifications (current calendar year only), one e-filing FAQ page. |
 | PDF handling (live) | Text-layer extraction only. No OCR in the live path. Scanned or >8 MB PDFs are rejected. |
-| PDF extraction lab (branch) | Python lab, run by hand on a developer machine: native text with source geometry, Tesseract (English, Hindi) and EasyOCR (English) comparisons, scan recovery, table proposals. Nothing is selected or accepted automatically. |
-| Staging review (branch) | Hosted on a protected Vercel preview with its own Neon databases: extraction inbox, tax-review screen, and an OCR repair worker that sends flagged crops to the Azure chat model. No handoff to the live library. |
+| PDF extraction lab | Python lab, run by hand on a developer machine: native text with source geometry, Tesseract (English, Hindi) and EasyOCR (English) comparisons, scan recovery, table proposals. Nothing is selected or accepted automatically. |
+| Engine package | `packages/pdfanchor`: a working skeleton of the open-source engine. PDF in; `document.json`, Markdown and RAG chunks out, with a rule-based accepted / flagged / blocked verdict per line. Not yet at parity with the lab. |
+| Staging review | Hosted on a protected Vercel preview with its own Neon databases: extraction inbox, tax-review screen, and an OCR repair worker that sends flagged crops to the Azure chat model. No handoff to the live library. |
 | Retrieval | PostgreSQL full-text search. No embeddings, no reranking. |
 | Orchestration | Plain TypeScript functions in one route handler. No LangChain or LangGraph. |
 | Review | Fully manual, one document at a time, by an `ADMIN` user. Nothing is auto-approved. |
@@ -121,7 +121,13 @@ scripts/                      tax-worker, tax-health, tax-probe, tax-evaluate, t
 prisma/                       schema and five hand-ordered SQL migrations
 evaluations/income-tax.json   six evaluation cases
 tests/                        unit and PGlite integration tests
-docs/                         deployment, release plan, tax foundation, improvement areas
+docs/                         runbooks, improvement areas, roadmap
+status.md                     running status log; read first when resuming work
+tools/pdf_pipeline/           the Python extraction lab (CLI `tax-pdf`), its benchmarks and schemas
+tools/extraction-staging/     SQL for the isolated staging database
+src/lib/extraction-staging/   staging store, contract, repair worker
+src/app/staging/              extraction inbox and tax-review screens
+packages/pdfanchor/           the open-source engine package (Python)
 ```
 
 ## 6. Data model
@@ -202,9 +208,9 @@ The response is returned whole; nothing is streamed.
 
 `ChatContext` holds chat state in memory only (never `localStorage`) and is remounted when the signed-in identity changes. The chat opens as a full-screen dialog from a floating widget on every page. The user must pick a period (FY, AY or TY × five years) before sending; changing it starts a new chat. `/chats` lists, reopens, exports (streamed JSON) and deletes conversations. `/library` and the in-chat coverage notice show which released documents are currently available for a period.
 
-### 7.6 Extraction lab and staging review (branch `codex/pdf-processing-lab`)
+### 7.6 Extraction lab and staging review
 
-This is a separate system. It does not read or write the live library, and the live ingestion in 7.1 is unchanged by it.
+This is a separate system, developed on the `codex/pdf-processing-lab` branch and merged on 15 November 2026. It does not read or write the live library, and the live ingestion in 7.1 is unchanged by it. Staging routes return 404 unless `EXTRACTION_STAGING_ENABLED` is set.
 
 ```
  developer machine (operator)                      Vercel preview, region cle1
@@ -243,11 +249,30 @@ This is a separate system. It does not read or write the live library, and the l
 - Evidence lives in Neon Object Storage through an S3 client; the web role has read-only access; each object is capped at 4 MiB in the cloud pilot.
 - **Nothing accepted in staging reaches the live library.** There is no release adapter into `TaxVersion` / `TaxChunk`.
 
-Recorded state (branch `status.md`, 14 November 2026): Notification 1/2026 has an accepted extraction awaiting its first tax review; Circular 3/2026 has a saved recheck draft and is blocked by its partial table scope.
+Recorded state (`status.md`, 14 November 2026): Notification 1/2026 has an accepted extraction awaiting its first tax review; Circular 3/2026 has a saved recheck draft and is blocked by its partial table scope.
+
+### 7.7 The `pdfanchor` engine (`packages/pdfanchor/`)
+
+The planned open-source library: given any PDF, produce output a language model can read and a vector index can ingest. Character recognition is one stage inside it. It is a self-contained Python package with no imports from the rest of the repository, so it can move to its own repository with `git subtree split`. The name is a working name.
+
+```
+PDF ─▶ preflight ─▶ text layer + geometry ─▶ OCR (scan, or cross-check)
+    ─▶ rule validators ─▶ decision policy ─▶ structure
+    ─▶ document.json · document.md · chunks.jsonl
+```
+
+- `model.py` is the output contract (schema `0.1.0`, published in `schemas/`). Every line has a page box, the reader's exact text, its source (`native` or `ocr:<engine>`), other engines' readings of the same place, a status and the flags behind it.
+- `native.py` reads the text layer and table cells with boxes and classifies each page as native, scanned, blank or failed. `ocr/` defines the engine interface; Tesseract (command-line program) is implemented and tested, EasyOCR is written but untested.
+- `crosscheck.py` compares two readings: overall similarity plus exact equality of critical tokens (anything with a digit, and negations). `validators/` raises flags for unmapped characters and malformed dates. Nothing rewrites text.
+- `policy.py` decides per line: **accepted** (no validator objects and an independent reading agrees), **flagged** (with the rule id), or **blocked**. Tables are always flagged. A scanned page with no engine is blocked, never silently empty.
+- `export/` writes Markdown (page breaks and flags as HTML comments) and chunks (one JSON object per line with `embedding_text`, `anchors` to page boxes, `status` and `rules`). A chunk never splits a paragraph, may cross a page break, and a table is its own chunk.
+- `pipeline.convert()` runs the stages; `cli.py` exposes `pdfanchor convert file.pdf --out dir` with exit codes 0 (all accepted), 2 (needs a person), 1 (failed).
+
+It is a skeleton, about 1,000 lines plus tests. Process isolation, pinned weights, scan recovery, table structure and large-document handling are still only in the lab; `packages/pdfanchor/docs/porting-from-the-lab.md` lists the order for bringing them across. The policy thresholds are uncalibrated.
 
 ## 8. Architectural decisions
 
-Each entry records the decision, the reason, and the consequence that matters for future work. AD-01 to AD-25 are on `main`; AD-26 onward are on the lab branch.
+Each entry records the decision, the reason, and the consequence that matters for future work. AD-01 to AD-25 concern the live product; AD-26 to AD-33 the lab and staging; AD-34 onward the engine package.
 
 | # | Decision | Why | Consequence |
 | --- | --- | --- | --- |
@@ -285,6 +310,9 @@ Each entry records the decision, the reason, and the consequence that matters fo
 | AD-31 | **Staging history is immutable and capability-gated**, independent of the app's `ADMIN` role. | Auditable decisions; a site admin is not automatically a qualified reviewer. | Two permission systems; schema applied outside Prisma. |
 | AD-32 | **Two review gates: extraction acceptance, then tax applicability**, each bound to an exact revision. | Transcription quality and legal meaning are different skills. | A document needs two human passes before it can be released. |
 | AD-33 | **OCR repair proposals come from the Azure chat model reading a crop**, returned for human recheck. | Fast to build; matched three reviewed fields in a probe. | The document path depends on a chat model. The owner has since decided against this (section 12). |
+| AD-34 | **The engine is a generic, standalone package**; tax-specific rules and the staging contract stay in the application. | It is meant to be published for others; the application should treat it as a black box producing `document.json`. | Two places to change during the port from the lab. |
+| AD-35 | **The engine decides by rule**: a line is accepted only when validators pass and an independent reading agrees on every critical token. Engine confidence is never used. | The owner allows rules to accept; recorded cases show confidence is high on wrong dates. | "Accepted" means "passed every rule" until thresholds are measured on reference pages. |
+| AD-36 | **Three outputs from one record**: `document.json` is canonical; Markdown and chunks are derived and carry page anchors and status. | Serves model reading, vector indexing and human review from the same evidence. | Consumers must filter on `status`; flagged text is included and labelled by default. |
 
 Advisory lock ids in use: `740126` publication and draft saves, `740127` manual refresh (with a per-source hash), `74329018` storage budget, `740129` auth import.
 
@@ -326,13 +354,13 @@ Advisory lock ids in use: `740126` publication and draft saves, `740127` manual 
 
 Stated plainly, because several of these are easy to assume:
 
-- **No OCR in the live path.** On `main`, PDFs are read through their embedded text layer only; a scanned PDF fails with "Extraction needs manual review" and is excluded. OCR exists only in the lab on the branch.
+- **No OCR in the live path.** Live ingestion reads a PDF's embedded text layer only; a scanned PDF fails with "Extraction needs manual review" and is excluded. OCR exists in the lab and in `pdfanchor`, neither of which feeds the live library.
 - **No automated pipeline from PDF to reviewed text.** The lab is about thirty hand-run commands; an operator runs them locally, assembles the bundle and imports it. Nothing is scheduled.
-- **No automatic decision anywhere in extraction.** No engine is selected, no page or region is accepted by rule.
+- **No automatic decision in the lab or staging.** No engine is selected, no page or region is accepted by rule. `pdfanchor` has a decision policy, but its thresholds are not calibrated and nothing consumes its output yet.
 - **No path for scanned full pages into staging.** The staging contract accepts native full pages and image table bands only.
 - **No handoff from staging to the live library.**
 - **No measured extraction accuracy.** One official reference page is verified.
-- **No model in the live ingestion or review path.** On `main`, review metadata is typed by a person; the only automation is two presets hard-coded in `review-suggestions.ts`. On the branch, the one model in the document path is the Azure chat deployment used by the OCR repair worker.
+- **No model in the live ingestion or review path.** In the live review screen, metadata is typed by a person; the only automation is two presets hard-coded in `review-suggestions.ts`. In staging, the one model in the document path is the Azure chat deployment used by the OCR repair worker.
 - **No embeddings or vector index.** Retrieval is keyword search.
 - **No LangChain, LangGraph or agent framework.** The answer flow is about 130 lines in one route handler.
 - **No streaming.**
@@ -351,16 +379,20 @@ Unused leftovers: `src/sanity/client.ts` and the `@sanity/client` dependency; th
 
 | Topic | Decision |
 | --- | --- |
-| Automation boundary | Rules only in ingestion. No language model decides or proposes in the document path; a person approves what rules cannot decide. |
-| OCR repair | Should not depend on a chat model (this retires AD-33 as the default; confirmation of the detail is pending). |
-| Hosting | Pilot stays on free tiers: Vercel, Neon, GitHub Actions. |
-| Audience and scope | Everyone (individuals, professionals, businesses) and all tax material, as the destination. |
+| Automation boundary | Rules only in ingestion. Rules may accept easy pages without a person; a person audits and decides what rules cannot. |
+| OCR repair | Retire the Azure chat-model repair as the default; keep it in the code as a switched-off backup (AD-33). |
+| Bilingual documents | Index the English text; keep Hindi as displayed evidence that does not block acceptance. |
+| Hindi and Hinglish questions | Deferred, to avoid extra model charges. |
+| Hosting | Pilot stays on free tiers: Vercel, Neon, GitHub Actions. The repository is public. |
+| Audience and scope | Everyone and all tax material, as the destination. |
+| Reviewers | The owner for extraction; a chartered accountant for tax applicability, one to two hours a day. |
+| Extraction engine | To be open-sourced as a separate library. Scaffolded in `packages/pdfanchor`. |
+| Languages | Python for extraction, TypeScript for everything online. |
 | Forms product | Parked. |
-| Language for new services | Open; the recommendation is Python for extraction, TypeScript for everything online. |
 
 Workstreams that follow. Details, trade-offs and sequencing are in [`docs/improvement-areas.md`](docs/improvement-areas.md).
 
-1. **Autonomous extraction.** Turn the lab into one scheduled pipeline with a deterministic decision policy, so people review only what rules flag, and the chat model and the hand-run operator steps leave the loop. Then connect accepted extractions to the live library.
+1. **Autonomous extraction.** Bring the lab's capabilities into `pdfanchor`, run it on a schedule, and have people review only what its rules flag, so the chat model and the hand-run operator steps leave the loop. Then connect accepted extractions to the live library.
 2. **Knowledge store and orchestrated answers.** Structure-aware nodes instead of character-count chunks, hybrid lexical plus vector retrieval with reranking, document relationships, and a LangGraph answer graph that keeps AD-01, AD-08 and AD-09 as explicit nodes.
 3. **Forms product (parked).** A separate application on shared foundations, to be designed later.
 
