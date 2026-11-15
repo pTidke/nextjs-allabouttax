@@ -82,7 +82,20 @@ export async function carryOver(
       .filter(Boolean),
   );
   const results = [];
-  for (const head of data.candidates.filter((c) => !replaced.has(c.id))) {
+  const headAction = (c: StagingData["candidates"][number]) =>
+    data.revisions.find((r) => r.id === c.head)?.action;
+  // Accepted reviews first: once a document's text is accepted, other staging
+  // work on the same file (drafts, repair pilots) adds history, not decisions.
+  const heads = data.candidates
+    .filter((c) => !replaced.has(c.id))
+    .sort(
+      (a, b) =>
+        Number(headAction(b) === "ACCEPT_EXTRACTION") -
+        Number(headAction(a) === "ACCEPT_EXTRACTION"),
+    );
+  // In a plan nothing is written, so remember what would have been accepted.
+  const acceptedInThisRun = new Set<string>();
+  for (const head of heads) {
     const c = head.payload;
     const ids = lineage(data, head.id);
     const revisions = data.revisions
@@ -143,9 +156,12 @@ export async function carryOver(
       continue;
     }
 
+    const alreadyAccepted =
+      version.extractionReviews[0]?.decision === "ACCEPTED" ||
+      acceptedInThisRun.has(version.id);
     let planned: ReturnType<typeof plannedDecisions> = [];
     let state = null as ReturnType<typeof progress> | null;
-    if (usable) {
+    if (usable && !alreadyAccepted) {
       const document = usable.document as unknown as EngineDocument;
       const required = requiredLines(usable.id, document);
       const existing = await lineDecisions(usable.id);
@@ -165,8 +181,6 @@ export async function carryOver(
         });
       state = progress(required, after);
     }
-    const alreadyAccepted =
-      version.extractionReviews[0]?.decision === "ACCEPTED";
     const acceptText =
       headRevision?.action === "ACCEPT_EXTRACTION" &&
       !alreadyAccepted &&
@@ -189,12 +203,15 @@ export async function carryOver(
       ...report,
       version: version.id,
       engineRun: usable ? short(usable.id) : "not read by the engine yet",
-      lineDecisions: counts,
+      lineDecisions: alreadyAccepted
+        ? "none: the live text is already accepted; history only"
+        : counts,
       stillUndecided: state?.undecided ?? null,
       unreadable: state?.unreadable ?? null,
       acceptText,
       taxDrafts: taxUsers.length,
     };
+    if (acceptText) acceptedInThisRun.add(version.id);
     if (!options.write) {
       results.push({ ...outcome, outcome: "would write" });
       continue;
