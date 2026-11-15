@@ -165,22 +165,14 @@ test("every flagged line and the spot check must be decided before the text is a
   assert.equal(overview?.status, "OK");
   if (overview?.status !== "OK") return;
   runId = overview.runId;
-  assert.deepEqual(
-    overview.attention.map((l) => l.id),
-    ["p1-l1", "p2-l1"],
-  );
-  assert.deepEqual(
-    overview.sample.map((l) => l.id),
-    ["p1-l2"],
-    "the one rule-accepted line is the spot check",
-  );
-  // The screen walks the lines in reading order, spot checks included.
-  assert.deepEqual(
-    [...overview.attention, ...overview.sample]
-      .sort((a, b) => a.position - b.position)
-      .map((l) => l.id),
-    ["p1-l1", "p1-l2", "p2-l1"],
-  );
+  // The queue lists every line that needs a decision in reading order; the one
+  // rule-accepted line is the spot check.
+  assert.deepEqual(overview.queue, [
+    { id: "p1-l1", page: 1, spotCheck: false, decision: null },
+    { id: "p1-l2", page: 1, spotCheck: true, decision: null },
+    { id: "p2-l1", page: 2, spotCheck: false, decision: null },
+  ]);
+  assert.equal(overview.sampleSize, 1);
   assert.deepEqual(overview.progress, {
     required: 3,
     decided: 0,
@@ -242,11 +234,17 @@ test("every flagged line and the spot check must be decided before the text is a
   await decide("p2-l1", "CORRECTED", "Annexure A");
   const ready = await lines.lineReviewOverview(versionId);
   assert.equal(ready?.status === "OK" && ready.progress.complete, true);
+  assert.deepEqual(
+    ready?.status === "OK" && ready.queue.map((e) => e.decision),
+    ["CORRECTED", "CONFIRMED", "CORRECTED"],
+  );
+  const pageOne = await lines.pageForReview(reviewer, versionId, 1);
   assert.equal(
-    ready?.status === "OK" && ready.attention[0].decision?.text,
+    pageOne.lines[0].decision?.text,
     "MINISTRY OF FINANCE",
     "corrections are tidied",
   );
+  assert.equal(pageOne.lines[0].decision?.reviewer, "Reviewer");
 });
 
 test("accepting rebuilds the chatbot's passages from the reviewed lines", async () => {

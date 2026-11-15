@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RenderTask } from "pdfjs-dist";
 import type { EngineBox } from "@/lib/review/extraction-runs";
-import type { ReviewLine } from "@/lib/review/line-reviews";
+import type { QueueEntry, ReviewLine } from "@/lib/review/line-reviews";
 import PageViewer from "./PageViewer";
 import { Spinner, usePdf } from "./pdf";
 
@@ -17,7 +17,6 @@ type PageSize = {
   rotation: number;
 };
 type Decision = NonNullable<ReviewLine["decision"]>;
-type QueuedLine = ReviewLine & { spotCheck: boolean };
 
 export const readers: Record<string, string> = {
   native: "PDF text layer",
@@ -212,8 +211,7 @@ export default function LineReviewer({
   linesUrl,
   pages,
   runId,
-  attention,
-  sample,
+  queue,
   canDecide,
   versionId,
   onChanged,
@@ -222,45 +220,63 @@ export default function LineReviewer({
   linesUrl: string;
   pages: PageSize[];
   runId: string;
-  attention: ReviewLine[];
-  sample: ReviewLine[];
+  // Every line that needs a decision, in reading order.
+  queue: QueueEntry[];
   canDecide: boolean;
   versionId: string;
   onChanged: () => void;
 }) {
-  // Every line that needs a decision, in reading order.
-  const queue = useMemo<QueuedLine[]>(() => {
-    const seen = new Set<string>();
-    return [
-      ...attention.map((line) => ({ ...line, spotCheck: false })),
-      ...sample.map((line) => ({ ...line, spotCheck: true })),
-    ]
-      .filter((line) => !seen.has(line.id) && !!seen.add(line.id))
-      .sort((a, b) => a.position - b.position);
-  }, [attention, sample]);
   // Decisions saved here but not yet in the page's data.
   const [saved, setSaved] = useState<Record<string, Decision>>({});
-  const decisionOf = useCallback(
-    (line: ReviewLine) => saved[line.id] ?? line.decision,
+  const decided = useCallback(
+    (entry: QueueEntry) => saved[entry.id]?.decision ?? entry.decision,
     [saved],
   );
+  // The lines of each page, loaded when first needed.
+  const [loaded, setLoaded] = useState<Record<number, ReviewLine[] | "failed">>(
+    {},
+  );
+  const requested = useRef(new Set<number>());
+  const load = useCallback(
+    (page: number) => {
+      if (requested.current.has(page)) return;
+      requested.current.add(page);
+      void fetch(`${linesUrl}?page=${page}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+        .then((body: { lines: ReviewLine[] }) =>
+          setLoaded((old) => ({ ...old, [page]: body.lines })),
+        )
+        .catch(() => {
+          requested.current.delete(page);
+          setLoaded((old) => ({ ...old, [page]: "failed" }));
+        });
+    },
+    [linesUrl],
+  );
   const [currentId, setCurrentId] = useState<string | null>(
-    () => (queue.find((line) => !line.decision) ?? queue[0])?.id ?? null,
+    () => (queue.find((entry) => !entry.decision) ?? queue[0])?.id ?? null,
   );
   const index = Math.max(
     0,
     queue.findIndex((line) => line.id === currentId),
   );
-  const line = queue[index] ?? null;
+  const entry = queue[index] ?? null;
+  const pageLines = entry ? loaded[entry.page] : undefined;
+  const entryId = entry?.id;
+  const line = useMemo(
+    () =>
+      (Array.isArray(pageLines) &&
+        pageLines.find((candidate) => candidate.id === entryId)) ||
+      null,
+    [pageLines, entryId],
+  );
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [page, setPage] = useState(line?.page ?? 1);
-  const decidedCount = queue.filter(decisionOf).length;
-  const unreadable = queue.filter(
-    (l) => decisionOf(l)?.decision === "UNREADABLE",
-  ).length;
+  const [page, setPage] = useState(entry?.page ?? 1);
+  const decidedCount = queue.filter(decided).length;
+  const unreadable = queue.filter((e) => decided(e) === "UNREADABLE").length;
   const allDecided = !!queue.length && decidedCount === queue.length;
 
   const go = useCallback(
@@ -274,6 +290,14 @@ export default function LineReviewer({
     },
     [queue],
   );
+
+  // Load the current line's page, and the page of the next open line ahead.
+  useEffect(() => {
+    if (!entry) return;
+    load(entry.page);
+    const ahead = queue.slice(index + 1).find((e) => !decided(e));
+    if (ahead) load(ahead.page);
+  }, [decided, entry, index, load, queue]);
 
   const ocr = line?.other.find(
     (reading) => reading.text.trim() && reading.text !== line.text,
@@ -307,7 +331,7 @@ export default function LineReviewer({
         setSaved((old) => ({ ...old, [line.id]: record }));
         setEditing(false);
         // The next undecided line after this one, wrapping around.
-        const isOpen = (l: ReviewLine) => l.id !== line.id && !decisionOf(l);
+        const isOpen = (e: QueueEntry) => e.id !== line.id && !decided(e);
         const after = queue.slice(index + 1).findIndex(isOpen);
         const before = queue.slice(0, index).findIndex(isOpen);
         if (after >= 0) go(index + 1 + after);
@@ -319,15 +343,15 @@ export default function LineReviewer({
         setBusy(false);
       }
     },
-    [busy, decisionOf, go, index, line, onChanged, queue, runId, versionId],
+    [busy, decided, go, index, line, onChanged, queue, runId, versionId],
   );
 
   const startEditing = useCallback(() => {
     if (!line) return;
-    const current = decisionOf(line);
+    const current = saved[line.id] ?? line.decision;
     setDraft(current?.decision === "CORRECTED" ? current.text! : line.text);
     setEditing(true);
-  }, [decisionOf, line]);
+  }, [line, saved]);
 
   // Keyboard: 1 to 4 choose, the arrow keys move between lines.
   useEffect(() => {
@@ -354,8 +378,8 @@ export default function LineReviewer({
     return () => window.removeEventListener("keydown", onKey);
   }, [canDecide, decide, editing, go, index, ocr, startEditing]);
 
-  const size = pages.find((p) => p.number === line?.page);
-  const decision = line ? decisionOf(line) : null;
+  const size = pages.find((p) => p.number === entry?.page);
+  const decision = line ? (saved[line.id] ?? line.decision) : null;
   const button =
     "rounded-lg border px-3 py-2 text-sm bg-white hover:bg-slate-50 disabled:opacity-40 text-left";
   const key = (k: string) => (
@@ -366,7 +390,7 @@ export default function LineReviewer({
 
   return (
     <div className="space-y-4">
-      {!line ? (
+      {!entry ? (
         <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
           Every line passed the engine&rsquo;s checks and there is nothing to
           spot-check. Look over the whole page, then accept the text.
@@ -377,8 +401,8 @@ export default function LineReviewer({
             <h2 className="font-semibold">
               Line {index + 1} of {queue.length}
               <span className="ml-2 text-sm font-normal text-slate-500">
-                page {line.page}
-                {line.spotCheck &&
+                page {entry.page}
+                {entry.spotCheck &&
                   " · spot check of a line the engine accepted"}
               </span>
             </h2>
@@ -419,130 +443,150 @@ export default function LineReviewer({
             {unreadable ? ` · ${unreadable} unreadable` : ""}
           </p>
 
-          {size && <LineCrop src={src} line={line} size={size} />}
-
-          {!!line.flags.length && (
-            <p className="text-sm text-amber-900">
-              {line.flags.map((flag) => readable(flag.message)).join(" ")}
-            </p>
-          )}
-          <dl className="space-y-2 text-base">
-            <div>
-              <dt className="text-xs text-slate-500">
-                {readers[line.source] ?? line.source}
-              </dt>
-              <dd className="font-medium">
-                <Marked text={line.text} other={ocr?.text ?? null} />
-              </dd>
-            </div>
-            {line.other.map((reading) => (
-              <div key={reading.source}>
-                <dt className="text-xs text-slate-500">
-                  {readers[reading.source] ?? reading.source}
-                </dt>
-                <dd>
-                  <Marked
-                    text={reading.text}
-                    other={reading === ocr ? line.text : null}
-                  />
-                </dd>
-              </div>
-            ))}
-          </dl>
-
-          {decision && !editing && (
-            <p
-              className={`rounded-lg p-2 text-sm ${decision.decision === "UNREADABLE" ? "bg-red-50 text-red-800" : "bg-emerald-50 text-emerald-900"}`}
-            >
-              {decisionText[decision.decision]}
-              {decision.decision === "CORRECTED" && (
-                <> to &ldquo;{decision.text}&rdquo;</>
-              )}{" "}
-              by {decision.reviewer}.
-              {canDecide && " Choose again to change it."}
-            </p>
-          )}
-
-          {canDecide && !editing && (
-            <div className="grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                disabled={busy}
-                className={button}
-                onClick={() => void decide("CONFIRMED")}
-              >
-                {key("1")}Text is right
-              </button>
-              {ocr ? (
+          {!line ? (
+            pageLines === "failed" ? (
+              <p className="text-sm text-red-800">
+                This page&rsquo;s lines could not be loaded.{" "}
                 <button
                   type="button"
-                  disabled={busy}
-                  className={button}
-                  onClick={() => void decide("CORRECTED", ocr.text)}
+                  className="underline"
+                  onClick={() => entry && load(entry.page)}
                 >
-                  {key("2")}Use the {readers[ocr.source] ?? ocr.source} reading
+                  Try again
                 </button>
-              ) : (
-                <span className="hidden sm:block" />
+              </p>
+            ) : (
+              <Spinner label="Loading the line…" />
+            )
+          ) : (
+            <>
+              {size && <LineCrop src={src} line={line} size={size} />}
+
+              {!!line.flags.length && (
+                <p className="text-sm text-amber-900">
+                  {line.flags.map((flag) => readable(flag.message)).join(" ")}
+                </p>
               )}
-              <button
-                type="button"
-                disabled={busy}
-                className={button}
-                onClick={startEditing}
-              >
-                {key("3")}Type a correction
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                className={`${button} text-red-700`}
-                onClick={() => void decide("UNREADABLE")}
-              >
-                {key("4")}Can&rsquo;t read
-              </button>
-            </div>
-          )}
-          {canDecide && editing && (
-            <form
-              className="space-y-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void decide("CORRECTED", draft);
-              }}
-            >
-              <label className="block text-sm text-slate-600">
-                What the page says
-                <input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") setEditing(false);
+              <dl className="space-y-2 text-base">
+                <div>
+                  <dt className="text-xs text-slate-500">
+                    {readers[line.source] ?? line.source}
+                  </dt>
+                  <dd className="font-medium">
+                    <Marked text={line.text} other={ocr?.text ?? null} />
+                  </dd>
+                </div>
+                {line.other.map((reading) => (
+                  <div key={reading.source}>
+                    <dt className="text-xs text-slate-500">
+                      {readers[reading.source] ?? reading.source}
+                    </dt>
+                    <dd>
+                      <Marked
+                        text={reading.text}
+                        other={reading === ocr ? line.text : null}
+                      />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              {decision && !editing && (
+                <p
+                  className={`rounded-lg p-2 text-sm ${decision.decision === "UNREADABLE" ? "bg-red-50 text-red-800" : "bg-emerald-50 text-emerald-900"}`}
+                >
+                  {decisionText[decision.decision]}
+                  {decision.decision === "CORRECTED" && (
+                    <> to &ldquo;{decision.text}&rdquo;</>
+                  )}{" "}
+                  by {decision.reviewer}.
+                  {canDecide && " Choose again to change it."}
+                </p>
+              )}
+
+              {canDecide && !editing && (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className={button}
+                    onClick={() => void decide("CONFIRMED")}
+                  >
+                    {key("1")}Text is right
+                  </button>
+                  {ocr ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className={button}
+                      onClick={() => void decide("CORRECTED", ocr.text)}
+                    >
+                      {key("2")}Use the {readers[ocr.source] ?? ocr.source}{" "}
+                      reading
+                    </button>
+                  ) : (
+                    <span className="hidden sm:block" />
+                  )}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className={button}
+                    onClick={startEditing}
+                  >
+                    {key("3")}Type a correction
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className={`${button} text-red-700`}
+                    onClick={() => void decide("UNREADABLE")}
+                  >
+                    {key("4")}Can&rsquo;t read
+                  </button>
+                </div>
+              )}
+              {canDecide && editing && (
+                <form
+                  className="space-y-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void decide("CORRECTED", draft);
                   }}
-                  maxLength={2000}
-                  autoFocus
-                  className="mt-1 block w-full rounded-md border p-2 text-base"
-                />
-              </label>
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={busy || !draft.trim()}
-                  className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-40"
                 >
-                  Save and go on
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg border px-3 py-2 text-sm"
-                  onClick={() => setEditing(false)}
-                >
-                  Cancel
-                </button>
-                <span className="text-xs text-slate-500">
-                  Enter saves, Esc cancels
-                </span>
-              </div>
-            </form>
+                  <label className="block text-sm text-slate-600">
+                    What the page says
+                    <input
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") setEditing(false);
+                      }}
+                      maxLength={2000}
+                      autoFocus
+                      className="mt-1 block w-full rounded-md border p-2 text-base"
+                    />
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={busy || !draft.trim()}
+                      className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-40"
+                    >
+                      Save and go on
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border px-3 py-2 text-sm"
+                      onClick={() => setEditing(false)}
+                    >
+                      Cancel
+                    </button>
+                    <span className="text-xs text-slate-500">
+                      Enter saves, Esc cancels
+                    </span>
+                  </div>
+                </form>
+              )}
+            </>
           )}
           {busy && <Spinner label="Saving…" />}
           {error && (
@@ -566,18 +610,19 @@ export default function LineReviewer({
             <label className="flex items-center gap-1.5">
               Jump to
               <select
-                value={line.id}
+                value={entry.id}
                 onChange={(e) =>
                   go(queue.findIndex((l) => l.id === e.target.value))
                 }
                 className="max-w-64 rounded border px-1 py-0.5 text-xs text-slate-700"
               >
                 {queue.map((l, i) => {
-                  const d = decisionOf(l);
+                  const d = decided(l);
                   return (
                     <option key={l.id} value={l.id}>
-                      {d ? (d.decision === "UNREADABLE" ? "✗" : "✓") : "•"}{" "}
-                      {i + 1}. p{l.page} · {l.text.slice(0, 40) || "(empty)"}
+                      {d ? (d === "UNREADABLE" ? "✗" : "✓") : "•"} Line {i + 1},
+                      page {l.page}
+                      {l.spotCheck ? " (spot check)" : ""}
                     </option>
                   );
                 })}

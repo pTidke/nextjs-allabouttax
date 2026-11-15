@@ -137,7 +137,8 @@ export async function extractVersion(
           "--exclude-script",
           "Deva",
         ],
-        { timeout: options.timeoutMs ?? 5 * 60_000, maxBuffer: 1024 * 1024 },
+        // A long scan is read by OCR page by page; about 2 to 5 seconds a page.
+        { timeout: options.timeoutMs ?? 15 * 60_000, maxBuffer: 1024 * 1024 },
       );
     } catch (error) {
       // Exit code 2 means "written, but something needs a person": a normal result.
@@ -243,8 +244,8 @@ export function forReview(line: EngineLine): LineForReview {
   };
 }
 
-// What the document page needs up front: the run's state, page sizes, and the
-// lines a person must look at. Page-by-page line boxes come from pageLines.
+// What the document page needs up front: the run's state and page sizes. The
+// lines themselves come page by page from pageLines.
 export async function runOverview(versionId: string) {
   return overviewOf(await latestRun(versionId));
 }
@@ -259,10 +260,9 @@ export function overviewOf(latest: Awaited<ReturnType<typeof latestRun>>) {
       error: latest.error,
     };
   const document = latest.document as unknown as EngineDocument;
-  const lines = document.pages.flatMap((page) => page.lines);
-  const attention = lines.filter(
-    (line) => !line.excluded && line.status !== "accepted",
-  );
+  const attentionTotal = document.pages
+    .flatMap((page) => page.lines)
+    .filter((line) => !line.excluded && line.status !== "accepted").length;
   return {
     status: "OK" as const,
     engine: latest.engine,
@@ -279,11 +279,12 @@ export function overviewOf(latest: Awaited<ReturnType<typeof latestRun>>) {
       }),
     ),
     documentFlags: document.flags,
-    attention: attention.slice(0, 500).map(forReview),
-    attentionTotal: attention.length,
+    attentionTotal,
   };
 }
 
+// One page of the latest run. Only that page is read out of the stored result,
+// which for a long scan can be several megabytes.
 export async function pageLines(
   userId: string,
   versionId: string,
@@ -292,13 +293,20 @@ export async function pageLines(
   await requireReviewer(userId);
   if (!Number.isSafeInteger(page) || page < 1)
     throw new HttpError(400, "Invalid page.");
-  const latest = await latestRun(versionId);
-  if (latest?.status !== "OK" || !latest.document)
+  const [latest] = await prisma.$queryRaw<
+    { id: string; status: string; page: EnginePage | null }[]
+  >`
+    SELECT id, status, jsonb_path_query_first(document,
+      '$.pages[*] ? (@.number == $n)', jsonb_build_object('n', ${page}::int)) AS page
+    FROM "ExtractionRun" WHERE "versionId" = ${versionId}
+    ORDER BY "createdAt" DESC, id DESC LIMIT 1`;
+  if (latest?.status !== "OK")
     throw new HttpError(404, "No engine result for this document yet.");
-  const found = (latest.document as unknown as EngineDocument).pages.find(
-    (candidate) => candidate.number === page,
-  );
-  if (!found)
+  if (!latest.page)
     throw new HttpError(404, "That page is not in the engine result.");
-  return { page, lines: found.lines.map(forReview) };
+  return {
+    runId: latest.id,
+    page,
+    lines: latest.page.lines.map(forReview),
+  };
 }

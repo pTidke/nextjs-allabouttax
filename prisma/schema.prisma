@@ -321,3 +321,30 @@ model LineReview {
 
   @@index([runId, lineId, createdAt])
 }
+
+// A PDF being uploaded in parts of up to 4 MB (Vercel's request limit). The parts
+// are joined and checked against the declared size and SHA-256 when the upload
+// completes, then removed. Unfinished uploads are cleared after a day.
+model PendingUpload {
+  id          String       @id @default(cuid())
+  userId      String
+  title       String
+  officialUrl String
+  issuedAt    String?
+  size        Int
+  parts       Int
+  sha256      String
+  createdAt   DateTime     @default(now())
+  chunks      UploadPart[]
+
+  @@index([createdAt])
+}
+
+model UploadPart {
+  uploadId String
+  index    Int
+  data     Bytes
+  upload   PendingUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@id([uploadId, index])
+}

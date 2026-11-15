@@ -6,7 +6,7 @@ import TaxReviewForm, {
 } from "@/components/review/TaxReviewForm";
 import LineReviewer from "@/components/review/LineReviewer";
 import PageViewer from "@/components/review/PageViewer";
-import type { ReviewLine } from "@/lib/review/line-reviews";
+import type { QueueEntry } from "@/lib/review/line-reviews";
 
 type Check = {
   id: string;
@@ -52,9 +52,9 @@ export type EngineOverview =
         kind: string;
       }[];
       runId: string;
-      attention: ReviewLine[];
+      queue: QueueEntry[];
       attentionTotal: number;
-      sample: ReviewLine[];
+      sampleSize: number;
       progress: {
         required: number;
         decided: number;
@@ -159,11 +159,13 @@ export default function Workspace({
             {version.reviewNote && ` ${version.reviewNote}`}
           </p>
         )}
-        {version.document.lastError && (
-          <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-            {version.document.lastError}
-          </p>
-        )}
+        {/* An upload's "needs OCR" note is out of date once the engine has read it. */}
+        {version.document.lastError &&
+          !(engine?.status === "OK" && version.document.uploaded) && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              {version.document.lastError}
+            </p>
+          )}
         {message && (
           <p
             role={message.error ? "alert" : "status"}
@@ -194,8 +196,7 @@ export default function Workspace({
               linesUrl={`/api/review/${version.id}/lines`}
               pages={engine.pages}
               runId={engine.runId}
-              attention={engine.attention}
-              sample={engine.sample}
+              queue={engine.queue}
               canDecide={open && access.extraction && !textAccepted}
               versionId={version.id}
               onChanged={() => router.refresh()}
@@ -241,8 +242,9 @@ export default function Workspace({
             )}
             {!version.chunks.length && (
               <p className="text-sm text-slate-500">
-                No text could be read from this file. It needs OCR before it can
-                be checked.
+                {engine?.status === "OK"
+                  ? "This file has no text layer; the engine read it with OCR. The passages are made from the checked lines when the text is accepted."
+                  : "No text could be read from this file. The extraction engine reads it with OCR on its next run, within two hours."}
               </p>
             )}
             <ol className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
@@ -454,8 +456,8 @@ function EngineSummary({
           : ""}
         . You are asked about {engine.attentionTotal} line
         {engine.attentionTotal === 1 ? "" : "s"} the rules did not accept
-        {engine.sample.length
-          ? ` and a fixed spot check of ${engine.sample.length} they did`
+        {engine.sampleSize
+          ? ` and a fixed spot check of ${engine.sampleSize} they did`
           : ""}
         .
       </p>
