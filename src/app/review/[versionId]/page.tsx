@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { HttpError } from "@/lib/http";
 import { reviewDocument } from "@/lib/review/workflow";
 import { pageAccess } from "../guard";
-import Workspace from "./workspace";
+import Workspace, { type CarriedHistory } from "./workspace";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -27,7 +27,7 @@ export default async function ReviewDocumentPage({
     if (error instanceof HttpError && error.status === 404) notFound();
     throw error;
   }
-  const { access, version, engine } = data;
+  const { access, version, engine, carriedOver } = data;
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-4">
       <Link href="/review" className="text-sm underline">
@@ -35,6 +35,11 @@ export default async function ReviewDocumentPage({
       </Link>
       <Workspace
         access={{ extraction: access.extraction, tax: access.tax }}
+        carriedOver={carriedOver.map((c) => ({
+          ...c,
+          history: c.history as unknown as CarriedHistory,
+          createdAt: c.createdAt.toISOString(),
+        }))}
         engine={
           engine && {
             ...engine,

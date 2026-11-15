@@ -70,12 +70,42 @@ export type EngineOverview =
       error: string | null;
     };
 
+export type CarriedHistory = {
+  officialUrl: string;
+  lineage: string[];
+  revisions: {
+    candidate: string;
+    action: string;
+    at: string;
+    findings: Record<string, number>;
+    issues: number;
+    note: string | null;
+  }[];
+  taxReviews: {
+    decision: string;
+    at: string;
+    fields: Record<string, unknown>;
+  }[];
+};
+type CarriedOver = {
+  candidateId: string;
+  title: string;
+  headAction: string | null;
+  history: CarriedHistory;
+  lineDecisions: number;
+  textAccepted: boolean;
+  taxDrafts: number;
+  createdAt: string;
+};
+
 export default function Workspace({
   access,
+  carriedOver,
   engine,
   version,
 }: {
   access: { extraction: boolean; tax: boolean };
+  carriedOver: CarriedOver[];
   engine: EngineOverview | null;
   version: Version;
 }) {
@@ -364,6 +394,7 @@ export default function Workspace({
                 </p>
               )
             )}
+            <StagingHistory carriedOver={carriedOver} />
             {version.textChecks.length > 1 && (
               <details className="text-xs text-slate-500">
                 <summary className="cursor-pointer">Earlier checks</summary>
@@ -462,5 +493,71 @@ function EngineSummary({
         .
       </p>
     </div>
+  );
+}
+
+const stagingAction: Record<string, string> = {
+  SAVE_DRAFT: "Draft saved",
+  ACCEPT_EXTRACTION: "Extraction accepted",
+  REQUEST_CHANGES: "Changes requested",
+};
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+// The review this document had in the old staging inbox, carried over (R3).
+function StagingHistory({ carriedOver }: { carriedOver: CarriedOver[] }) {
+  // One entry per staging document; the newest carry-over of each.
+  const latest = carriedOver.filter(
+    (c, i) =>
+      carriedOver.findIndex((o) => o.candidateId === c.candidateId) === i,
+  );
+  if (!latest.length) return null;
+  return (
+    <details className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+      <summary className="cursor-pointer text-sm text-slate-700">
+        Carried over from the staging review ({latest.length})
+      </summary>
+      <ul className="mt-2 space-y-3">
+        {latest.map((c) => (
+          <li key={c.candidateId} className="space-y-1">
+            <p className="font-medium text-slate-700">{c.title}</p>
+            <p>
+              {c.lineDecisions} line decision
+              {c.lineDecisions === 1 ? "" : "s"} carried over
+              {c.textAccepted ? "; the extraction was accepted" : ""}
+              {c.taxDrafts ? "; a tax-review draft was filled in" : ""} on{" "}
+              {when(c.createdAt)}.
+            </p>
+            <ol className="space-y-0.5 border-l pl-2">
+              {c.history.revisions.map((r, i) => (
+                <li key={i}>
+                  {stagingAction[r.action] ?? r.action} · {when(r.at)}
+                  {Object.keys(r.findings).length
+                    ? ` · ${Object.entries(r.findings)
+                        .map(([state, n]) => `${n} ${state.replace("_", " ")}`)
+                        .join(", ")}`
+                    : ""}
+                  {r.issues ? ` · ${r.issues} issue(s)` : ""}
+                  {r.note && (
+                    <span className="block text-slate-500">
+                      &ldquo;{r.note}&rdquo;
+                    </span>
+                  )}
+                </li>
+              ))}
+              {c.history.taxReviews.map((t, i) => (
+                <li key={`t${i}`}>
+                  Tax review{" "}
+                  {t.decision === "ACCEPT"
+                    ? "accepted"
+                    : t.decision.toLowerCase()}{" "}
+                  · {when(t.at)}
+                </li>
+              ))}
+            </ol>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

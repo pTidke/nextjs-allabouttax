@@ -3,14 +3,20 @@ import { Pool } from "pg";
 import { prisma } from "../src/lib/db";
 import type { EngineDocument } from "../src/lib/review/extraction-runs";
 import { requiredLines } from "../src/lib/review/line-reviews";
+import { carryOver, type StagingData } from "../src/lib/review/staging-apply";
 import {
   compareWithEngine,
   revisionSummary,
   type StagingCandidate,
 } from "../src/lib/review/staging-carry-over";
 
-// R3, step 1: a read-only look at the staging review work and how it lines up
-// with the live library. Run by .github/workflows/carry-over.yml.
+// R3: carrying the staging review work into the live review records. Run by
+// .github/workflows/carry-over.yml.
+//   inspect  a read-only look at the staging work and how it lines up with the
+//            live library;
+//   plan     what apply would write, without writing it;
+//   apply    writes it (lib/review/staging-apply.ts). Safe to run again.
+// The staging database is only ever read, in a read-only transaction.
 //
 // Actions logs on a public repository are public, so this prints only what is
 // already public (document titles and official addresses) and counts: no
@@ -41,19 +47,10 @@ async function readStaging(url: string) {
     }[];
     const revisions = (
       await client.query(
-        "SELECT id, candidate_id, action, created_at, payload->'command' AS command FROM extraction_staging.revisions ORDER BY created_at, id",
+        // A revision's payload is the reviewer's command itself.
+        "SELECT id, candidate_id, action, created_at, payload FROM extraction_staging.revisions ORDER BY created_at, id",
       )
-    ).rows as {
-      id: string;
-      candidate_id: string;
-      action: string;
-      created_at: Date;
-      command: {
-        note?: string;
-        checks?: { regionId: string; state: string }[];
-        issues?: unknown[];
-      } | null;
-    }[];
+    ).rows as StagingData["revisions"];
     // Tables the web role may not be allowed to read are reported, not fatal.
     const optional = async <T>(sql: string) => {
       await client.query("SAVEPOINT optional");
@@ -66,13 +63,9 @@ async function readStaging(url: string) {
         return null;
       }
     };
-    const taxReviews = await optional<{
-      candidate_id: string;
-      extraction_revision: string;
-      decision: string;
-      created_at: Date;
-      fields: Record<string, unknown>;
-    }>(
+    const taxReviews = await optional<
+      NonNullable<StagingData["taxReviews"]>[number]
+    >(
       "SELECT candidate_id, extraction_revision, decision, created_at, fields FROM extraction_staging.tax_reviews ORDER BY id",
     );
     const repairJobs = await optional<{ candidate_id: string; status: string }>(
@@ -86,10 +79,20 @@ async function readStaging(url: string) {
   }
 }
 
-async function inspect() {
+function stagingUrl() {
   const url = process.env.STAGING_DATABASE_URL;
   if (!url) throw new Error("STAGING_DATABASE_URL is not set.");
-  const staging = await readStaging(url);
+  return url;
+}
+
+async function run(write: boolean) {
+  const staging = await readStaging(stagingUrl());
+  const results = await carryOver(staging, { write });
+  console.log(JSON.stringify(results, null, 2));
+}
+
+async function inspect() {
+  const staging = await readStaging(stagingUrl());
   const replaced = new Set(
     staging.candidates
       .map((c) => c.payload.repair?.replacesCandidateId)
@@ -179,9 +182,9 @@ async function inspect() {
         revisionSummary({
           action: r.action,
           createdAt: new Date(r.created_at),
-          checks: r.command?.checks ?? [],
-          issues: r.command?.issues?.length ?? 0,
-          hasNote: !!r.command?.note?.trim(),
+          checks: r.payload?.checks ?? [],
+          issues: r.payload?.issues?.length ?? 0,
+          hasNote: !!r.payload?.note?.trim(),
         }),
       ),
       taxReviews:
@@ -218,7 +221,13 @@ async function inspect() {
 const mode = process.argv[2];
 (mode === "inspect"
   ? inspect()
-  : Promise.reject(new Error("Usage: staging-carry-over inspect"))
+  : mode === "plan"
+    ? run(false)
+    : mode === "apply"
+      ? run(true)
+      : Promise.reject(
+          new Error("Usage: staging-carry-over inspect | plan | apply"),
+        )
 )
   .catch((error) => {
     // Short and free of connection details.
