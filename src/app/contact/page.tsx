@@ -14,28 +14,35 @@ export default function ContactPage() {
     email: "",
     message: "",
   });
-  const handleSubmit = (e: React.FormEvent) => {
+  const [status, setStatus] = useState<
+    { state: "idle" | "sending" | "sent" } | { state: "error"; message: string }
+  >({ state: "idle" });
+  const [website, setWebsite] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Construct email body
-    const emailBody = `
-Name: ${formData.name}
-Email: ${formData.email}
-
-Message:
-${formData.message}
-    `.trim();
-
-    // Construct Gmail URL
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=ask.allabouttax@gmail.com&su=${encodeURIComponent(
-      `Contact Form: ${formData.name}`,
-    )}&body=${encodeURIComponent(emailBody)}`;
-
-    // Open in new tab
-    window.open(gmailUrl, "_blank");
-
-    // Reset form (optional, depending on UX preference)
-    setFormData({ name: "", email: "", message: "" });
+    setStatus({ state: "sending" });
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, website }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok)
+        throw new Error(body.error || "Your message could not be sent.");
+      setFormData({ name: "", email: "", message: "" });
+      setStatus({ state: "sent" });
+    } catch (error) {
+      // Keep what they typed so nothing is lost.
+      setStatus({
+        state: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Your message could not be sent.",
+      });
+    }
   };
 
   const handleChange = (
@@ -111,6 +118,17 @@ ${formData.message}
               className="w-full p-7 md:p-12 rounded-[40px] bg-white border border-slate-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)]"
             >
               <form className="space-y-6" onSubmit={handleSubmit}>
+                {/* Hidden from people; only bots fill it in. */}
+                <input
+                  type="text"
+                  name="website"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="hidden"
+                />
                 <div className="space-y-2 text-left">
                   <label className="text-sm font-semibold text-slate-700 ml-1">
                     Full Name
@@ -154,11 +172,30 @@ ${formData.message}
                   />
                 </div>
 
+                {status.state === "sent" && (
+                  <p
+                    role="status"
+                    className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800"
+                  >
+                    Thank you. Your message has been received and we will reply
+                    by email.
+                  </p>
+                )}
+                {status.state === "error" && (
+                  <p
+                    role="alert"
+                    className="rounded-2xl bg-red-50 p-4 text-sm text-red-800"
+                  >
+                    {status.message}
+                  </p>
+                )}
                 <Button
+                  type="submit"
+                  disabled={status.state === "sending"}
                   size="lg"
                   className="w-full rounded-full bg-emerald-600 hover:bg-emerald-700 text-white py-8 text-lg font-semibold transition-all group shadow-xl shadow-emerald-600/20 flex items-center justify-center"
                 >
-                  Send Message via Gmail
+                  {status.state === "sending" ? "Sending…" : "Send message"}
                   <Send
                     className="ml-2 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
                     size={18}

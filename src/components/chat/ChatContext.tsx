@@ -34,6 +34,8 @@ type ChatState = {
   clearChat: () => void;
   openConversation: (id: string) => Promise<void>;
   error: string | null;
+  // Questions left today, once the server has told us.
+  remaining: number | null;
 };
 const ChatContext = createContext<ChatState | undefined>(undefined);
 
@@ -50,6 +52,7 @@ function ChatStateProvider({
   const [period, setPeriod] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const [status, setStatus] = useState<ChatState["status"]>("awaiting_message");
   const conversationId = useRef<string | null>(null);
   const controller = useRef<AbortController | null>(null);
@@ -144,6 +147,7 @@ function ChatStateProvider({
         }),
       });
       const payload = await response.json();
+      if (response.status === 429) setRemaining(0);
       if (!response.ok)
         throw new Error(
           payload.error || "The assistant is temporarily unavailable.",
@@ -152,6 +156,8 @@ function ChatStateProvider({
       conversationId.current = payload.conversationId;
       setMessages((old) => [...old, payload.message]);
       setSuggestions(payload.suggestions || []);
+      if (typeof payload.remaining === "number")
+        setRemaining(payload.remaining);
     } catch (err) {
       if (current !== generation.current || abort.signal.aborted) return;
       setError(
@@ -186,6 +192,7 @@ function ChatStateProvider({
         clearChat,
         openConversation,
         error,
+        remaining,
       }}
     >
       {children}

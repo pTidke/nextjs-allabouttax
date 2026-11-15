@@ -93,6 +93,11 @@ export default async function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                 )}
+                {session.user.role === "ADMIN" && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/inbox">Inbox</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <SignOutMenuItem />
               </DropdownMenuContent>

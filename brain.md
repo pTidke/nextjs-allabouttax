@@ -148,7 +148,9 @@ All tables are in one Postgres database (`prisma/schema.prisma`).
 
 **Pipeline** — `IngestionJob` (Postgres-backed queue: `dedupeKey`, `status`, `attempts`, `availableAt`, `leaseUntil`, `leaseToken`, optional `documentUrl`) and `TaxWorkerState` (single `ingestion` heartbeat row).
 
-**Conversations** — `TaxConversation` (`userId`, fixed `period`), `TaxMessage` (`role`, `content`, `citations` JSON, `releaseId`, `model`, `promptVersion`), `DailyUsage` (`userId`, IST `day`, `count`).
+**Conversations** — `TaxConversation` (`userId`, fixed `period`), `TaxMessage` (`role`, `content`, `citations` JSON, `releaseId`, `model`, `promptVersion`, and on assistant messages an `outcome`: `ANSWERED`, `CLARIFICATION`, `UNSUPPORTED` or `NO_EVIDENCE`), `DailyUsage` (`userId`, IST `day`, `count`), `TaxContentGap` (a question the library could not answer: points at the user's own message and is deleted with it).
+
+**Contact** — `ContactMessage` (`name`, `email`, `message`) from the public contact form.
 
 Hand-written SQL that Prisma's schema does not express: the GIN full-text index on `TaxChunk`, the partial unique index `IngestionJob_active_source` (one `RUNNING` job per source), and a check constraint on `periodMode`.
 
@@ -194,12 +196,13 @@ Matching is `to_tsquery('english', …)` over up to 24 lower-cased question term
 
 1. Same-origin check, session check, input validation (message ≤ 6,000 characters, valid period, body ≤ 16 kB).
 2. Load the conversation if an id was sent; it must belong to the user and have the same period. Load its last three user questions as search context.
-3. Retrieve evidence. **If none, return a fixed limitation message immediately**: no model call, no quota use, nothing saved.
+3. Retrieve evidence. **If none, reply with a fixed limitation message**: no model call and no quota use, but both messages are saved (outcome `NO_EVIDENCE`) and the question is logged as a content gap.
 4. Reserve one question from the daily quota (atomic upsert keyed on the IST date).
-5. Create the conversation if needed, load the last 8 messages as history.
-6. Call the model once: `instructions` (prompt version `tax-evidence-v3`), a JSON payload of question, period, history and evidence (each passage labelled `S1…S6` with its scope metadata), strict JSON schema output `{answer, supported, sourceIds, suggestions}`, `store: false`, 2,200 max output tokens, 40 s timeout, no retries.
-7. `validateAnswer`: reject URLs or markdown links in the text; every `[S#]` marker must be a declared source id and every declared id must appear as a marker; a supported answer must cite something. If `supported` is false the model text is discarded and a fixed refusal is returned. A "Source status: Official guidance […]" line is appended by the server for cited guidance.
-8. Save the user and assistant messages in one transaction with citations, release id, model and prompt version. On any failure after step 4 the quota is refunded.
+5. Load the last 8 messages as history.
+6. Call the model once: `instructions` (prompt version `tax-evidence-v4`), a JSON payload of question, period, history and evidence (each passage labelled `S1…S6` with its scope metadata), strict JSON schema output `{answer, supported, needsClarification, sourceIds, suggestions}`, `store: false`, 2,200 max output tokens, 40 s timeout, no retries.
+7. `validateAnswer`: reject URLs or markdown links in the text; every `[S#]` marker must be a declared source id and every declared id must appear as a marker; a supported answer must cite something. If `supported` is false the model text is discarded and a fixed refusal is returned (`UNSUPPORTED`), unless `needsClarification` is true and the text passes `safeClarification`: at most 400 characters, contains a question mark, no digits and no citation markers. Then it is shown as a clarifying question (`CLARIFICATION`). The no-digits rule keeps amounts, dates, rates and thresholds from model memory out of it. A "Source status: Official guidance […]" line is appended by the server for cited guidance.
+8. `saveTurn` (`lib/chat/turn.ts`), in one transaction: create the conversation if this is its first question, save both messages with citations, release id, model, prompt version and outcome, log a content gap for `UNSUPPORTED`, and give the question back to the quota for `UNSUPPORTED`. A clarifying question is charged. On any failure after step 4 the quota is refunded and nothing is saved, so no empty conversation is left behind.
+9. Reply with the message, suggestions and the number of questions left today, which the chat shows under the input.
 
 The response is returned whole; nothing is streamed.
 
@@ -291,7 +294,7 @@ Each entry records the decision, the reason, and the consequence that matters fo
 | AD-14 | **CBDT adapter is complete-or-fail.** | Silent truncation would look like full coverage. | Any upstream layout or taxonomy change blocks the whole source. |
 | AD-15 | **Original bytes live in Postgres** under a cumulative budget. | One store, transactional with metadata. | Hard ceiling on corpus size until originals move to object storage. |
 | AD-16 | **Google-only sign-in, database sessions, admin role re-read from the database on every admin request.** | Small surface; role changes take effect immediately. | Roles can only be changed in the database. Reviewer and publisher are the same role. |
-| AD-17 | **Daily quota is an atomic counter** (10 per user, 1,000 per admin, IST day), reserved before the model call and refunded on error. | Bounded model spend without races. | Limits are constants in the route handler. |
+| AD-17 | **Daily quota is an atomic counter** (10 per user, 1,000 per admin, IST day), reserved before the model call and refunded on error or refusal. | Bounded model spend without races. | Limits are constants in `lib/chat/turn.ts`. |
 | AD-18 | **Conversations are server-owned; the client keeps nothing durable.** No provider thread ids. | Private text should not persist in the browser; no lock-in to a provider's thread store. | Reload loses the open chat unless reopened from `/chats`. |
 | AD-19 | **Logs carry only the error type.** | Never log financial text, credentials or provider errors. | Production failures are hard to diagnose. |
 | AD-20 | **Azure OpenAI only, endpoint shape validated, fail closed if unconfigured.** | No accidental fallback to another provider or key. | Changing provider means changing `lib/chat/model.ts`. |
@@ -309,6 +312,8 @@ Each entry records the decision, the reason, and the consequence that matters fo
 | AD-31 | **Staging history is immutable and capability-gated**, independent of the app's `ADMIN` role. | Auditable decisions; a site admin is not automatically a qualified reviewer. | Two permission systems; schema applied outside Prisma. |
 | AD-32 | **Two review gates: extraction acceptance, then tax applicability**, each bound to an exact revision. | Transcription quality and legal meaning are different skills. | A document needs two human passes before it can be released. |
 | AD-33 | **OCR repair proposals come from the Azure chat model reading a crop**, returned for human recheck. | Fast to build; matched three reviewed fields in a probe. | The document path depends on a chat model. The owner has since decided against this (section 12). |
+| AD-37 | **Unanswered questions are kept, anonymously, for the administrator.** `/admin/inbox` lists them with period and reason but no name, email or user id, and they are deleted with their conversation. The privacy policy says so. | The best signal for what to ingest next. | User text is read by a person; the wording in the privacy policy must stay accurate. |
+| AD-38 | **The contact form writes to the database**, with a hidden spam field, 3 messages per sender per hour and 100 site-wide per hour. Messages appear in `/admin/inbox`. | Free, no e-mail service or key. | Nobody is notified of a new message; the admin has to look. |
 | AD-34 | **The engine is a generic, standalone package**; tax-specific rules and the staging contract stay in the application. | It is meant to be published for others; the application should treat it as a black box producing `document.json`. | Two places to change during the port from the lab. |
 | AD-35 | **The engine decides by rule**: a line is accepted only when validators pass and an independent reading agrees on every critical token. Engine confidence is never used. | The owner allows rules to accept; recorded cases show confidence is high on wrong dates. | "Accepted" means "passed every rule" until thresholds are measured on reference pages. |
 | AD-36 | **Three outputs from one record**: `document.json` is canonical; Markdown and chunks are derived and carry page anchors and status. | Serves model reading, vector indexing and human review from the same evidence. | Consumers must filter on `status`; flagged text is included and labelled by default. |

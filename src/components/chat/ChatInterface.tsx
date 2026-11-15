@@ -37,6 +37,7 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
     handleSubmit,
     clearChat,
     error,
+    remaining,
   } = useChat();
   const [copied, setCopied] = useState<string | null>(null);
   const scroll = useRef<HTMLDivElement>(null);
@@ -288,6 +289,8 @@ export default function ChatInterface({ trigger }: { trigger: ReactNode }) {
               </button>
             </div>
             <p className="text-center text-[11px] text-slate-400 mt-3">
+              {remaining !== null &&
+                `${remaining} ${remaining === 1 ? "question" : "questions"} left today. Questions the library cannot answer are not counted. `}
               Check the cited sources before acting. New chat clears this view;
               it does not delete server records.
             </p>

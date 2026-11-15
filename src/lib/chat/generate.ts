@@ -19,6 +19,7 @@ export async function generateAnswer({
         {
           answer: "No matching evidence",
           supported: false,
+          needsClarification: false,
           sourceIds: [],
           suggestions: [],
         },
