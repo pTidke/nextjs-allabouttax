@@ -180,6 +180,31 @@ test("an uploaded PDF is stored, extracted and joins the queue", async () => {
     (await workflow.reviewQueue("ocr", 0)).items.map((i) => i.title),
     ["Scanned notice"],
   );
+  // By kind, and by words in the title; the tabs count within each other.
+  const uploads = await workflow.reviewQueue("all", 0, { category: "uploads" });
+  assert.equal(uploads.items.length, 2);
+  assert.equal(uploads.categories.uploads, 2);
+  assert.equal(
+    (await workflow.reviewQueue("all", 0, { category: "circulars" })).items
+      .length,
+    0,
+  );
+  const found = await workflow.reviewQueue("all", 0, { query: "  SCANNED  " });
+  assert.deepEqual(
+    found.items.map((i) => i.title),
+    ["Scanned notice"],
+  );
+  assert.equal(found.counts.all, 1);
+  assert.equal(found.query, "scanned");
+  // LIKE wildcards in a search are taken literally, not as wildcards.
+  assert.equal(
+    (await workflow.reviewQueue("all", 0, { query: "%" })).items.length,
+    2,
+  );
+  await assert.rejects(
+    workflow.reviewQueue("all", 0, { category: "x" as never }),
+    { status: 400 },
+  );
   // A scan has nothing to accept yet.
   await assert.rejects(
     workflow.recordTextCheck(owner, scan.versionId, "ACCEPTED", ""),
