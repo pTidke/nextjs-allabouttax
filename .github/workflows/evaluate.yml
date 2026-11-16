@@ -1,0 +1,36 @@
+name: Evaluate answers
+# Manual and read-only: scores the chatbot against evaluations/income-tax.json
+# (lib/tax/evaluation.ts). "search" checks that each question finds the passage
+# that answers it, for free; "live" also asks the model, which needs the
+# AZURE_OPENAI_* secrets in the tax-worker environment and costs a little.
+# The log is public: case ids, pass or fail, ranks and counts only.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "search (free) or live (asks the model)"
+        type: choice
+        options: [search, live]
+        default: search
+permissions:
+  contents: read
+jobs:
+  evaluate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: tax-worker
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci --legacy-peer-deps
+      - name: Evaluate
+        run: npx tsx scripts/tax-evaluate.ts ${{ inputs.mode == 'live' && '--live' || '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          AZURE_OPENAI_BASE_URL: ${{ secrets.AZURE_OPENAI_BASE_URL }}
