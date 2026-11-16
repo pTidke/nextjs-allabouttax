@@ -23,7 +23,8 @@ People: the owner reviews extraction; a chartered accountant reviews tax applica
 - [x] No empty conversations after a failed answer (B8)
 - [x] Remove the year picker; take the year from the question, else search all years (B1, AD-05)
 - [x] Say on each reply that did not count toward the daily limit
-- [ ] Evaluation set with expected source passages and expected refusals; store a trace per answer (G1, G2)
+- [x] Evaluation set with expected source passages and expected refusals, scored for search, answering and citing in one command or the `Evaluate answers` workflow (G1). Grow it with reviewed questions as documents are published
+- [ ] Store a trace per answer: what was retrieved, scores, latency, tokens (G2)
 - [x] Fix the contact form and the consent links (B11, B12)
 - [ ] Notify the admin of new contact messages (needs an e-mail service; deferred)
 
