@@ -72,6 +72,8 @@ test("passages keep paragraphs whole, tables together, corrections in and Hindi 
         flags: [],
         lines: [
           line("a", "भारत का राजपत्र", { excluded: "script:Deva" }),
+          // Mixed, but mostly Hindi: a Gazette header with Roman numerals.
+          line("a2", "[भाग II—खण्ड 3(ii)] भारत का राजपत्र : असाधारण 3"),
           line("b", "nnnnMINISTRY OF FINANCE", {
             paragraph: 0,
             status: "flagged",
