@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RenderTask } from "pdfjs-dist";
 import type { EngineBox } from "@/lib/review/extraction-runs";
 import type { QueueEntry, ReviewLine } from "@/lib/review/line-reviews";
+import { needsOneByOne, oneByOneReason } from "@/lib/review/line-rules";
 import PageViewer from "./PageViewer";
 import { Spinner, usePdf } from "./pdf";
 
@@ -229,6 +230,8 @@ export default function LineReviewer({
 }) {
   // The lines the engine asks about, or, on request, every line.
   const [everyLine, setEveryLine] = useState(false);
+  // A whole page at once: tick the page's lines and confirm them together.
+  const [pageMode, setPageMode] = useState(false);
   const required = useMemo(
     () => allLines.filter((entry) => entry.required),
     [allLines],
@@ -299,6 +302,10 @@ export default function LineReviewer({
     },
     [queue],
   );
+
+  useEffect(() => {
+    if (pageMode) load(page);
+  }, [load, page, pageMode]);
 
   // Load the current line's page, and the page of the next open line ahead.
   useEffect(() => {
@@ -373,6 +380,7 @@ export default function LineReviewer({
         target?.closest("input, textarea, select, [contenteditable]")
       )
         return;
+      if (pageMode) return;
       if (event.key === "ArrowRight") go(index + 1);
       else if (event.key === "ArrowLeft") go(index - 1);
       else if (!canDecide || editing) return;
@@ -385,7 +393,7 @@ export default function LineReviewer({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [canDecide, decide, editing, go, index, ocr, startEditing]);
+  }, [canDecide, decide, editing, go, index, ocr, pageMode, startEditing]);
 
   const size = pages.find((p) => p.number === entry?.page);
   const decision = line ? (saved[line.id] ?? line.decision) : null;
@@ -446,255 +454,324 @@ export default function LineReviewer({
     </div>
   );
 
+  const modes = canDecide && (
+    <div
+      role="group"
+      aria-label="How to check"
+      className="inline-flex rounded-lg bg-slate-200/70 p-1"
+    >
+      <button
+        type="button"
+        aria-pressed={!pageMode}
+        className={tab(!pageMode)}
+        onClick={() => setPageMode(false)}
+      >
+        One line at a time
+      </button>
+      <button
+        type="button"
+        aria-pressed={pageMode}
+        className={tab(pageMode)}
+        onClick={() => {
+          setPageMode(true);
+          setEditing(false);
+        }}
+      >
+        A whole page at once
+      </button>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      {!entry && switcher}
-      {!entry ? (
-        <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
-          Every line passed the engine&rsquo;s checks and there is nothing to
-          spot-check. Look over the whole page, then accept the text.
-        </p>
+      {modes}
+      {pageMode ? (
+        <PageChecklist
+          key={page}
+          pageNumber={page}
+          pageCount={pages.length}
+          lines={loaded[page]}
+          saved={saved}
+          runId={runId}
+          versionId={versionId}
+          onPage={(next) => setPage(next)}
+          onRetry={() => load(page)}
+          onConfirmed={(ids) => {
+            const at = new Date().toISOString();
+            setSaved((old) => {
+              const next = { ...old };
+              for (const id of ids)
+                next[id] = {
+                  decision: "CONFIRMED",
+                  text: null,
+                  reviewer: "you",
+                  at,
+                };
+              return next;
+            });
+            onChanged();
+          }}
+          onOneByOne={(lineId) => {
+            const entryAt = allLines.find((l) => l.id === lineId);
+            if (!entryAt) return;
+            if (!queue.some((l) => l.id === lineId)) setEveryLine(true);
+            setCurrentId(lineId);
+            setPageMode(false);
+          }}
+        />
       ) : (
-        <section className="space-y-3 rounded-xl border p-4">
-          {switcher}
-          {/* Fixed places for Previous and Next, whatever the line's label. */}
-          <div className="grid grid-cols-[7rem_1fr_7rem] items-center gap-2">
-            <button
-              type="button"
-              className="rounded-md border px-2.5 py-1 text-sm disabled:opacity-40"
-              disabled={index === 0}
-              onClick={() => go(index - 1)}
-            >
-              ← Previous
-            </button>
-            <h2 className="text-center font-semibold">
-              Line {index + 1} of {queue.length}
-            </h2>
-            <button
-              type="button"
-              className="rounded-md border px-2.5 py-1 text-sm disabled:opacity-40"
-              disabled={index >= queue.length - 1}
-              onClick={() => go(index + 1)}
-            >
-              Next →
-            </button>
-          </div>
-          <p className="min-h-4 text-center text-xs text-slate-500">
-            page {entry.page}
-            {entry.spotCheck
-              ? " · spot check of a line the engine accepted"
-              : !entry.required
-                ? " · accepted by the engine; checking it is optional"
-                : ""}
-          </p>
-          <div
-            className="h-1.5 overflow-hidden rounded-full bg-slate-100"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={queue.length}
-            aria-valuenow={decidedCount}
-            aria-label="Lines decided"
-          >
-            <div
-              className="h-full bg-emerald-600 transition-all"
-              style={{ width: `${(decidedCount / queue.length) * 100}%` }}
-            />
-          </div>
-          <p className="text-xs text-slate-500">
-            {decidedCount} of {queue.length} decided
-            {unreadable ? ` · ${unreadable} unreadable` : ""}
-          </p>
-
-          {!line ? (
-            pageLines === "failed" ? (
-              <p className="text-sm text-red-800">
-                This page&rsquo;s lines could not be loaded.{" "}
+        <>
+          {!entry && switcher}
+          {!entry ? (
+            <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
+              Every line passed the engine&rsquo;s checks and there is nothing
+              to spot-check. Look over the whole page, then accept the text.
+            </p>
+          ) : (
+            <section className="space-y-3 rounded-xl border p-4">
+              {switcher}
+              {/* Fixed places for Previous and Next, whatever the line's label. */}
+              <div className="grid grid-cols-[7rem_1fr_7rem] items-center gap-2">
                 <button
                   type="button"
-                  className="underline"
-                  onClick={() => entry && load(entry.page)}
+                  className="rounded-md border px-2.5 py-1 text-sm disabled:opacity-40"
+                  disabled={index === 0}
+                  onClick={() => go(index - 1)}
                 >
-                  Try again
+                  ← Previous
                 </button>
+                <h2 className="text-center font-semibold">
+                  Line {index + 1} of {queue.length}
+                </h2>
+                <button
+                  type="button"
+                  className="rounded-md border px-2.5 py-1 text-sm disabled:opacity-40"
+                  disabled={index >= queue.length - 1}
+                  onClick={() => go(index + 1)}
+                >
+                  Next →
+                </button>
+              </div>
+              <p className="min-h-4 text-center text-xs text-slate-500">
+                page {entry.page}
+                {entry.spotCheck
+                  ? " · spot check of a line the engine accepted"
+                  : !entry.required
+                    ? " · accepted by the engine; checking it is optional"
+                    : ""}
               </p>
-            ) : (
-              <Spinner label="Loading the line…" />
-            )
-          ) : (
-            <>
-              {size && <LineCrop src={src} line={line} size={size} />}
-
-              {!!line.flags.length && (
-                <p className="text-sm text-amber-900">
-                  {line.flags.map((flag) => readable(flag.message)).join(" ")}
-                </p>
-              )}
-              <dl className="space-y-2 text-base">
-                <div>
-                  <dt className="text-xs text-slate-500">
-                    {readers[line.source] ?? line.source}
-                  </dt>
-                  <dd className="font-medium">
-                    <Marked text={line.text} other={ocr?.text ?? null} />
-                  </dd>
-                </div>
-                {line.other.map((reading) => (
-                  <div key={reading.source}>
-                    <dt className="text-xs text-slate-500">
-                      {readers[reading.source] ?? reading.source}
-                    </dt>
-                    <dd>
-                      <Marked
-                        text={reading.text}
-                        other={reading === ocr ? line.text : null}
-                      />
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-
-              {decision && !editing && (
-                <p
-                  className={`rounded-lg p-2 text-sm ${decision.decision === "UNREADABLE" ? "bg-red-50 text-red-800" : "bg-emerald-50 text-emerald-900"}`}
-                >
-                  {decisionText[decision.decision]}
-                  {decision.decision === "CORRECTED" && (
-                    <> to &ldquo;{decision.text}&rdquo;</>
-                  )}{" "}
-                  by {decision.reviewer}.
-                  {canDecide && " Choose again to change it."}
-                </p>
-              )}
-
-              {canDecide && !editing && (
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className={button}
-                    onClick={() => void decide("CONFIRMED")}
-                  >
-                    {key("1")}Text is right
-                  </button>
-                  {ocr ? (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      className={button}
-                      onClick={() => void decide("CORRECTED", ocr.text)}
-                    >
-                      {key("2")}Use the {readers[ocr.source] ?? ocr.source}{" "}
-                      reading
-                    </button>
-                  ) : (
-                    <span className="hidden sm:block" />
-                  )}
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className={button}
-                    onClick={startEditing}
-                  >
-                    {key("3")}Type a correction
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className={`${button} text-red-700`}
-                    onClick={() => void decide("UNREADABLE")}
-                  >
-                    {key("4")}Can&rsquo;t read
-                  </button>
-                </div>
-              )}
-              {canDecide && editing && (
-                <form
-                  className="space-y-2"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void decide("CORRECTED", draft);
-                  }}
-                >
-                  <label className="block text-sm text-slate-600">
-                    What the page says
-                    <input
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") setEditing(false);
-                      }}
-                      maxLength={2000}
-                      autoFocus
-                      className="mt-1 block w-full rounded-md border p-2 text-base"
-                    />
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      disabled={busy || !draft.trim()}
-                      className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-40"
-                    >
-                      Save and go on
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-lg border px-3 py-2 text-sm"
-                      onClick={() => setEditing(false)}
-                    >
-                      Cancel
-                    </button>
-                    <span className="text-xs text-slate-500">
-                      Enter saves, Esc cancels
-                    </span>
-                  </div>
-                </form>
-              )}
-            </>
-          )}
-          {busy && <Spinner label="Saving…" />}
-          {error && (
-            <p role="alert" className="text-sm text-red-700">
-              {error}
-            </p>
-          )}
-          {allDecided && (
-            <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
-              {unreadable
-                ? `All lines are decided, but ${unreadable} cannot be read. Report the problem in the text check.`
-                : "All lines are decided. "}
-              {!unreadable && (
-                <a href="#text-check" className="underline">
-                  Accept the text in the text check
-                </a>
-              )}
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-            <label className="flex items-center gap-1.5">
-              Jump to
-              <select
-                value={entry.id}
-                onChange={(e) =>
-                  go(queue.findIndex((l) => l.id === e.target.value))
-                }
-                className="max-w-64 rounded border px-1 py-0.5 text-xs text-slate-700"
+              <div
+                className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={queue.length}
+                aria-valuenow={decidedCount}
+                aria-label="Lines decided"
               >
-                {queue.map((l, i) => {
-                  const d = decided(l);
-                  return (
-                    <option key={l.id} value={l.id}>
-                      {d ? (d === "UNREADABLE" ? "✗" : "✓") : "•"} Line {i + 1},
-                      page {l.page}
-                      {l.spotCheck ? " (spot check)" : ""}
-                    </option>
-                  );
-                })}
-              </select>
-            </label>
-            {canDecide && (
-              <span>Keys: 1–4 choose · ← → move between lines</span>
-            )}
-          </div>
-        </section>
+                <div
+                  className="h-full bg-emerald-600 transition-all"
+                  style={{ width: `${(decidedCount / queue.length) * 100}%` }}
+                />
+              </div>
+              <p className="text-xs text-slate-500">
+                {decidedCount} of {queue.length} decided
+                {unreadable ? ` · ${unreadable} unreadable` : ""}
+              </p>
+
+              {!line ? (
+                pageLines === "failed" ? (
+                  <p className="text-sm text-red-800">
+                    This page&rsquo;s lines could not be loaded.{" "}
+                    <button
+                      type="button"
+                      className="underline"
+                      onClick={() => entry && load(entry.page)}
+                    >
+                      Try again
+                    </button>
+                  </p>
+                ) : (
+                  <Spinner label="Loading the line…" />
+                )
+              ) : (
+                <>
+                  {size && <LineCrop src={src} line={line} size={size} />}
+
+                  {!!line.flags.length && (
+                    <p className="text-sm text-amber-900">
+                      {line.flags
+                        .map((flag) => readable(flag.message))
+                        .join(" ")}
+                    </p>
+                  )}
+                  <dl className="space-y-2 text-base">
+                    <div>
+                      <dt className="text-xs text-slate-500">
+                        {readers[line.source] ?? line.source}
+                      </dt>
+                      <dd className="font-medium">
+                        <Marked text={line.text} other={ocr?.text ?? null} />
+                      </dd>
+                    </div>
+                    {line.other.map((reading) => (
+                      <div key={reading.source}>
+                        <dt className="text-xs text-slate-500">
+                          {readers[reading.source] ?? reading.source}
+                        </dt>
+                        <dd>
+                          <Marked
+                            text={reading.text}
+                            other={reading === ocr ? line.text : null}
+                          />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  {decision && !editing && (
+                    <p
+                      className={`rounded-lg p-2 text-sm ${decision.decision === "UNREADABLE" ? "bg-red-50 text-red-800" : "bg-emerald-50 text-emerald-900"}`}
+                    >
+                      {decisionText[decision.decision]}
+                      {decision.decision === "CORRECTED" && (
+                        <> to &ldquo;{decision.text}&rdquo;</>
+                      )}{" "}
+                      by {decision.reviewer}.
+                      {canDecide && " Choose again to change it."}
+                    </p>
+                  )}
+
+                  {canDecide && !editing && (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        className={button}
+                        onClick={() => void decide("CONFIRMED")}
+                      >
+                        {key("1")}Text is right
+                      </button>
+                      {ocr ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          className={button}
+                          onClick={() => void decide("CORRECTED", ocr.text)}
+                        >
+                          {key("2")}Use the {readers[ocr.source] ?? ocr.source}{" "}
+                          reading
+                        </button>
+                      ) : (
+                        <span className="hidden sm:block" />
+                      )}
+                      <button
+                        type="button"
+                        disabled={busy}
+                        className={button}
+                        onClick={startEditing}
+                      >
+                        {key("3")}Type a correction
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        className={`${button} text-red-700`}
+                        onClick={() => void decide("UNREADABLE")}
+                      >
+                        {key("4")}Can&rsquo;t read
+                      </button>
+                    </div>
+                  )}
+                  {canDecide && editing && (
+                    <form
+                      className="space-y-2"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void decide("CORRECTED", draft);
+                      }}
+                    >
+                      <label className="block text-sm text-slate-600">
+                        What the page says
+                        <input
+                          value={draft}
+                          onChange={(e) => setDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") setEditing(false);
+                          }}
+                          maxLength={2000}
+                          autoFocus
+                          className="mt-1 block w-full rounded-md border p-2 text-base"
+                        />
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          disabled={busy || !draft.trim()}
+                          className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-40"
+                        >
+                          Save and go on
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg border px-3 py-2 text-sm"
+                          onClick={() => setEditing(false)}
+                        >
+                          Cancel
+                        </button>
+                        <span className="text-xs text-slate-500">
+                          Enter saves, Esc cancels
+                        </span>
+                      </div>
+                    </form>
+                  )}
+                </>
+              )}
+              {busy && <Spinner label="Saving…" />}
+              {error && (
+                <p role="alert" className="text-sm text-red-700">
+                  {error}
+                </p>
+              )}
+              {allDecided && (
+                <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
+                  {unreadable
+                    ? `All lines are decided, but ${unreadable} cannot be read. Report the problem in the text check.`
+                    : "All lines are decided. "}
+                  {!unreadable && (
+                    <a href="#text-check" className="underline">
+                      Accept the text in the text check
+                    </a>
+                  )}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                <label className="flex items-center gap-1.5">
+                  Jump to
+                  <select
+                    value={entry.id}
+                    onChange={(e) =>
+                      go(queue.findIndex((l) => l.id === e.target.value))
+                    }
+                    className="max-w-64 rounded border px-1 py-0.5 text-xs text-slate-700"
+                  >
+                    {queue.map((l, i) => {
+                      const d = decided(l);
+                      return (
+                        <option key={l.id} value={l.id}>
+                          {d ? (d === "UNREADABLE" ? "✗" : "✓") : "•"} Line{" "}
+                          {i + 1}, page {l.page}
+                          {l.spotCheck ? " (spot check)" : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </label>
+                {canDecide && (
+                  <span>Keys: 1–4 choose · ← → move between lines</span>
+                )}
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       <details open className="group">
@@ -727,5 +804,239 @@ export default function LineReviewer({
         </div>
       </details>
     </div>
+  );
+}
+
+// A whole page at once: every checkable line of the page in a list, ticked
+// unless already decided or in need of a look on its own. "Text is right" for the
+// ticked lines records them all; the server refuses any line that needs a look.
+function PageChecklist({
+  pageNumber,
+  pageCount,
+  lines,
+  saved,
+  runId,
+  versionId,
+  onPage,
+  onRetry,
+  onConfirmed,
+  onOneByOne,
+}: {
+  pageNumber: number;
+  pageCount: number;
+  lines: ReviewLine[] | "failed" | undefined;
+  saved: Record<string, Decision>;
+  runId: string;
+  versionId: string;
+  onPage: (page: number) => void;
+  onRetry: () => void;
+  onConfirmed: (ids: string[]) => void;
+  onOneByOne: (lineId: string) => void;
+}) {
+  const checkable = Array.isArray(lines)
+    ? lines.filter((line) => !line.excluded && line.text.trim())
+    : [];
+  const decisionOf = (line: ReviewLine) => saved[line.id] ?? line.decision;
+  const open = checkable.filter(
+    (line) => !decisionOf(line) && !needsOneByOne(line),
+  );
+  const [selected, setSelected] = useState<Set<string> | null>(null);
+  const chosen = selected ?? new Set(open.map((line) => line.id));
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{
+    text: string;
+    error?: boolean;
+  } | null>(null);
+  const toggle = (id: string, on: boolean) => {
+    const next = new Set(chosen);
+    if (on) next.add(id);
+    else next.delete(id);
+    setSelected(next);
+  };
+  async function confirm() {
+    const ids = checkable
+      .filter((line) => chosen.has(line.id) && !decisionOf(line))
+      .map((line) => line.id);
+    if (!ids.length) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/review/${versionId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "lines", runId, lineIds: ids }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "That did not save.");
+      onConfirmed(ids);
+      setSelected(new Set());
+      setMessage({
+        text: `${ids.length} line${ids.length === 1 ? "" : "s"} confirmed.`,
+      });
+    } catch (e) {
+      setMessage({
+        text: e instanceof Error ? e.message : "That did not save.",
+        error: true,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+  const oneByOne = checkable.filter(
+    (line) => !decisionOf(line) && needsOneByOne(line),
+  ).length;
+  const decided = checkable.filter(decisionOf).length;
+  const count = checkable.filter(
+    (line) => chosen.has(line.id) && !decisionOf(line),
+  ).length;
+  const nav = "rounded-md border px-2.5 py-1 text-sm disabled:opacity-40";
+
+  return (
+    <section className="space-y-3 rounded-xl border p-4">
+      <div className="grid grid-cols-[7rem_1fr_7rem] items-center gap-2">
+        <button
+          type="button"
+          className={nav}
+          disabled={pageNumber <= 1}
+          onClick={() => onPage(pageNumber - 1)}
+        >
+          ← Page
+        </button>
+        <h2 className="text-center font-semibold">
+          Page {pageNumber} of {pageCount}
+        </h2>
+        <button
+          type="button"
+          className={nav}
+          disabled={pageNumber >= pageCount}
+          onClick={() => onPage(pageNumber + 1)}
+        >
+          Page →
+        </button>
+      </div>
+      {lines === "failed" ? (
+        <p className="text-sm text-red-800">
+          This page&rsquo;s lines could not be loaded.{" "}
+          <button type="button" className="underline" onClick={onRetry}>
+            Try again
+          </button>
+        </p>
+      ) : !lines ? (
+        <Spinner label="Loading the page’s lines…" />
+      ) : !checkable.length ? (
+        <p className="text-sm text-slate-600">
+          No lines to check on this page.
+        </p>
+      ) : (
+        <>
+          <p className="text-xs text-slate-500">
+            Read the page below against these lines. {checkable.length} lines ·{" "}
+            {decided} decided
+            {oneByOne
+              ? ` · ${oneByOne} must be decided on ${oneByOne === 1 ? "its" : "their"} own`
+              : ""}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <button
+              type="button"
+              className={nav}
+              onClick={() => setSelected(new Set(open.map((line) => line.id)))}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              className={nav}
+              onClick={() => setSelected(new Set())}
+            >
+              Select none
+            </button>
+            <button
+              type="button"
+              disabled={busy || !count}
+              onClick={() => void confirm()}
+              className="ml-auto rounded-lg bg-emerald-700 px-3 py-1.5 text-sm text-white disabled:opacity-40"
+            >
+              {busy
+                ? "Saving…"
+                : `Text is right for ${count} selected line${count === 1 ? "" : "s"}`}
+            </button>
+          </div>
+          {message && (
+            <p
+              role={message.error ? "alert" : "status"}
+              className={`text-sm ${message.error ? "text-red-700" : "text-emerald-800"}`}
+            >
+              {message.text}
+              {!message.error && pageNumber < pageCount && (
+                <>
+                  {" "}
+                  <button
+                    type="button"
+                    className="underline"
+                    onClick={() => onPage(pageNumber + 1)}
+                  >
+                    Next page
+                  </button>
+                </>
+              )}
+            </p>
+          )}
+          <ol className="max-h-[60vh] space-y-1 overflow-y-auto pr-1">
+            {checkable.map((line) => {
+              const decision = decisionOf(line);
+              const alone = !decision && needsOneByOne(line);
+              const other = line.other.find((r) => r.text.trim());
+              return (
+                <li
+                  key={line.id}
+                  className={`flex items-start gap-2 rounded-md p-1.5 text-sm ${alone ? "bg-amber-50" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    aria-label={`Select: ${line.text}`}
+                    className="mt-1"
+                    disabled={!!decision || alone}
+                    checked={!decision && !alone && chosen.has(line.id)}
+                    onChange={(e) => toggle(line.id, e.target.checked)}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className={decision ? "text-slate-500" : ""}>
+                      {alone ? (
+                        <Marked text={line.text} other={other?.text ?? null} />
+                      ) : (
+                        line.text
+                      )}
+                    </p>
+                    {alone && other && (
+                      <p className="text-xs text-slate-600">
+                        {readers[other.source] ?? other.source}:{" "}
+                        <Marked text={other.text} other={line.text} />
+                      </p>
+                    )}
+                    {alone && (
+                      <button
+                        type="button"
+                        className="text-xs text-amber-900 underline"
+                        onClick={() => onOneByOne(line.id)}
+                      >
+                        {oneByOneReason(line)}: decide it on its own
+                      </button>
+                    )}
+                  </div>
+                  {decision && (
+                    <span
+                      className={`shrink-0 text-xs ${decision.decision === "UNREADABLE" ? "text-red-700" : "text-emerald-800"}`}
+                    >
+                      {decisionText[decision.decision]}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </>
+      )}
+    </section>
   );
 }

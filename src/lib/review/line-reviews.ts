@@ -11,6 +11,7 @@ import {
   type LineForReview,
 } from "./extraction-runs";
 import { requireReviewer } from "./roles";
+import { mostlyDevanagari, needsOneByOne } from "./line-rules";
 import { incomeYears } from "../tax/years";
 import { documentFacts } from "./document-facts";
 import { STAGING_REVIEWER, STAGING_REVIEWER_NAME } from "./staging-carry-over";
@@ -116,15 +117,9 @@ function cleanCorrection(value: unknown) {
   return text;
 }
 
-export async function recordLineDecision(
-  userId: string,
-  versionId: string,
-  input: { runId: unknown; lineId: unknown; decision: unknown; text?: unknown },
-) {
-  await requireReviewer(userId, "EXTRACTION");
-  if (!LINE_DECISIONS.includes(input.decision as LineDecision))
-    throw new HttpError(400, "Unknown line decision.");
-  const decision = input.decision as LineDecision;
+// The document must still await review, and the decision must be for the
+// engine run the reviewer saw.
+async function openRun(versionId: string, runId: unknown) {
   const version = await prisma.taxVersion.findUnique({
     where: { id: versionId },
     select: { status: true, document: { select: { latestVersionId: true } } },
@@ -139,14 +134,25 @@ export async function recordLineDecision(
       "This document is no longer awaiting review. Reload the page.",
     );
   const run = await latestRun(versionId);
-  if (!run || run.status !== "OK" || !run.document || run.id !== input.runId)
+  if (!run || run.status !== "OK" || !run.document || run.id !== runId)
     throw new HttpError(
       409,
       "The engine has read this document again. Reload the page.",
     );
-  const line = lines(run.document as unknown as EngineDocument).find(
-    (l) => l.id === input.lineId,
-  );
+  return { run, document: run.document as unknown as EngineDocument };
+}
+
+export async function recordLineDecision(
+  userId: string,
+  versionId: string,
+  input: { runId: unknown; lineId: unknown; decision: unknown; text?: unknown },
+) {
+  await requireReviewer(userId, "EXTRACTION");
+  if (!LINE_DECISIONS.includes(input.decision as LineDecision))
+    throw new HttpError(400, "Unknown line decision.");
+  const decision = input.decision as LineDecision;
+  const { run, document } = await openRun(versionId, input.runId);
+  const line = lines(document).find((l) => l.id === input.lineId);
   if (!line || line.excluded)
     throw new HttpError(400, "That line is not part of the review.");
   return prisma.lineReview.create({
@@ -160,6 +166,49 @@ export async function recordLineDecision(
     },
     select: { lineId: true, decision: true, text: true, createdAt: true },
   });
+}
+
+export const MAX_LINES_AT_ONCE = 500;
+
+// "Text is right" for many lines at once, typically the rest of a page after
+// looking at it. Refuses lines that need a look one at a time.
+export async function confirmLines(
+  userId: string,
+  versionId: string,
+  input: { runId: unknown; lineIds: unknown },
+) {
+  await requireReviewer(userId, "EXTRACTION");
+  const ids = input.lineIds;
+  if (
+    !Array.isArray(ids) ||
+    !ids.length ||
+    ids.length > MAX_LINES_AT_ONCE ||
+    ids.some((id) => typeof id !== "string") ||
+    new Set(ids).size !== ids.length
+  )
+    throw new HttpError(400, "Choose the lines to confirm.");
+  const { run, document } = await openRun(versionId, input.runId);
+  const byId = new Map(lines(document).map((line) => [line.id, line]));
+  const chosen = (ids as string[]).map((id) => byId.get(id));
+  if (chosen.some((line) => !line || line.excluded))
+    throw new HttpError(400, "A chosen line is not part of the review.");
+  const oneByOne = chosen.filter((line) => needsOneByOne(line!)).length;
+  if (oneByOne)
+    throw new HttpError(
+      400,
+      `${oneByOne} of the chosen line${oneByOne === 1 ? "" : "s"} must be decided one at a time: the readings disagree or a rule blocked ${oneByOne === 1 ? "it" : "them"}.`,
+    );
+  await prisma.lineReview.createMany({
+    data: chosen.map((line) => ({
+      versionId,
+      runId: run.id,
+      lineId: line!.id,
+      decision: "CONFIRMED",
+      text: null,
+      reviewerId: userId,
+    })),
+  });
+  return { confirmed: chosen.length };
 }
 
 export type ReviewLine = LineForReview & {
@@ -268,12 +317,6 @@ export async function pageForReview(
 }
 
 // ---- Rebuilding the chatbot's passages -------------------------------------
-
-export function mostlyDevanagari(text: string) {
-  const devanagari = (text.match(/[\u0900-\u097F]/g) ?? []).length;
-  const latin = (text.match(/[A-Za-z]/g) ?? []).length;
-  return devanagari > latin;
-}
 
 export type Passage = {
   anchor: string;
