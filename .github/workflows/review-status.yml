@@ -1,0 +1,25 @@
+name: Review status
+# Manual and read-only. For each pending document someone has started reviewing,
+# prints how many lines are decided, whether the text check is accepted, and
+# whether lines were checked since. Titles and counts only: the log is public.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  status:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: tax-worker
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci --legacy-peer-deps
+      - name: Status
+        run: npx tsx scripts/review-status.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

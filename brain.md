@@ -34,7 +34,7 @@ The first is under way as a local extraction lab, a hosted staging review screen
 | PDF handling (live) | Text-layer extraction only. No OCR in the live path. Scanned or >8 MB PDFs are rejected. |
 | PDF extraction lab | Python lab, run by hand on a developer machine: native text with source geometry, Tesseract (English, Hindi) and EasyOCR (English) comparisons, scan recovery, table proposals. Nothing is selected or accepted automatically. |
 | Engine (separate repository) | `pdfanchor` in [`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack): a working skeleton of the open-source engine. PDF in; `document.json`, Markdown and RAG chunks out, with a rule-based accepted / flagged / blocked verdict per line. Not yet at parity with the lab. |
-| Staging review | Hosted on a protected Vercel preview with its own Neon databases: extraction inbox, tax-review screen, and an OCR repair worker that sends flagged crops to the Azure chat model. No handoff to the live library. |
+| Staging review | **Retired on 16 November 2026 (R3).** Its pages, API routes and hosted repair queue are removed; its work was carried into the live review records by the `carry-over` workflow, which still reads the staging database. The library code (`src/lib/extraction-staging/`, including the Azure OCR repair worker) stays as a switched-off backup. |
 | Retrieval | PostgreSQL full-text search. No embeddings, no reranking. |
 | Orchestration | Plain TypeScript functions in one route handler. No LangChain or LangGraph. |
 | Review | Fully manual, one document at a time, by an `ADMIN` user. Nothing is auto-approved. |
@@ -126,7 +126,6 @@ status.md                     running status log; read first when resuming work
 tools/pdf_pipeline/           the Python extraction lab (CLI `tax-pdf`), its benchmarks and schemas
 tools/extraction-staging/     SQL for the isolated staging database
 src/lib/extraction-staging/   staging store, contract, repair worker
-src/app/staging/              extraction inbox and tax-review screens
 ```
 
 ## 6. Data model
@@ -234,6 +233,8 @@ The response is returned whole; nothing is streamed.
 `ChatContext` holds chat state in memory only (never `localStorage`) and is remounted when the signed-in identity changes. The chat opens as a full-screen dialog from a floating widget on every page. There is no year picker: the user names a year in the question when it matters, and each answer says which year it applies to. A reply that did not count toward the daily limit says so. `/chats` lists, reopens, exports (streamed JSON) and deletes conversations. `/library` and the in-chat coverage notice show which released documents are currently available, for all years or, in the library, for one year.
 
 ### 7.6 Extraction lab and staging review
+
+*Retired on 16 November 2026: the `/staging` pages, `/api/staging` routes and the hosted repair queue were removed after the carry-over (R3). This section is kept as history; the library code it describes remains, disconnected, as a backup.*
 
 This is a separate system, developed on the `codex/pdf-processing-lab` branch and merged on 15 November 2026. It does not read or write the live library, and the live ingestion in 7.1 is unchanged by it. Staging routes return 404 unless `EXTRACTION_STAGING_ENABLED` is set.
 
@@ -393,7 +394,7 @@ Stated plainly, because several of these are easy to assume:
 - **No automated pipeline from PDF to reviewed text.** The lab is about thirty hand-run commands; an operator runs them locally, assembles the bundle and imports it. Nothing is scheduled.
 - **No automatic decision in the lab or staging.** No engine is selected, no page or region is accepted by rule. `pdfanchor` has a decision policy, but its thresholds are not calibrated and nothing consumes its output yet.
 - **No path for scanned full pages into staging.** The staging contract accepts native full pages and image table bands only.
-- **No handoff from staging to the live library.**
+- **Staging is retired.** Its accepted work was carried into the live review records (R3); nothing else flows from it.
 - **No measured extraction accuracy.** One official reference page is verified.
 - **No model in the live ingestion or review path.** In the live review screen, metadata is typed by a person; the only automation is two presets hard-coded in `review-suggestions.ts`. In staging, the one model in the document path is the Azure chat deployment used by the OCR repair worker.
 - **No embeddings or vector index.** Retrieval is keyword search.
