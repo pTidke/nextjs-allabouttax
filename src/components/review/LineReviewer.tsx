@@ -412,32 +412,43 @@ export default function LineReviewer({
   const tab = (active: boolean) =>
     `rounded-md px-3 py-1 text-sm ${active ? "bg-white shadow-sm font-medium" : "text-slate-600 hover:text-slate-900"}`;
 
+  // Which lines to go through: the ones the engine asks about, or every line.
+  const switcher = allLines.length > required.length && (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-slate-50 p-2">
+      <span className="text-sm text-slate-600">Go through</span>
+      <div
+        role="group"
+        aria-label="Which lines to go through"
+        className="inline-flex rounded-lg bg-slate-200/70 p-1"
+      >
+        <button
+          type="button"
+          aria-pressed={!everyLine}
+          className={tab(!everyLine)}
+          onClick={() => switchTo(false)}
+        >
+          Lines to check ({required.length})
+        </button>
+        <button
+          type="button"
+          aria-pressed={everyLine}
+          className={tab(everyLine)}
+          onClick={() => switchTo(true)}
+        >
+          Every line ({allLines.length})
+        </button>
+      </div>
+      <span className="text-xs text-slate-500">
+        {everyLine
+          ? "Lines the engine accepted can be checked too; it is optional."
+          : "To check more lines than the engine asked about, choose Every line."}
+      </span>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      {allLines.length > required.length && (
-        <div
-          role="group"
-          aria-label="Which lines to go through"
-          className="inline-flex rounded-lg bg-slate-100 p-1"
-        >
-          <button
-            type="button"
-            aria-pressed={!everyLine}
-            className={tab(!everyLine)}
-            onClick={() => switchTo(false)}
-          >
-            Lines to check ({required.length})
-          </button>
-          <button
-            type="button"
-            aria-pressed={everyLine}
-            className={tab(everyLine)}
-            onClick={() => switchTo(true)}
-          >
-            Every line ({allLines.length})
-          </button>
-        </div>
-      )}
+      {!entry && switcher}
       {!entry ? (
         <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
           Every line passed the engine&rsquo;s checks and there is nothing to
@@ -445,37 +456,37 @@ export default function LineReviewer({
         </p>
       ) : (
         <section className="space-y-3 rounded-xl border p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-semibold">
+          {switcher}
+          {/* Fixed places for Previous and Next, whatever the line's label. */}
+          <div className="grid grid-cols-[7rem_1fr_7rem] items-center gap-2">
+            <button
+              type="button"
+              className="rounded-md border px-2.5 py-1 text-sm disabled:opacity-40"
+              disabled={index === 0}
+              onClick={() => go(index - 1)}
+            >
+              ← Previous
+            </button>
+            <h2 className="text-center font-semibold">
               Line {index + 1} of {queue.length}
-              <span className="ml-2 text-sm font-normal text-slate-500">
-                page {entry.page}
-                {entry.spotCheck
-                  ? " · spot check of a line the engine accepted"
-                  : !entry.required
-                    ? " · accepted by the engine; checking it is optional"
-                    : ""}
-              </span>
             </h2>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="rounded-md border px-2.5 py-1 text-sm disabled:opacity-40"
-                disabled={index === 0}
-                onClick={() => go(index - 1)}
-              >
-                ← Previous
-              </button>
-              <button
-                type="button"
-                className="rounded-md border px-2.5 py-1 text-sm disabled:opacity-40"
-                disabled={index >= queue.length - 1}
-                onClick={() => go(index + 1)}
-              >
-                Next →
-              </button>
-            </div>
+            <button
+              type="button"
+              className="rounded-md border px-2.5 py-1 text-sm disabled:opacity-40"
+              disabled={index >= queue.length - 1}
+              onClick={() => go(index + 1)}
+            >
+              Next →
+            </button>
           </div>
+          <p className="min-h-4 text-center text-xs text-slate-500">
+            page {entry.page}
+            {entry.spotCheck
+              ? " · spot check of a line the engine accepted"
+              : !entry.required
+                ? " · accepted by the engine; checking it is optional"
+                : ""}
+          </p>
           <div
             className="h-1.5 overflow-hidden rounded-full bg-slate-100"
             role="progressbar"
