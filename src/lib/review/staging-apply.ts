@@ -168,7 +168,7 @@ export async function carryOver(
       planned = plannedDecisions(
         matchLines(c, document).pairs,
         headRevision?.payload?.checks ?? [],
-        new Set([...required.attention, ...required.sample].map((l) => l.id)),
+        new Set(required.all.map((l) => l.id)),
         new Set(existing.keys()),
       );
       const after = new Map<string, Decided>(existing);

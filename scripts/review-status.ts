@@ -46,15 +46,12 @@ async function main() {
     if (document) {
       const required = requiredLines(run.id, document);
       const decisions = await lineDecisions(run.id);
-      const checkable = document.pages
-        .flatMap((page) => page.lines)
-        .filter((line) => !line.excluded && line.text.trim());
       const state = progress(required, decisions);
       lines = {
-        checkable: checkable.length,
-        decided: checkable.filter((line) => decisions.has(line.id)).length,
-        required: state.required,
-        requiredUndecided: state.undecided,
+        toCheck: state.required,
+        decided: state.decided,
+        undecided: state.undecided,
+        leftOut: required.leftOut.size,
         unreadable: [...decisions.values()].filter(
           (d) => d.decision === "UNREADABLE",
         ).length,

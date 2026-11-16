@@ -191,13 +191,14 @@ test("every flagged line and the spot check must be decided before the text is a
   assert.equal(overview?.status, "OK");
   if (overview?.status !== "OK") return;
   runId = overview.runId;
-  // The queue lists every line that needs a decision in reading order; the one
-  // rule-accepted line is the spot check.
+  // The queue lists every line in reading order; the one rule-accepted line is
+  // the spot check.
   assert.deepEqual(overview.queue, [
-    { id: "p1-l1", page: 1, required: true, spotCheck: false, decision: null },
-    { id: "p1-l2", page: 1, required: true, spotCheck: true, decision: null },
-    { id: "p2-l1", page: 2, required: true, spotCheck: false, decision: null },
+    { id: "p1-l1", page: 1, spotCheck: false, decision: null },
+    { id: "p1-l2", page: 1, spotCheck: true, decision: null },
+    { id: "p2-l1", page: 2, spotCheck: false, decision: null },
   ]);
+  assert.deepEqual(overview.leftOut, []);
   assert.equal(overview.sampleSize, 1);
   assert.deepEqual(overview.progress, {
     required: 3,
@@ -298,21 +299,40 @@ test("accepting rebuilds the chatbot's passages from the reviewed lines", async 
   assert.deepEqual(await runs.versionsToExtract("pdfanchor newer", 10), []);
 });
 
-test("lines checked after acceptance need the text accepted again before publishing", async () => {
+test("a line changed after acceptance rebuilds the passages at once; an unreadable one withdraws the acceptance", async () => {
   await db.reviewerGrant.create({
     data: { userId: reviewer, role: "TAX", grantedBy: reviewer },
   });
   const accepted = await workflow.latestTextCheck(versionId);
   assert.equal(await workflow.linesChangedSince(versionId, accepted), 0);
-  // Any line can be checked, not only those the engine asked about, and the
-  // text check stays open for it.
+  // Unreadable after acceptance: the acceptance is withdrawn.
+  const unreadable = await lines.recordLineDecision(reviewer, versionId, {
+    runId,
+    lineId: "p1-l2",
+    decision: "UNREADABLE",
+  });
+  assert.equal(unreadable.acceptedText, "withdrawn");
+  assert.equal(
+    (await workflow.latestTextCheck(versionId))?.decision,
+    "NEEDS_CHANGES",
+  );
   await lines.recordLineDecision(reviewer, versionId, {
+    runId,
+    lineId: "p1-l2",
+    decision: "CONFIRMED",
+  });
+  await workflow.recordTextCheck(reviewer, versionId, "ACCEPTED", "");
+  // A correction after acceptance: the passages follow without a second accept.
+  const corrected = await lines.recordLineDecision(reviewer, versionId, {
     runId,
     lineId: "p1-l2",
     decision: "CORRECTED",
     text: "NOTIFICATION No. 1",
   });
-  assert.equal(await workflow.linesChangedSince(versionId, accepted), 1);
+  assert.equal(corrected.acceptedText, "rebuilt");
+  const latest = await workflow.latestTextCheck(versionId);
+  assert.equal(latest?.decision, "ACCEPTED");
+  assert.equal(await workflow.linesChangedSince(versionId, latest), 0);
   const review = {
     versionId,
     action: "approve" as const,
@@ -323,21 +343,8 @@ test("lines checked after acceptance need the text accepted again before publish
     effectiveFrom: "2026-04-01",
     note: "Synthetic reviewed test only.",
   };
-  await assert.rejects(workflow.recordTaxDecision(reviewer, review), {
-    status: 409,
-    message: /Accept the text again/,
-  });
   const page = await workflow.reviewDocument(reviewer, versionId);
-  assert.equal(page.changedSinceAcceptance, 1);
-
-  await workflow.recordTextCheck(reviewer, versionId, "ACCEPTED", "");
-  assert.equal(
-    await workflow.linesChangedSince(
-      versionId,
-      await workflow.latestTextCheck(versionId),
-    ),
-    0,
-  );
+  assert.equal(page.changedSinceAcceptance, 0);
   const chunks = await db.taxChunk.findMany({
     where: { versionId },
     orderBy: { anchor: "asc" },
@@ -386,16 +393,21 @@ test("a whole page can be confirmed at once, except lines that need a look on th
       runId: overview.runId,
       lineIds,
     });
-  // p1-l1's OCR reading differs from its text: it must be decided on its own.
-  await assert.rejects(confirm(["p1-l1", "p1-l2"]), {
-    status: 400,
-    message: /one at a time/,
-  });
+  // p1-l1's OCR reading differs from its text, and p1-l2 is the spot check:
+  // both must be looked at on their own.
+  for (const id of ["p1-l1", "p1-l2"])
+    await assert.rejects(confirm([id, "p2-l1"]), {
+      status: 400,
+      message: /one at a time/,
+    });
   await assert.rejects(confirm([]), { status: 400 });
-  await assert.rejects(confirm(["p1-l2", "p1-l2"]), { status: 400 });
+  await assert.rejects(confirm(["p2-l1", "p2-l1"]), { status: 400 });
   await assert.rejects(confirm(["nope"]), { status: 400 });
-  // The single-reader scan line and the rule-accepted line go together.
-  assert.deepEqual(await confirm(["p1-l2", "p2-l1"]), { confirmed: 2 });
+  // The single-reader scan line without a number can go with its page.
+  assert.deepEqual(await confirm(["p2-l1"]), {
+    confirmed: 1,
+    acceptedText: null,
+  });
   const after = await lines.lineReviewOverview(fresh.versionId);
-  assert.equal(after?.status === "OK" && after.progress.undecided, 1);
+  assert.equal(after?.status === "OK" && after.progress.undecided, 2);
 });

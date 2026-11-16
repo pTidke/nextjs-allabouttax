@@ -12,28 +12,31 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+// The same three steps as a document's page (AD-48).
 const labels: Record<QueueFilter, string> = {
-  text: "Needs text check",
-  tax: "Ready for tax review",
-  ocr: "Needs OCR",
+  text: "1. Check the words",
+  tax: "2. Check the details",
+  ocr: "Waiting to be read",
   uploads: "Uploaded",
-  all: "All pending",
+  all: "Everything waiting",
 };
-const order: QueueFilter[] = ["text", "tax", "ocr", "uploads", "all"];
 
 function status(
   item: Awaited<ReturnType<typeof reviewQueue>>["items"][number],
 ) {
   if (!item.chunks && !item.hasRun)
-    return { text: "Needs OCR", tone: "bg-amber-100 text-amber-900" };
+    return {
+      text: "Waiting to be read (within two hours)",
+      tone: "bg-slate-100 text-slate-600",
+    };
   if (item.textDecision === "ACCEPTED")
     return {
-      text: "Text checked · ready for tax review",
+      text: "Words checked · details next",
       tone: "bg-emerald-100 text-emerald-900",
     };
   if (item.textDecision === "NEEDS_CHANGES")
-    return { text: "Text problems reported", tone: "bg-red-100 text-red-900" };
-  return { text: "Needs text check", tone: "bg-slate-100 text-slate-800" };
+    return { text: "Sent back", tone: "bg-red-100 text-red-900" };
+  return { text: "Words to check", tone: "bg-amber-100 text-amber-900" };
 }
 
 export default async function ReviewQueuePage({
@@ -43,13 +46,27 @@ export default async function ReviewQueuePage({
 }) {
   const access = await pageAccess();
   const params = await searchParams;
-  const fallback: QueueFilter =
-    access.tax && !access.extraction ? "tax" : "text";
-  const filter = QUEUE_FILTERS.includes(params.filter as QueueFilter)
+  // Your own steps first: the details (closest to publishing), then the words.
+  const yours: QueueFilter[] = [
+    ...(access.tax ? (["tax"] as const) : []),
+    ...(access.extraction ? (["text"] as const) : []),
+  ];
+  const order: QueueFilter[] = ["text", "tax", "ocr", "all"];
+  const requested = QUEUE_FILTERS.includes(params.filter as QueueFilter)
     ? (params.filter as QueueFilter)
-    : fallback;
+    : null;
   const page = Math.max(0, Math.min(10000, Number(params.page) || 0));
-  const queue = await reviewQueue(filter, page);
+  let filter = requested ?? yours[0] ?? "all";
+  let queue = await reviewQueue(filter, page);
+  // With nothing in your first step, open the next step that has something.
+  if (!requested && !queue.items.length)
+    for (const f of yours.slice(1))
+      if (queue.counts[f]) {
+        filter = f;
+        queue = await reviewQueue(f, 0);
+        break;
+      }
+  const next = yours.includes(filter) ? queue.items[0] : undefined;
   const href = (f: QueueFilter, p = 0) =>
     `/review?filter=${f}${p ? `&page=${p}` : ""}`;
   return (
@@ -58,18 +75,8 @@ export default async function ReviewQueuePage({
         <div>
           <h1 className="text-3xl font-semibold">Review</h1>
           <p className="text-slate-600 mt-1">
-            Check that the extracted text matches each original, then review its
-            tax applicability. Nothing reaches the chatbot until both are done.
-          </p>
-          <p className="text-xs text-slate-500 mt-2">
-            Your access:{" "}
-            {[
-              access.extraction && "text check",
-              access.tax && "tax review",
-              access.admin && "administrator",
-            ]
-              .filter(Boolean)
-              .join(", ")}
+            Each document is checked in two steps, the words and then the
+            details, before the chatbot can use it.
           </p>
         </div>
         <nav className="flex gap-4 text-sm">
@@ -102,6 +109,20 @@ export default async function ReviewQueuePage({
         ))}
       </nav>
 
+      {next && (
+        <Link
+          href={`/review/${next.versionId}`}
+          className="flex items-center justify-between gap-4 rounded-xl bg-slate-900 p-4 text-white hover:bg-slate-800"
+        >
+          <span>
+            <span className="block text-sm text-slate-300">
+              Next for you · {labels[filter].replace(/^\d\. /, "")}
+            </span>
+            <span className="font-medium">{next.title}</span>
+          </span>
+          <span className="shrink-0 font-medium">Start →</span>
+        </Link>
+      )}
       {!queue.items.length && (
         <p className="text-slate-500">Nothing here right now.</p>
       )}
@@ -126,8 +147,7 @@ export default async function ReviewQueuePage({
                   {item.sourceKind === "UPLOAD" ? "Uploaded" : item.sourceName}
                   {item.issuedAt &&
                     ` · issued ${item.issuedAt.toISOString().slice(0, 10)}`}
-                  {` · fetched ${item.fetchedAt.toISOString().slice(0, 10)}`}
-                  {` · ${item.chunks} ${item.chunks === 1 ? "passage" : "passages"}`}
+                  {` · added ${item.fetchedAt.toISOString().slice(0, 10)}`}
                 </p>
                 {item.textDecision === "NEEDS_CHANGES" && item.textNote && (
                   <p className="text-xs text-red-800">{item.textNote}</p>

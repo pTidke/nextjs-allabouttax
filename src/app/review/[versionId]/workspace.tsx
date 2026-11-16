@@ -1,13 +1,20 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import TaxReviewForm, {
+import DetailsCheck, {
   type PendingReview,
 } from "@/components/review/TaxReviewForm";
-import LineReviewer from "@/components/review/LineReviewer";
+import WordCheck from "@/components/review/WordCheck";
 import PageViewer from "@/components/review/PageViewer";
-import type { QueueEntry } from "@/lib/review/line-reviews";
+import type { LeftOut, QueueEntry } from "@/lib/review/line-reviews";
 import type { DocumentFact } from "@/lib/review/document-facts";
+
+// A document's review in three steps (AD-48), one shown at a time:
+//   1. Check the words  (text check access): every line against the original;
+//   2. Check the details (tax access): what the document is and when it applies;
+//   3. Published.
+// Someone with both kinds of access goes straight from one to the next. All the
+// technical detail (engine, passages, history) is in one closed drawer.
 
 type Check = {
   id: string;
@@ -43,9 +50,6 @@ type Version = Omit<PendingReview, "document" | "draft" | "suggestion"> & {
   textChecks: Check[];
 };
 
-const pageOf = (anchor: string) =>
-  Number(anchor.match(/^Page (\d+)/)?.[1] ?? 1);
-
 export type EngineOverview =
   | {
       status: "OK";
@@ -61,6 +65,7 @@ export type EngineOverview =
       }[];
       runId: string;
       queue: QueueEntry[];
+      leftOut: LeftOut[];
       attentionTotal: number;
       sampleSize: number;
       facts: DocumentFact[];
@@ -107,6 +112,13 @@ type CarriedOver = {
   createdAt: string;
 };
 
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
 export default function Workspace({
   access,
   carriedOver,
@@ -116,27 +128,31 @@ export default function Workspace({
 }: {
   access: { extraction: boolean; tax: boolean };
   carriedOver: CarriedOver[];
-  // Line decisions made after the text was last accepted.
+  // Line decisions made after the text was last accepted (only when the
+  // passages could not follow them: see line-reviews followAcceptedText).
   changedSinceAcceptance: number;
   engine: EngineOverview | null;
   version: Version;
 }) {
   const router = useRouter();
-  const [page, setPage] = useState(1);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{
     text: string;
     error?: boolean;
   } | null>(null);
   const [problem, setProblem] = useState("");
-  const [note, setNote] = useState("");
+  const [reporting, setReporting] = useState(false);
+  // Going back to the words from the details step, to change a line.
+  const [rechecking, setRechecking] = useState(false);
+  const [page, setPage] = useState(1);
+
   const latest = version.textChecks[0];
-  const textAccepted = latest?.decision === "ACCEPTED";
-  // Accepted, and nothing checked since: the passages include every decision.
-  const textCurrent = textAccepted && !changedSinceAcceptance;
   const open = version.current && version.status === "PENDING";
-  const linesReady = engine?.status !== "OK" || engine.progress.complete;
-  const canAcceptText = version.chunks.length > 0 || engine?.status === "OK";
+  const wordsDone = latest?.decision === "ACCEPTED" && !changedSinceAcceptance;
+  const sentBack = latest?.decision === "NEEDS_CHANGES";
+  const lines = engine?.status === "OK" ? engine : null;
+  const progress = lines?.progress;
+  const step = !open ? 3 : wordsDone ? 2 : 1;
 
   async function act(body: Record<string, unknown>) {
     setBusy(true);
@@ -150,20 +166,24 @@ export default function Workspace({
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "That did not work.");
       if (body.action === "approve" || body.action === "reject") {
-        router.push(`/review?filter=tax`);
+        router.push("/review");
         router.refresh();
         return;
       }
-      setMessage({
-        text:
-          body.action === "saveDraft"
-            ? "Draft saved. Nothing is published until you approve."
-            : body.decision === "ACCEPTED"
-              ? "Text check recorded. The document is ready for tax review."
-              : "Problems recorded. The document stays out of tax review until the text is accepted.",
-      });
+      setMessage(
+        body.decision === "ACCEPTED"
+          ? {
+              text: access.tax
+                ? "The words are checked. Now the details."
+                : "The words are checked and the document is with the tax reviewer.",
+            }
+          : {
+              text: "Sent back. It stays out of the chatbot until it is fixed.",
+            },
+      );
       setProblem("");
-      setNote("");
+      setReporting(false);
+      setRechecking(false);
       router.refresh();
     } catch (error) {
       setMessage({
@@ -175,9 +195,13 @@ export default function Workspace({
     }
   }
 
+  const original = `/api/review/${version.id}/original`;
+  const canCheckWords = open && access.extraction;
+  const showWords = step === 1 || rechecking;
+
   return (
-    <div className="space-y-4">
-      <header className="space-y-1">
+    <div className="space-y-5">
+      <header className="space-y-2">
         <h1 className="text-2xl font-semibold">{version.document.title}</h1>
         <p className="text-sm text-slate-500">
           {version.document.uploaded
@@ -194,22 +218,21 @@ export default function Workspace({
           >
             Official source
           </a>
-        </p>
-        {!open && (
-          <p className="rounded-lg bg-slate-100 p-3 text-sm">
-            {version.current
-              ? `This version has been ${version.status === "APPROVED" ? "approved" : "rejected"}.`
-              : "A newer version of this document exists. This one is kept for the record only."}
-            {version.reviewNote && ` ${version.reviewNote}`}
-          </p>
-        )}
-        {/* An upload's "needs OCR" note is out of date once the engine has read it. */}
-        {version.document.lastError &&
-          !(engine?.status === "OK" && version.document.uploaded) && (
-            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-              {version.document.lastError}
-            </p>
+          {version.isPdf && (
+            <>
+              {" · "}
+              <a
+                href={original}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                Open the PDF in a new tab
+              </a>
+            </>
           )}
+        </p>
+        <Steps step={step} approved={version.status === "APPROVED"} />
         {message && (
           <p
             role={message.error ? "alert" : "status"}
@@ -220,324 +243,429 @@ export default function Workspace({
         )}
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2 items-start">
-        <section className="lg:sticky lg:top-20 space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <h2 className="font-semibold">Original</h2>
+      {!open && (
+        <p className="rounded-lg bg-slate-100 p-4 text-sm">
+          {version.current
+            ? version.status === "APPROVED"
+              ? "Published: the chatbot can use this document."
+              : "Not published."
+            : "A newer version of this document exists. This one is kept for the record only."}
+          {version.reviewNote && ` ${version.reviewNote}`}
+        </p>
+      )}
+
+      {open && showWords && (
+        <section className="space-y-4">
+          {rechecking && (
+            <button
+              type="button"
+              className="text-sm underline"
+              onClick={() => setRechecking(false)}
+            >
+              ← Back to the details
+            </button>
+          )}
+          {sentBack && (
+            <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
+              Sent back by {latest.reviewer} on {when(latest.createdAt)}
+              {latest.note && `: ${latest.note}`}
+            </p>
+          )}
+          {/* An upload's "needs OCR" note is out of date once the engine has read it. */}
+          {version.document.lastError &&
+            !(lines && version.document.uploaded) && (
+              <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+                {version.document.lastError}
+              </p>
+            )}
+          {version.isPdf && lines ? (
+            <WordCheck
+              key={lines.runId}
+              src={original}
+              linesUrl={`/api/review/${version.id}/lines`}
+              pages={lines.pages}
+              runId={lines.runId}
+              queue={lines.queue}
+              leftOut={lines.leftOut}
+              canDecide={canCheckWords}
+              versionId={version.id}
+              onChanged={() => router.refresh()}
+            />
+          ) : (
+            <NoEngine
+              engine={engine}
+              version={version}
+              original={original}
+              page={page}
+              onPage={setPage}
+            />
+          )}
+
+          {canCheckWords && step === 1 && (
+            <div className="space-y-3 rounded-xl border p-4">
+              {progress && !progress.complete && !progress.unreadable ? (
+                <p className="text-sm text-slate-600">
+                  {progress.undecided} line
+                  {progress.undecided === 1 ? "" : "s"} left to check. When
+                  every line is checked, press Done.
+                </p>
+              ) : progress?.unreadable ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-red-800">
+                    {progress.unreadable} line
+                    {progress.unreadable === 1 ? " can’t" : "s can’t"} be read,
+                    so this copy can’t be published. If you can read{" "}
+                    {progress.unreadable === 1 ? "it" : "them"} after all, click
+                    the line and choose again. Otherwise send it back.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={busy || sentBack}
+                    onClick={() =>
+                      void act({
+                        action: "textCheck",
+                        decision: "NEEDS_CHANGES",
+                        note: `${progress.unreadable} line(s) cannot be read in this copy.`,
+                      })
+                    }
+                    className="rounded-lg bg-red-700 px-4 py-2 text-sm text-white disabled:opacity-40"
+                  >
+                    {sentBack ? "Sent back" : "Send it back: it can’t be read"}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-sm text-emerald-900">
+                    {progress
+                      ? `All ${progress.required} lines are checked.`
+                      : "Compare the text with the original."}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={
+                      busy || (!progress?.complete && !version.chunks.length)
+                    }
+                    onClick={() =>
+                      void act({
+                        action: "textCheck",
+                        decision: "ACCEPTED",
+                        note: "",
+                      })
+                    }
+                    className="ml-auto rounded-lg bg-emerald-700 px-6 py-2.5 font-medium text-white disabled:opacity-40"
+                  >
+                    {access.tax
+                      ? "Done: on to the details →"
+                      : "Done: send for tax review"}
+                  </button>
+                </div>
+              )}
+              {!reporting ? (
+                <button
+                  type="button"
+                  className="text-sm text-slate-600 underline"
+                  onClick={() => setReporting(true)}
+                >
+                  Something else is wrong with this document?
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <label className="block text-sm">
+                    What is wrong?
+                    <textarea
+                      value={problem}
+                      onChange={(e) => setProblem(e.target.value)}
+                      maxLength={4000}
+                      rows={2}
+                      placeholder="For example: page 2 is missing, or this is the wrong document."
+                      className="mt-1 block w-full rounded-lg border p-2"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={busy || !problem.trim()}
+                    onClick={() =>
+                      void act({
+                        action: "textCheck",
+                        decision: "NEEDS_CHANGES",
+                        note: problem,
+                      })
+                    }
+                    className="rounded-lg bg-red-700 px-4 py-2 text-sm text-white disabled:opacity-40"
+                  >
+                    Send it back
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {open && step === 1 && !access.extraction && (
+            <p className="text-sm text-slate-500">
+              The words are checked by a text reviewer first.
+            </p>
+          )}
+        </section>
+      )}
+
+      {open && step === 2 && !rechecking && (
+        <section className="space-y-4">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-emerald-900">
+            <span>
+              ✓ Words checked by {latest.reviewer} on {when(latest.createdAt)}.
+            </span>
+            {access.extraction && version.isPdf && lines && (
+              <button
+                type="button"
+                className="text-slate-600 underline"
+                onClick={() => setRechecking(true)}
+              >
+                Change a line
+              </button>
+            )}
+          </p>
+          {access.tax ? (
+            <div className="grid items-start gap-4 lg:grid-cols-2">
+              <div className="lg:sticky lg:top-20">
+                {version.isPdf ? (
+                  <PageViewer
+                    src={original}
+                    linesUrl={null}
+                    pages={lines?.pages ?? null}
+                    page={page}
+                    onPage={setPage}
+                    current={null}
+                    onSelect={() => {}}
+                  />
+                ) : (
+                  <Passages chunks={version.chunks} />
+                )}
+              </div>
+              <div className="rounded-xl border p-4">
+                <h2 className="mb-3 text-lg font-semibold">
+                  Check the details
+                </h2>
+                <DetailsCheck
+                  proposals={lines?.facts ?? []}
+                  key={version.draft?.revision ?? 0}
+                  version={version}
+                  busy={busy}
+                  act={act}
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="rounded-xl border p-4 text-sm text-slate-600">
+              Now a tax reviewer checks the details and publishes it. Nothing
+              more is needed from you.
+            </p>
+          )}
+        </section>
+      )}
+
+      <BehindTheScenes
+        engine={engine}
+        version={version}
+        carriedOver={carriedOver}
+      />
+    </div>
+  );
+}
+
+function Steps({ step, approved }: { step: number; approved: boolean }) {
+  const names = [
+    "Check the words",
+    "Check the details",
+    approved || step < 3 ? "Published" : "Not published",
+  ];
+  return (
+    <ol className="flex flex-wrap items-center gap-2 text-sm">
+      {names.map((name, i) => {
+        const n = i + 1;
+        const done = n < step || (n === 3 && step === 3);
+        const now = n === step && step < 3;
+        return (
+          <li key={name} className="flex items-center gap-2">
+            {i > 0 && <span className="h-px w-6 bg-slate-300" aria-hidden />}
+            <span
+              aria-current={now ? "step" : undefined}
+              className={`flex items-center gap-2 rounded-full px-3 py-1 ${now ? "bg-slate-900 text-white" : done ? "bg-emerald-50 text-emerald-900" : "bg-slate-100 text-slate-500"}`}
+            >
+              <span className="font-semibold">{done ? "✓" : n}</span>
+              {name}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+// Documents the engine has not read (web pages, or a PDF still waiting): the
+// text to check is the passages themselves, beside the original.
+function NoEngine({
+  engine,
+  version,
+  original,
+  page,
+  onPage,
+}: {
+  engine: EngineOverview | null;
+  version: Version;
+  original: string;
+  page: number;
+  onPage: (page: number) => void;
+}) {
+  return (
+    <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="space-y-2 lg:sticky lg:top-20">
+        {version.isPdf ? (
+          <PageViewer
+            src={original}
+            linesUrl={null}
+            pages={null}
+            page={page}
+            onPage={onPage}
+            current={null}
+            onSelect={() => {}}
+          />
+        ) : (
+          <p className="rounded-xl border p-4 text-sm text-slate-600">
+            The original is a web page. Compare the text with the{" "}
             <a
-              href={`/api/review/${version.id}/original`}
+              href={version.document.url}
               target="_blank"
               rel="noreferrer"
               className="underline"
             >
-              Open in a new tab
+              official page
             </a>
-          </div>
-          {version.isPdf && engine?.status === "OK" ? (
-            <LineReviewer
-              key={engine.runId}
-              src={`/api/review/${version.id}/original`}
-              linesUrl={`/api/review/${version.id}/lines`}
-              pages={engine.pages}
-              runId={engine.runId}
-              lines={engine.queue}
-              canDecide={open && access.extraction}
-              versionId={version.id}
-              onChanged={() => router.refresh()}
-            />
-          ) : version.isPdf ? (
-            <PageViewer
-              src={`/api/review/${version.id}/original`}
-              linesUrl={null}
-              pages={null}
-              page={page}
-              onPage={setPage}
-              current={null}
-              onSelect={() => {}}
-            />
-          ) : (
-            <p className="border rounded-xl p-4 text-sm text-slate-600">
-              The original is a web page. Compare the passages with the{" "}
-              <a
-                href={version.document.url}
-                target="_blank"
-                rel="noreferrer"
-                className="underline"
-              >
-                official page
-              </a>
-              .
-            </p>
-          )}
-        </section>
-
-        <section className="space-y-6">
-          <EngineSummary engine={engine} isPdf={version.isPdf} />
-
-          <div className="space-y-2">
-            <h2 className="font-semibold">
-              Passages the chatbot will use ({version.chunks.length})
-            </h2>
-            {version.isPdf && (
-              <p className="text-xs text-slate-500">
-                When the text is accepted, these are rebuilt from the checked
-                lines, with your corrections.
-              </p>
-            )}
-            {!version.chunks.length && (
-              <p className="text-sm text-slate-500">
-                {engine?.status === "OK"
-                  ? "This file has no text layer; the engine read it with OCR. The passages are made from the checked lines when the text is accepted."
-                  : "No text could be read from this file. The extraction engine reads it with OCR on its next run, within two hours."}
-              </p>
-            )}
-            <ol className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
-              {version.chunks.map((chunk) => (
-                <li
-                  key={chunk.id}
-                  className="border rounded-lg p-3 text-sm space-y-1"
-                >
-                  <button
-                    type="button"
-                    disabled={!version.isPdf || engine?.status === "OK"}
-                    onClick={() => setPage(pageOf(chunk.anchor))}
-                    className="text-xs text-emerald-800 underline disabled:no-underline disabled:text-slate-500"
-                  >
-                    {chunk.anchor}
-                  </button>
-                  {(!!chunk.headings.length || !!chunk.incomeYears.length) && (
-                    <p className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
-                      {chunk.headings.join(" › ")}
-                      {chunk.incomeYears.map((year) => (
-                        <span
-                          key={year}
-                          className="rounded bg-sky-50 px-1.5 py-0.5 text-sky-800"
-                        >
-                          {year}
-                        </span>
-                      ))}
-                    </p>
-                  )}
-                  <p className="whitespace-pre-wrap">{chunk.text}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div
-            id="text-check"
-            className="border rounded-xl p-4 space-y-3 scroll-mt-20"
-          >
-            <h2 className="font-semibold">1. Text check</h2>
-            <p className="text-sm text-slate-600">
-              Does the extracted text match the original? Look closely at dates,
-              amounts, section numbers and words like &ldquo;not&rdquo;.
-            </p>
-            {latest ? (
-              <p
-                className={`text-sm ${textAccepted ? "text-emerald-800" : "text-red-800"}`}
-              >
-                {textAccepted ? "Accepted" : "Problems reported"} by{" "}
-                {latest.reviewer} on{" "}
-                {new Date(latest.createdAt).toLocaleString("en-IN", {
-                  timeZone: "Asia/Kolkata",
-                })}
-                {latest.note && `: ${latest.note}`}
-              </p>
-            ) : (
-              <p className="text-sm text-slate-500">Not checked yet.</p>
-            )}
-            {open && access.extraction ? (
-              <div className="space-y-3">
-                {textAccepted && !textCurrent && (
-                  <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-900">
-                    {changedSinceAcceptance} line
-                    {changedSinceAcceptance === 1 ? " was" : "s were"} checked
-                    after the text was accepted. Accept it again, so the
-                    chatbot&rsquo;s passages include{" "}
-                    {changedSinceAcceptance === 1 ? "it" : "them"}; tax review
-                    waits until then.
-                  </p>
-                )}
-                {!textCurrent && engine?.status === "OK" && !linesReady && (
-                  <p className="text-sm text-amber-800">
-                    {engine.progress.unreadable
-                      ? `${engine.progress.unreadable} line(s) are marked unreadable. Report the problem below instead of accepting.`
-                      : `Decide the ${engine.progress.undecided} remaining line(s) beside the original before accepting.`}
-                  </p>
-                )}
-                {!textCurrent && (
-                  <>
-                    <label className="block text-sm">
-                      Note (optional when the text matches)
-                      <textarea
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        maxLength={4000}
-                        rows={2}
-                        className="block w-full border rounded-lg p-2 mt-1"
-                      />
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        disabled={busy || !canAcceptText || !linesReady}
-                        onClick={() =>
-                          void act({
-                            action: "textCheck",
-                            decision: "ACCEPTED",
-                            note,
-                          })
-                        }
-                        className="rounded-lg bg-emerald-700 text-white px-4 py-2 text-sm disabled:opacity-40"
-                      >
-                        {textAccepted
-                          ? "Accept the text again"
-                          : "Text matches the original"}
-                      </button>
-                    </div>
-                  </>
-                )}
-                <label className="block text-sm">
-                  {textAccepted
-                    ? "Found a problem after all? Describe it"
-                    : "Or describe what does not match"}
-                  <textarea
-                    value={problem}
-                    onChange={(e) => setProblem(e.target.value)}
-                    maxLength={4000}
-                    rows={2}
-                    placeholder="For example: page 2, the date reads 31* March instead of 31st March."
-                    className="block w-full border rounded-lg p-2 mt-1"
-                  />
-                </label>
-                <button
-                  type="button"
-                  disabled={busy || !problem.trim()}
-                  onClick={() =>
-                    void act({
-                      action: "textCheck",
-                      decision: "NEEDS_CHANGES",
-                      note: problem,
-                    })
-                  }
-                  className="text-sm text-red-700 underline disabled:opacity-40"
-                >
-                  Report problems
-                </button>
-              </div>
-            ) : (
-              open && (
-                <p className="text-xs text-slate-500">
-                  You do not have text check access.
-                </p>
-              )
-            )}
-            <StagingHistory carriedOver={carriedOver} />
-            {version.textChecks.length > 1 && (
-              <details className="text-xs text-slate-500">
-                <summary className="cursor-pointer">Earlier checks</summary>
-                <ul className="mt-2 space-y-1">
-                  {version.textChecks.slice(1).map((check) => (
-                    <li key={check.id}>
-                      {check.decision === "ACCEPTED" ? "Accepted" : "Problems"}{" "}
-                      · {check.reviewer} ·{" "}
-                      {new Date(check.createdAt).toLocaleString("en-IN", {
-                        timeZone: "Asia/Kolkata",
-                      })}
-                      {check.note && ` · ${check.note}`}
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <h2 className="font-semibold">2. Tax review</h2>
-            {!open ? null : !access.tax ? (
-              <p className="text-sm text-slate-500">
-                A tax reviewer decides this part.
-              </p>
-            ) : !textCurrent ? (
-              <p className="text-sm text-slate-500">
-                {textAccepted
-                  ? "Lines were checked after the text was accepted. Waiting for the text to be accepted again."
-                  : "Waiting for the text check. You can do it above if you have text check access."}
-              </p>
-            ) : (
-              <TaxReviewForm
-                proposals={engine?.status === "OK" ? engine.facts : []}
-                key={version.draft?.revision ?? 0}
-                version={version}
-                busy={busy}
-                act={act}
-              />
-            )}
-          </div>
-        </section>
+            .
+          </p>
+        )}
+      </div>
+      <div className="space-y-2">
+        {version.isPdf && (
+          <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+            {engine?.status === "FAILED"
+              ? "The engine could not read this document. Send it back below if the text is wrong."
+              : "The engine has not read this document yet (it runs every two hours). Until then, compare the text below with the page."}
+          </p>
+        )}
+        {version.chunks.length ? (
+          <Passages chunks={version.chunks} />
+        ) : (
+          <p className="text-sm text-slate-500">
+            No text could be read from this file yet.
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
-function EngineSummary({
+function Passages({ chunks }: { chunks: Version["chunks"] }) {
+  return (
+    <ol className="max-h-[70vh] space-y-2 overflow-y-auto pr-1">
+      {chunks.map((chunk) => (
+        <li key={chunk.id} className="space-y-1 rounded-lg border p-3 text-sm">
+          <p className="text-xs text-slate-500">
+            {chunk.anchor}
+            {!!chunk.headings.length && ` · ${chunk.headings.join(" › ")}`}
+            {chunk.incomeYears.map((year) => (
+              <span
+                key={year}
+                className="ml-1 rounded bg-sky-50 px-1.5 py-0.5 text-sky-800"
+              >
+                {year}
+              </span>
+            ))}
+          </p>
+          <p className="whitespace-pre-wrap">{chunk.text}</p>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+// Everything a reviewer does not need to finish a review, for when something
+// looks off: what the engine did, the passages the chatbot gets, the history.
+function BehindTheScenes({
   engine,
-  isPdf,
+  version,
+  carriedOver,
 }: {
   engine: EngineOverview | null;
-  isPdf: boolean;
+  version: Version;
+  carriedOver: CarriedOver[];
 }) {
-  if (!isPdf) return null;
-  if (!engine)
-    return (
-      <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-        The extraction engine has not read this document yet. It runs every two
-        hours. Until then, check the passages below against the page.
-      </p>
-    );
-  if (engine.status === "FAILED")
-    return (
-      <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
-        The extraction engine could not read this document:{" "}
-        {engine.error ?? "unknown error"}
-      </p>
-    );
-  const s = engine.summary;
-  const p = engine.progress;
+  const s = engine?.status === "OK" ? engine.summary : null;
   return (
-    <div className="border rounded-xl p-4 space-y-1">
-      <h2 className="font-semibold">Line check</h2>
-      <p
-        className={`text-sm ${p.complete ? "text-emerald-800" : "text-slate-700"}`}
-      >
-        {p.decided} of {p.required} required lines decided
-        {p.unreadable ? ` · ${p.unreadable} unreadable` : ""}
-        {p.complete ? " · ready to accept below" : ""}
-      </p>
-      <p className="text-sm text-slate-600">
-        {engine.queue.filter((line) => line.decision).length} of{" "}
-        {engine.queue.length} lines checked in all, counting optional ones
-      </p>
-      <p className="text-xs text-slate-500">
-        Read by {engine.engine} on{" "}
-        {new Date(engine.createdAt).toLocaleString("en-IN", {
-          timeZone: "Asia/Kolkata",
-        })}
-        . {s.accepted ?? 0} of {s.lines ?? 0} lines passed every rule
-        {s.excluded ? `; ${s.excluded} Hindi lines kept as evidence only` : ""}
-        {s.tables ? `; ${s.tables} tables to check` : ""}
-        {s.pages_scanned
-          ? `; ${s.pages_scanned} scanned pages read by OCR`
-          : ""}
-        . You are asked about {engine.attentionTotal} line
-        {engine.attentionTotal === 1 ? "" : "s"} the rules did not accept
-        {engine.sampleSize
-          ? ` and a fixed spot check of ${engine.sampleSize} they did`
-          : ""}
-        .
-      </p>
-    </div>
+    <details className="rounded-xl border p-4 text-sm">
+      <summary className="cursor-pointer font-medium text-slate-700">
+        Behind the scenes
+      </summary>
+      <div className="mt-3 space-y-5">
+        <div className="space-y-1 text-slate-600">
+          <h3 className="font-medium text-slate-800">How it was read</h3>
+          {!engine ? (
+            <p>The extraction engine has not read this document yet.</p>
+          ) : engine.status === "FAILED" ? (
+            <p>
+              The engine could not read it: {engine.error ?? "unknown error"}.
+            </p>
+          ) : (
+            <p>
+              Read by {engine.engine} on {when(engine.createdAt)}.{" "}
+              {s?.accepted ?? 0} of {s?.lines ?? 0} lines passed every rule
+              {s?.excluded
+                ? `; ${s.excluded} Hindi lines kept as evidence only`
+                : ""}
+              {s?.pages_scanned
+                ? `; ${s.pages_scanned} scanned pages read by OCR`
+                : ""}
+              {engine.leftOut.length
+                ? `; ${engine.leftOut.length} signature and “Copy to” lines left out of the chatbot’s text`
+                : ""}
+              . {engine.attentionTotal} line
+              {engine.attentionTotal === 1 ? "" : "s"} the rules did not trust
+              and {engine.sampleSize} spot check
+              {engine.sampleSize === 1 ? "" : "s"} are looked at one at a time.
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <h3 className="font-medium text-slate-800">
+            What the chatbot gets ({version.chunks.length} passage
+            {version.chunks.length === 1 ? "" : "s"})
+          </h3>
+          <p className="text-xs text-slate-500">
+            Rebuilt from the checked lines, with corrections, whenever the words
+            are checked or a line changes.
+          </p>
+          <Passages chunks={version.chunks} />
+        </div>
+        {version.textChecks.length > 0 && (
+          <div className="space-y-1">
+            <h3 className="font-medium text-slate-800">History</h3>
+            <ul className="space-y-1 text-xs text-slate-600">
+              {version.textChecks.map((check) => (
+                <li key={check.id}>
+                  {when(check.createdAt)} · {check.reviewer} ·{" "}
+                  {check.decision === "ACCEPTED"
+                    ? "words checked"
+                    : "sent back"}
+                  {check.note && ` · ${check.note}`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <StagingHistory carriedOver={carriedOver} />
+        <p className="break-all text-xs text-slate-500">
+          Version {version.id} · SHA-256 {version.hash}
+        </p>
+      </div>
+    </details>
   );
 }
 
@@ -546,8 +674,6 @@ const stagingAction: Record<string, string> = {
   ACCEPT_EXTRACTION: "Extraction accepted",
   REQUEST_CHANGES: "Changes requested",
 };
-const when = (iso: string) =>
-  new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
 // The review this document had in the old staging inbox, carried over (R3).
 function StagingHistory({ carriedOver }: { carriedOver: CarriedOver[] }) {
@@ -558,11 +684,11 @@ function StagingHistory({ carriedOver }: { carriedOver: CarriedOver[] }) {
   );
   if (!latest.length) return null;
   return (
-    <details className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-      <summary className="cursor-pointer text-sm text-slate-700">
-        Carried over from the staging review ({latest.length})
-      </summary>
-      <ul className="mt-2 space-y-3">
+    <div className="space-y-1 text-xs text-slate-600">
+      <h3 className="text-sm font-medium text-slate-800">
+        Carried over from the staging review
+      </h3>
+      <ul className="space-y-3">
         {latest.map((c) => (
           <li key={c.candidateId} className="space-y-1">
             <p className="font-medium text-slate-700">{c.title}</p>
@@ -603,6 +729,6 @@ function StagingHistory({ carriedOver }: { carriedOver: CarriedOver[] }) {
           </li>
         ))}
       </ul>
-    </details>
+    </div>
   );
 }

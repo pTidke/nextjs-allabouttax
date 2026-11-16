@@ -318,13 +318,15 @@ model ExtractionRun {
 
 // A reviewer's decision on one line of an engine run. CONFIRMED: the engine's text
 // is right. CORRECTED: the reviewer typed the right text. UNREADABLE: nobody can
-// tell. Append-only; the newest row for a run and line is its current decision.
+// tell. LEFT_OUT: not part of the text (a garbled header, a watermark), kept out
+// of the passages. Append-only; the newest row for a run and line is its current
+// decision.
 model LineReview {
   id         String        @id @default(cuid())
   versionId  String
   runId      String
   lineId     String
-  decision   String // CONFIRMED, CORRECTED or UNREADABLE
+  decision   String // CONFIRMED, CORRECTED, UNREADABLE or LEFT_OUT
   text       String?
   reviewerId String
   createdAt  DateTime      @default(now())

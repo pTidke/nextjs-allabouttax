@@ -12,20 +12,31 @@ import {
 } from "./extraction-runs";
 import { requireReviewer } from "./roles";
 import { mostlyDevanagari, needsOneByOne } from "./line-rules";
+import { closingLines, type ClosingReason } from "./closing-lines";
 import { incomeYears } from "../tax/years";
 import { documentFacts } from "./document-facts";
 import { STAGING_REVIEWER, STAGING_REVIEWER_NAME } from "./staging-carry-over";
 
 // Line-by-line text check on top of an engine run.
 //
-// A person must decide every line the engine did not accept, plus a small fixed
-// sample of the lines it did accept (to keep the rules honest). Hindi lines kept as
-// evidence need nothing. When the text check is accepted, the chatbot's passages
-// are rebuilt from the run's lines with the reviewers' corrections applied.
+// Every line is checked (AD-48): a page's lines can be confirmed together, but
+// the lines the rules did not trust (see line-rules) and a small fixed sample of
+// the ones they did (to keep the rules honest) are decided one at a time. Hindi
+// lines kept as evidence, and the signature and "Copy to" list at the end of an
+// order (closing-lines), need nothing. When the text is accepted, the chatbot's
+// passages are rebuilt from the run's lines with the reviewers' corrections
+// applied, and again whenever a line changes after that.
 
-export const LINE_DECISIONS = ["CONFIRMED", "CORRECTED", "UNREADABLE"] as const;
+export const LINE_DECISIONS = [
+  "CONFIRMED",
+  "CORRECTED",
+  "UNREADABLE",
+  "LEFT_OUT",
+] as const;
 export type LineDecision = (typeof LINE_DECISIONS)[number];
+// The spot check: about one rule-accepted line in twenty, from one to five.
 export const AUDIT_SAMPLE_SIZE = 5;
+const AUDIT_SAMPLE_EVERY = 20;
 const MAX_PASSAGE_CHARS = 2000;
 
 const lines = (document: EngineDocument) =>
@@ -34,25 +45,36 @@ const lines = (document: EngineDocument) =>
 // The same lines every time for the same run, so reviewers can share the work.
 export function auditSample(
   runId: string,
-  document: EngineDocument,
+  checkable: EngineLine[],
   size = AUDIT_SAMPLE_SIZE,
 ) {
   const key = (line: EngineLine) =>
     createHash("sha256").update(`${runId}:${line.id}`).digest("hex");
-  return lines(document)
-    .filter(
-      (line) =>
-        !line.excluded && line.status === "accepted" && line.text.trim(),
-    )
+  const accepted = checkable.filter((line) => line.status === "accepted");
+  return accepted
     .sort((a, b) => key(a).localeCompare(key(b)))
-    .slice(0, size);
+    .slice(
+      0,
+      Math.min(
+        size,
+        Math.max(1, Math.ceil(accepted.length / AUDIT_SAMPLE_EVERY)),
+      ),
+    );
 }
 
+// all: every line a person checks; attention: those the rules did not accept;
+// sample: the spot check; leftOut: the signature and "Copy to" lines.
 export function requiredLines(runId: string, document: EngineDocument) {
-  const attention = lines(document).filter(
-    (line) => !line.excluded && line.status !== "accepted",
+  const leftOut = closingLines(document);
+  const all = lines(document).filter(
+    (line) => !line.excluded && line.text.trim() && !leftOut.has(line.id),
   );
-  return { attention, sample: auditSample(runId, document) };
+  return {
+    all,
+    attention: all.filter((line) => line.status !== "accepted"),
+    sample: auditSample(runId, all),
+    leftOut,
+  };
 }
 
 export type Decided = {
@@ -86,10 +108,10 @@ export async function lineDecisions(runId: string) {
 }
 
 export function progress(
-  required: { attention: EngineLine[]; sample: EngineLine[] },
+  required: { all: EngineLine[] },
   decisions: Map<string, Decided>,
 ) {
-  const all = [...required.attention, ...required.sample];
+  const all = required.all;
   const undecided = all.filter((line) => !decisions.has(line.id));
   const unreadable = all.filter(
     (line) => decisions.get(line.id)?.decision === "UNREADABLE",
@@ -155,23 +177,83 @@ export async function recordLineDecision(
   const line = lines(document).find((l) => l.id === input.lineId);
   if (!line || line.excluded)
     throw new HttpError(400, "That line is not part of the review.");
-  return prisma.lineReview.create({
+  const text = decision === "CORRECTED" ? cleanCorrection(input.text) : null;
+  return prisma.$transaction(
+    async (tx) => {
+      const saved = await tx.lineReview.create({
+        data: {
+          versionId,
+          runId: run.id,
+          lineId: line.id,
+          decision,
+          text,
+          reviewerId: userId,
+        },
+        select: { lineId: true, decision: true, text: true, createdAt: true },
+      });
+      const acceptedText = await followAcceptedText(
+        tx,
+        userId,
+        versionId,
+        decision === "UNREADABLE",
+      );
+      return { ...saved, acceptedText };
+    },
+    { timeout: 30_000 },
+  );
+}
+
+// When the text is already accepted and a line then changes, the chatbot's
+// passages follow at once: they are rebuilt and the acceptance recorded again,
+// so nobody has to remember to accept the text a second time. A line marked
+// unreadable withdraws the acceptance instead, which stops publication until it
+// is resolved.
+async function followAcceptedText(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  versionId: string,
+  unreadable: boolean,
+): Promise<"rebuilt" | "withdrawn" | "incomplete" | null> {
+  const latest = await tx.extractionReview.findFirst({
+    where: { versionId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { decision: true },
+  });
+  if (latest?.decision !== "ACCEPTED") return null;
+  if (unreadable) {
+    await tx.extractionReview.create({
+      data: {
+        versionId,
+        reviewerId: userId,
+        decision: "NEEDS_CHANGES",
+        note: "A line was marked unreadable after the text was accepted.",
+      },
+    });
+    return "withdrawn";
+  }
+  try {
+    await applyReviewedLines(tx, versionId);
+  } catch (error) {
+    // Accepted under the older rule, when only some lines needed a decision:
+    // the rest must be checked before the passages can be rebuilt.
+    if (error instanceof HttpError && error.status === 409) return "incomplete";
+    throw error;
+  }
+  await tx.extractionReview.create({
     data: {
       versionId,
-      runId: run.id,
-      lineId: line.id,
-      decision,
-      text: decision === "CORRECTED" ? cleanCorrection(input.text) : null,
       reviewerId: userId,
+      decision: "ACCEPTED",
+      note: "Passages rebuilt after a line was changed.",
     },
-    select: { lineId: true, decision: true, text: true, createdAt: true },
   });
+  return "rebuilt";
 }
 
 export const MAX_LINES_AT_ONCE = 500;
 
-// "Text is right" for many lines at once, typically the rest of a page after
-// looking at it. Refuses lines that need a look one at a time.
+// "Text is right" for many lines at once: the rest of a page after looking at
+// it. Refuses lines that must be decided one at a time.
 export async function confirmLines(
   userId: string,
   versionId: string,
@@ -192,23 +274,39 @@ export async function confirmLines(
   const chosen = (ids as string[]).map((id) => byId.get(id));
   if (chosen.some((line) => !line || line.excluded))
     throw new HttpError(400, "A chosen line is not part of the review.");
-  const oneByOne = chosen.filter((line) => needsOneByOne(line!)).length;
+  const spot = new Set(
+    requiredLines(run.id, document).sample.map((line) => line.id),
+  );
+  const oneByOne = chosen.filter(
+    (line) => needsOneByOne(line!) || spot.has(line!.id),
+  ).length;
   if (oneByOne)
     throw new HttpError(
       400,
-      `${oneByOne} of the chosen line${oneByOne === 1 ? "" : "s"} must be decided one at a time: the readings disagree or a rule blocked ${oneByOne === 1 ? "it" : "them"}.`,
+      `${oneByOne} of the chosen line${oneByOne === 1 ? "" : "s"} must be looked at one at a time.`,
     );
-  await prisma.lineReview.createMany({
-    data: chosen.map((line) => ({
-      versionId,
-      runId: run.id,
-      lineId: line!.id,
-      decision: "CONFIRMED",
-      text: null,
-      reviewerId: userId,
-    })),
-  });
-  return { confirmed: chosen.length };
+  return prisma.$transaction(
+    async (tx) => {
+      await tx.lineReview.createMany({
+        data: chosen.map((line) => ({
+          versionId,
+          runId: run.id,
+          lineId: line!.id,
+          decision: "CONFIRMED",
+          text: null,
+          reviewerId: userId,
+        })),
+      });
+      const acceptedText = await followAcceptedText(
+        tx,
+        userId,
+        versionId,
+        false,
+      );
+      return { confirmed: chosen.length, acceptedText };
+    },
+    { timeout: 30_000 },
+  );
 }
 
 export type ReviewLine = LineForReview & {
@@ -220,17 +318,18 @@ export type ReviewLine = LineForReview & {
   } | null;
 };
 
-// One entry per line a person can check, in reading order: every line with text
-// except Hindi evidence. "required" marks those that need a decision before the
-// text can be accepted. Kept small, because a long scan can have thousands; the
-// lines themselves load page by page.
+// One entry per line a person checks, in reading order: every line with text
+// except Hindi evidence and the closing lines. "spotCheck" marks the sample that
+// is looked at one at a time although the rules accepted it. Kept small, because
+// a long scan can have thousands; the lines themselves load page by page.
 export type QueueEntry = {
   id: string;
   page: number;
-  required: boolean;
   spotCheck: boolean;
   decision: LineDecision | null;
 };
+// Lines left out of the passages, shown greyed on the page with the reason.
+export type LeftOut = { id: string; reason: ClosingReason };
 
 async function reviewerNames(decisions: Map<string, Decided>) {
   const ids = [...new Set([...decisions.values()].map((d) => d.reviewer))];
@@ -253,30 +352,32 @@ export async function lineReviewOverview(versionId: string) {
   const required = requiredLines(run!.id, document);
   const decisions = await lineDecisions(run!.id);
   const spot = new Set(required.sample.map((line) => line.id));
-  const needed = new Set([
-    ...required.attention.map((line) => line.id),
-    ...spot,
-  ]);
-  const queue: QueueEntry[] = lines(document)
-    .filter((line) => !line.excluded && line.text.trim())
-    .map((line) => ({
-      id: line.id,
-      page: line.page,
-      required: needed.has(line.id),
-      spotCheck: spot.has(line.id),
-      decision: decisions.get(line.id)?.decision ?? null,
-    }));
+  const queue: QueueEntry[] = required.all.map((line) => ({
+    id: line.id,
+    page: line.page,
+    spotCheck: spot.has(line.id),
+    decision: decisions.get(line.id)?.decision ?? null,
+  }));
   return {
     ...overview,
     runId: run!.id,
     queue,
+    leftOut: [...required.leftOut].map(([id, reason]): LeftOut => ({
+      id,
+      reason,
+    })),
     sampleSize: required.sample.length,
+    // Facts come from the reviewed text: corrections in, left-out lines out.
     facts: documentFacts(
       document,
       new Map(
         [...decisions]
-          .filter(([, d]) => d.decision === "CORRECTED" && d.text)
-          .map(([id, d]) => [id, d.text!]),
+          .filter(
+            ([, d]) =>
+              (d.decision === "CORRECTED" && d.text) ||
+              d.decision === "LEFT_OUT",
+          )
+          .map(([id, d]) => [id, d.decision === "LEFT_OUT" ? "" : d.text!]),
       ),
     ),
     progress: progress(required, decisions),
@@ -332,7 +433,7 @@ export type Passage = {
 // Lines become paragraphs (joined with spaces), tables stay together (one row per
 // line), and paragraphs are packed into passages of up to 2,000 characters on one
 // page, under one heading path, without ever splitting a paragraph. Hindi
-// evidence lines are left out. Headings are the lines the engine marked as such
+// evidence lines, the signature and the "Copy to" list are left out. Headings are the lines the engine marked as such
 // (larger or bold short lines, or CHAPTER, SCHEDULE, ANNEXURE...); consecutive
 // heading lines form one heading.
 export function passagesFrom(
@@ -340,6 +441,7 @@ export function passagesFrom(
   decisions: Map<string, Decided>,
 ): Passage[] {
   const passages: Passage[] = [];
+  const closing = closingLines(document);
   let header: string | null = null;
   let current: string | null = null;
   for (const page of document.pages) {
@@ -351,8 +453,11 @@ export function passagesFrom(
       heading: boolean;
     } | null = null;
     for (const line of page.lines) {
-      if (line.excluded) continue;
+      // Hindi evidence, and the signature and "Copy to" list (closing-lines).
+      if (line.excluded || closing.has(line.id)) continue;
       const decided = decisions.get(line.id);
+      // A reviewer said it is not part of the text.
+      if (decided?.decision === "LEFT_OUT") continue;
       const text = (
         decided?.decision === "CORRECTED" ? decided.text! : line.text
       ).trim();
