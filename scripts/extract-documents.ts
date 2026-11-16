@@ -21,6 +21,8 @@ async function main() {
     engine,
     limit,
     budgetMs,
+    // The second reader's models (EasyOCR), when the workflow installed them.
+    easyocrModels: process.env.EASYOCR_MODELS || undefined,
     log: console.log,
   });
   console.log(JSON.stringify(results));
