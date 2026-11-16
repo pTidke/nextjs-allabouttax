@@ -225,7 +225,11 @@ export type LineForReview = Pick<
   | "flags"
   | "excluded"
   | "role"
-> & { other: { source: string; text: string }[] };
+> & {
+  other: { source: string; text: string }[];
+  // The confidence the line's own reader gave it, when it reports one.
+  confidence: number | null;
+};
 
 export function forReview(line: EngineLine): LineForReview {
   return {
@@ -241,6 +245,9 @@ export function forReview(line: EngineLine): LineForReview {
     other: line.readings
       .filter((reading) => reading.source !== line.source)
       .map(({ source, text }) => ({ source, text })),
+    confidence:
+      line.readings.find((reading) => reading.source === line.source)
+        ?.confidence ?? null,
   };
 }
 

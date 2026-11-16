@@ -7,7 +7,7 @@ import {
   saveTaxDraft,
   type TextDecision,
 } from "@/lib/review/workflow";
-import { recordLineDecision } from "@/lib/review/line-reviews";
+import { confirmLines, recordLineDecision } from "@/lib/review/line-reviews";
 
 export const runtime = "nodejs";
 
@@ -43,6 +43,13 @@ export async function POST(
             lineId: input.lineId,
             decision: input.decision,
             text: input.text,
+          }),
+        );
+      case "lines":
+        return reply(
+          await confirmLines(userId, versionId, {
+            runId: input.runId,
+            lineIds: input.lineIds,
           }),
         );
       case "saveDraft":

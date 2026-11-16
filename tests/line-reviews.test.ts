@@ -365,3 +365,37 @@ test("lines checked after acceptance need the text accepted again before publish
     { status: 400 },
   );
 });
+
+test("a whole page can be confirmed at once, except lines that need a look on their own", async () => {
+  const fresh = await upload.uploadDocument({
+    bytes: Buffer.from("%PDF-1.4\n% another scan\n%%EOF"),
+    title: "Another notification",
+    officialUrl: "https://egazette.nic.in/scan-2.pdf",
+  });
+  await runs.extractPending({
+    bin,
+    engine: "pdfanchor test",
+    limit: 5,
+    budgetMs: 60_000,
+  });
+  const overview = await lines.lineReviewOverview(fresh.versionId);
+  assert.equal(overview?.status, "OK");
+  if (overview?.status !== "OK") return;
+  const confirm = (lineIds: unknown) =>
+    lines.confirmLines(reviewer, fresh.versionId, {
+      runId: overview.runId,
+      lineIds,
+    });
+  // p1-l1's OCR reading differs from its text: it must be decided on its own.
+  await assert.rejects(confirm(["p1-l1", "p1-l2"]), {
+    status: 400,
+    message: /one at a time/,
+  });
+  await assert.rejects(confirm([]), { status: 400 });
+  await assert.rejects(confirm(["p1-l2", "p1-l2"]), { status: 400 });
+  await assert.rejects(confirm(["nope"]), { status: 400 });
+  // The single-reader scan line and the rule-accepted line go together.
+  assert.deepEqual(await confirm(["p1-l2", "p2-l1"]), { confirmed: 2 });
+  const after = await lines.lineReviewOverview(fresh.versionId);
+  assert.equal(after?.status === "OK" && after.progress.undecided, 1);
+});

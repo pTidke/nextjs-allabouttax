@@ -149,3 +149,57 @@ test("facts are read from the reviewed text, corrections included", () => {
     ],
   );
 });
+
+test("lines that need a look on their own: blocked, or readings that disagree", async () => {
+  const { needsOneByOne, mostlyDevanagari } =
+    await import("../src/lib/review/line-rules");
+  const base = {
+    status: "flagged" as const,
+    text: "No. 1/2026",
+    source: "native",
+  };
+  assert.equal(needsOneByOne({ ...base, other: [] }), false, "one reader only");
+  assert.equal(
+    needsOneByOne({ ...base, other: [{ text: "No.  1/2026" }] }),
+    false,
+    "same text, different spacing",
+  );
+  assert.equal(
+    needsOneByOne({ ...base, other: [{ text: "No. 7/2026" }] }),
+    true,
+  );
+  assert.equal(needsOneByOne({ ...base, status: "blocked", other: [] }), true);
+  // Read by one OCR reader only: numbers and unsure readings go one by one.
+  const ocr = {
+    status: "flagged" as const,
+    source: "ocr:tesseract",
+    other: [],
+  };
+  assert.equal(
+    needsOneByOne({ ...ocr, text: "5.0. 5325(E).- In pursuance" }),
+    true,
+  );
+  assert.equal(
+    needsOneByOne({
+      ...ocr,
+      text: "(Department of Revenue)",
+      confidence: 96.6,
+    }),
+    false,
+  );
+  assert.equal(
+    needsOneByOne({ ...ocr, text: "BERBER EERMINISTRY", confidence: 45 }),
+    true,
+  );
+  // Two readers that agree can go together, numbers or not.
+  assert.equal(
+    needsOneByOne({
+      ...base,
+      source: "native",
+      other: [{ text: "No. 1/2026" }],
+    }),
+    false,
+  );
+  assert.equal(mostlyDevanagari("[भाग II—खण्ड 3(ii)] भारत का राजपत्र"), true);
+  assert.equal(mostlyDevanagari("MINISTRY OF FINANCE (वित्त मंत्रालय)"), false);
+});
