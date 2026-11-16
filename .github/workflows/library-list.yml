@@ -1,0 +1,26 @@
+name: Library list
+# Manual and read-only. Prints every document in the library (title, source,
+# issue date, review status, official link) as a numbered Markdown table, for
+# deciding with the tax reviewer which documents are needed. The documents are
+# public official publications; nothing about reviewers or users is printed.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  list:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: tax-worker
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci --legacy-peer-deps
+      - name: List
+        run: npx tsx scripts/library-list.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

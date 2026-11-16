@@ -384,6 +384,7 @@ Advisory lock ids in use: `740126` publication and draft saves, `740127` manual 
 | `npm run tax:health [-- --strict]` | Freshness, failures, queue and heartbeat report; non-zero if no fresh approved evidence or no heartbeat within 12 h |
 | `npm run tax:probe` | Read-only live check of the registered sources |
 | `npm run tax:evaluate [-- --live]` | The answer yardstick (`lib/tax/evaluation.ts`, cases in `evaluations/income-tax.json`): search alone by default (is the passage that answers each question found, at what rank; is nothing found where nothing should be; is another taxpayer's order kept out), or with `--live` also the model (answers or refuses correctly, cites the expected document, uses the expected words). Cases whose document is not published wait. Also the manual `Evaluate answers` workflow, search by default; live needs the `AZURE_OPENAI_*` secrets in the `tax-worker` environment. Logs show ids, results, ranks and counts only. |
+| `Library list` workflow (`scripts/library-list.ts`) | Every document in the library as a numbered table: title, source, issue date, review status, official link. Read-only; the titles are public publications. |
 
 **CI** — `.github/workflows/checks.yml` runs lint, tests, build and typecheck with placeholder configuration on pull requests and pushes to `main`. `.github/workflows/knowledge-worker.yml` runs the worker and health check on a six-hour cron when the repository variable `TAX_WORKER_ENABLED` is `true`, inside the protected `tax-worker` environment.
 
