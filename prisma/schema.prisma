@@ -125,6 +125,11 @@ model TaxVersion {
   jurisdiction      String?
   effectiveFrom     DateTime?
   effectiveTo       DateTime?
+  // Document facts the tax reviewer confirmed, proposed from the heading lines.
+  documentNumber    String?
+  gazetteNumber     String?
+  issuingAuthority  String?
+  issuedOn          DateTime?
   document          TaxDocument        @relation(fields: [documentId], references: [id])
   drafts            TaxReviewDraft[]
   chunks            TaxChunk[]
@@ -137,13 +142,19 @@ model TaxVersion {
 }
 
 model TaxChunk {
-  id        String     @id @default(cuid())
-  versionId String
-  anchor    String
-  text      String
-  version   TaxVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  id          String     @id @default(cuid())
+  versionId   String
+  anchor      String
+  text        String
+  // From the reviewed lines (migration 202611150007): the page, the headings the
+  // passage sits under, and the income years it names ("2026-27").
+  page        Int?
+  headings    String[]   @default([])
+  incomeYears String[]   @default([])
+  version     TaxVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId])
+  @@index([incomeYears], type: Gin)
 }
 
 model KnowledgeRelease {

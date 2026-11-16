@@ -1,4 +1,5 @@
 "use client";
+import type { DocumentFact } from "@/lib/review/document-facts";
 import { useState } from "react";
 import type { ReviewSection } from "@/lib/tax/review-sections";
 
@@ -15,6 +16,10 @@ type Fields = {
   effectiveFrom: string;
   effectiveTo: string;
   note: string;
+  documentNumber: string;
+  gazetteNumber: string;
+  issuingAuthority: string;
+  issuedOn: string;
 };
 export type PendingReview = {
   id: string;
@@ -48,13 +53,30 @@ const empty: Fields = {
   effectiveFrom: "",
   effectiveTo: "",
   note: "",
+  documentNumber: "",
+  gazetteNumber: "",
+  issuingAuthority: "",
+  issuedOn: "",
+};
+const factLabels: Record<string, string> = {
+  documentType: "Document type",
+  documentNumber: "Number",
+  gazetteNumber: "Gazette number",
+  issuingAuthority: "Issued by",
+  issuedOn: "Issue date",
+  periodMode: "Period",
+  period: "Tax year",
+  applicabilityNote: "Years named",
 };
 
 export default function ReviewCard({
   version,
   busy,
   act,
+  proposals = [],
 }: {
+  // Facts read from the document's heading lines by rules, each with its line.
+  proposals?: DocumentFact[];
   version: PendingReview;
   busy: boolean;
   act: (body: Record<string, unknown>) => Promise<void>;
@@ -138,6 +160,50 @@ export default function ReviewCard({
           </button>
         </div>
       )}
+      {!!proposals.length && (
+        <div className="rounded-lg border border-sky-200 bg-sky-50 p-4 space-y-2">
+          <p className="font-medium">Proposed from the document</p>
+          <p className="text-sm text-slate-600">
+            Read by rules from the document&rsquo;s own lines. Check each
+            against the line it came from; filling them in changes only empty
+            fields.
+          </p>
+          <ul className="space-y-1 text-sm">
+            {proposals.map((fact) => (
+              <li key={fact.field}>
+                <span className="font-medium">{factLabels[fact.field]}:</span>{" "}
+                {fact.field === "periodMode"
+                  ? fact.value === "MULTI_PERIOD"
+                    ? "across tax periods"
+                    : "one tax year"
+                  : fact.value}
+                <span className="block text-xs text-slate-500">
+                  page {fact.source.page}: &ldquo;{fact.source.text}&rdquo;
+                </span>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            disabled={busy}
+            className="rounded-lg bg-sky-700 text-white px-4 py-2 text-sm disabled:opacity-40"
+            onClick={() =>
+              setFields((old) => {
+                const next = { ...old };
+                for (const fact of proposals) {
+                  const key = fact.field as keyof Fields;
+                  // The period mode is always set; it starts as "one tax year".
+                  if (key === "periodMode" ? !old.period : !old[key])
+                    next[key] = fact.value;
+                }
+                return next;
+              })
+            }
+          >
+            Fill in the proposals
+          </button>
+        </div>
+      )}
       <details open={!selected.length && !version.suggestion}>
         <summary className="cursor-pointer font-medium">
           Choose source sections ({selected.length} selected)
@@ -183,6 +249,47 @@ export default function ReviewCard({
           </p>
         </div>
       )}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <label className="text-sm">
+          Number
+          <input
+            className={field}
+            maxLength={300}
+            placeholder="1/2026"
+            value={fields.documentNumber}
+            onChange={(e) => set("documentNumber", e.target.value)}
+          />
+        </label>
+        <label className="text-sm">
+          Gazette number
+          <input
+            className={field}
+            maxLength={300}
+            placeholder="S.O. 44(E)"
+            value={fields.gazetteNumber}
+            onChange={(e) => set("gazetteNumber", e.target.value)}
+          />
+        </label>
+        <label className="text-sm">
+          Issued by
+          <input
+            className={field}
+            maxLength={300}
+            placeholder="Ministry of Finance, Department of Revenue"
+            value={fields.issuingAuthority}
+            onChange={(e) => set("issuingAuthority", e.target.value)}
+          />
+        </label>
+        <label className="text-sm">
+          Issue date
+          <input
+            type="date"
+            className={field}
+            value={fields.issuedOn}
+            onChange={(e) => set("issuedOn", e.target.value)}
+          />
+        </label>
+      </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <label className="text-sm">
           Document type

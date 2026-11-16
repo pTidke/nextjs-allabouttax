@@ -16,6 +16,10 @@ const names = [
   "investmentThrough",
   "applicabilityNote",
   "note",
+  "documentNumber",
+  "gazetteNumber",
+  "issuingAuthority",
+  "issuedOn",
 ];
 export function draftFields(value: unknown): Prisma.InputJsonObject {
   if (!value || typeof value !== "object" || Array.isArray(value))

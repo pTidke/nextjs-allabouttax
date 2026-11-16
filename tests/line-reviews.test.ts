@@ -59,7 +59,7 @@ function line(
   };
 }
 
-test("passages keep paragraphs whole, tables together, corrections in and Hindi out", () => {
+test("passages keep paragraphs whole, tables together, corrections in and Hindi out, with headings and years", () => {
   const document = {
     source: { sha256: "x", pages: 2 },
     pages: [
@@ -75,9 +75,16 @@ test("passages keep paragraphs whole, tables together, corrections in and Hindi 
           line("b", "nnnnMINISTRY OF FINANCE", {
             paragraph: 0,
             status: "flagged",
+            role: "heading",
           }),
-          line("c", "The due date is extended", { paragraph: 1 }),
-          line("d", "to 31st October 2026.", { paragraph: 1 }),
+          line("b2", "(Department of Revenue)", {
+            paragraph: 1,
+            role: "heading",
+          }),
+          line("c", "The due date for the assessment year", { paragraph: 2 }),
+          line("d", "2026-27 is extended to 31st October 2026.", {
+            paragraph: 2,
+          }),
           line("e", "Class | Limit", { table_id: "t1", role: "table" }),
           line("f", "Individual | 1,50,000", { table_id: "t1", role: "table" }),
         ],
@@ -89,7 +96,13 @@ test("passages keep paragraphs whole, tables together, corrections in and Hindi 
         rotation: 0,
         kind: "scanned",
         flags: [],
-        lines: [line("g", "Annexure A", { page: 2 })],
+        lines: [
+          line("g", "Annexure A", { page: 2, role: "heading" }),
+          line("h", "Applies to tax years 2026-27 to 2027-28.", {
+            page: 2,
+            paragraph: 1,
+          }),
+        ],
       },
     ],
   } as unknown as EngineDocument;
@@ -107,9 +120,20 @@ test("passages keep paragraphs whole, tables together, corrections in and Hindi 
   assert.deepEqual(lines.passagesFrom(document, decided), [
     {
       anchor: "Page 1, passage 1",
-      text: "MINISTRY OF FINANCE\n\nThe due date is extended to 31st October 2026.\n\nClass | Limit\nIndividual | 1,50,000",
+      text: "MINISTRY OF FINANCE\n\n(Department of Revenue)\n\nThe due date for the assessment year 2026-27 is extended to 31st October 2026.\n\nClass | Limit\nIndividual | 1,50,000",
+      page: 1,
+      // Consecutive heading lines are one heading, corrected text included.
+      headings: ["MINISTRY OF FINANCE (Department of Revenue)"],
+      // Assessment year 2026-27 assesses the income of 2025-26.
+      incomeYears: ["2025-26"],
     },
-    { anchor: "Page 2, passage 1", text: "Annexure A" },
+    {
+      anchor: "Page 2, passage 1",
+      text: "Annexure A\n\nApplies to tax years 2026-27 to 2027-28.",
+      page: 2,
+      headings: ["MINISTRY OF FINANCE (Department of Revenue)", "Annexure A"],
+      incomeYears: ["2026-27", "2027-28"],
+    },
   ]);
   // Long pages split between paragraphs, never inside one.
   const long = {
@@ -318,4 +342,24 @@ test("lines checked after acceptance need the text accepted again before publish
     select: { text: true },
   });
   assert.equal(chunks[0].text, "MINISTRY OF FINANCE NOTIFICATION No. 1");
+
+  // Approval stores the document facts the reviewer confirmed.
+  await workflow.recordTaxDecision(reviewer, {
+    ...review,
+    documentNumber: " 1/2026 ",
+    gazetteNumber: "S.O. 44(E)",
+    issuingAuthority: "Ministry of Finance",
+    issuedOn: "2026-01-05",
+  });
+  const approved = await db.taxVersion.findUniqueOrThrow({
+    where: { id: versionId },
+  });
+  assert.equal(approved.status, "APPROVED");
+  assert.equal(approved.documentNumber, "1/2026");
+  assert.equal(approved.gazetteNumber, "S.O. 44(E)");
+  assert.equal(approved.issuedOn?.toISOString().slice(0, 10), "2026-01-05");
+  await assert.rejects(
+    workflow.recordTaxDecision(reviewer, { ...review, issuedOn: "5 Jan" }),
+    { status: 400 },
+  );
 });

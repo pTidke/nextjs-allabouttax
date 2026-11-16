@@ -16,6 +16,11 @@ export type ReviewInput = {
   effectiveTo?: string;
   documentType?: string;
   legalStatus?: string;
+  // Document facts, proposed from the heading lines and confirmed here.
+  documentNumber?: string;
+  gazetteNumber?: string;
+  issuingAuthority?: string;
+  issuedOn?: string;
   publishedAt?: string;
   note: string;
   sectionIds?: string[];
@@ -54,6 +59,18 @@ export function validateReview(input: ReviewInput) {
   const mode = input.periodMode ?? "SINGLE_PERIOD";
   if (!["SINGLE_PERIOD", "MULTI_PERIOD"].includes(mode))
     throw new Error("Choose one period or across tax periods.");
+  for (const key of [
+    "documentNumber",
+    "gazetteNumber",
+    "issuingAuthority",
+  ] as const)
+    if (
+      input[key] !== undefined &&
+      (typeof input[key] !== "string" || input[key]!.length > 300)
+    )
+      throw new Error(`Invalid ${key}.`);
+  if (input.issuedOn && !validDate(input.issuedOn))
+    throw new Error("Enter the issue date as a date.");
   for (const key of ["applicabilityNote", "entityName"] as const) {
     if (
       input[key] !== undefined &&
@@ -168,6 +185,10 @@ export async function reviewVersion(input: ReviewInput, userId: string) {
           ? {
               documentType: input.documentType,
               legalStatus: input.legalStatus,
+              documentNumber: input.documentNumber?.trim() || null,
+              gazetteNumber: input.gazetteNumber?.trim() || null,
+              issuingAuthority: input.issuingAuthority?.trim() || null,
+              issuedOn: input.issuedOn ? new Date(input.issuedOn) : null,
               publishedAt: input.publishedAt
                 ? new Date(input.publishedAt)
                 : null,
