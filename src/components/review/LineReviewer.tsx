@@ -701,6 +701,10 @@ export default function LineReviewer({
         <summary className="cursor-pointer text-sm font-semibold">
           Whole page
         </summary>
+        <p className="mt-1 text-xs text-slate-500">
+          Tick &ldquo;Outline every line&rdquo;, then click any line on the page
+          to check it.
+        </p>
         <div className="mt-2">
           <PageViewer
             src={src}
@@ -710,8 +714,14 @@ export default function LineReviewer({
             onPage={setPage}
             current={line}
             onSelect={(picked) => {
-              const at = queue.findIndex((l) => l.id === picked.id);
-              if (at >= 0) go(at);
+              // Any line clicked on the page opens it for a decision, switching
+              // to every line when it is not among the lines to check.
+              if (!allLines.some((l) => l.id === picked.id)) return;
+              if (!queue.some((l) => l.id === picked.id)) setEveryLine(true);
+              setCurrentId(picked.id);
+              setPage(picked.page);
+              setEditing(false);
+              setError("");
             }}
           />
         </div>
