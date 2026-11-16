@@ -22,6 +22,16 @@ const tone: Record<string, string> = {
   accepted:
     "border-emerald-600/40 hover:border-emerald-600 hover:bg-emerald-200/20",
   excluded: "border-slate-400 border-dashed hover:bg-slate-200/30",
+  // The word check's own colours (see WordCheck).
+  look: "bg-amber-300/30 border-amber-500 hover:bg-amber-300/50",
+  todo: "border-slate-400/50 hover:border-slate-600 hover:bg-slate-200/30",
+  done: "bg-emerald-300/15 border-emerald-600/50 hover:border-emerald-700",
+  problem: "bg-red-300/30 border-red-600",
+  left: "border-slate-300 border-dashed",
+};
+export type Outline = {
+  line: LineForReview;
+  tone: "look" | "todo" | "done" | "problem" | "left";
 };
 
 export default function PageViewer({
@@ -32,6 +42,8 @@ export default function PageViewer({
   onPage,
   current,
   onSelect,
+  outlines,
+  navigation = true,
 }: {
   src: string;
   // Null when the engine has not read this document: the page is shown without boxes.
@@ -42,6 +54,11 @@ export default function PageViewer({
   // The line being checked, outlined when it is on this page.
   current: LineForReview | null;
   onSelect: (line: LineForReview) => void;
+  // Every line of the page with its colour, from the caller. When given, the
+  // page draws these and does not load its own lines.
+  outlines?: Outline[];
+  // False when the caller moves between pages itself.
+  navigation?: boolean;
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -108,7 +125,7 @@ export default function PageViewer({
   }, [doc, page, width, zoom]);
 
   useEffect(() => {
-    if (!linesUrl || !showAll) return;
+    if (!linesUrl || !showAll || outlines) return;
     const abort = new AbortController();
     void fetch(`${linesUrl}?page=${page}`, {
       cache: "no-store",
@@ -118,7 +135,7 @@ export default function PageViewer({
       .then((body) => setLines(body.lines ?? []))
       .catch(() => {});
     return () => abort.abort();
-  }, [linesUrl, page, showAll]);
+  }, [linesUrl, page, showAll, outlines]);
 
   const size = pages?.find((p) => p.number === page);
   const rotated = !!size?.rotation;
@@ -157,38 +174,50 @@ export default function PageViewer({
     });
   }, [shown, factor]);
 
-  const visible = [
-    ...(showAll
-      ? lines.filter((line) => line.page === page && line.id !== shown?.id)
-      : []),
-    ...(shown ? [shown] : []),
-  ];
+  const toneOf = new Map(outlines?.map((o) => [o.line.id, o.tone]));
+  const visible = outlines
+    ? [
+        ...outlines
+          .map((o) => o.line)
+          .filter((line) => line.page === page && line.id !== shown?.id),
+        ...(shown ? [shown] : []),
+      ]
+    : [
+        ...(showAll
+          ? lines.filter((line) => line.page === page && line.id !== shown?.id)
+          : []),
+        ...(shown ? [shown] : []),
+      ];
   const ready = drawn?.key === drawKey;
   const button =
     "rounded-md border px-2.5 py-1 text-sm bg-white disabled:opacity-40";
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <button
-          type="button"
-          className={button}
-          disabled={page <= 1}
-          onClick={() => onPage(page - 1)}
-        >
-          Previous
-        </button>
-        <span>
-          Page {page} of {pageCount || "…"}
-        </span>
-        <button
-          type="button"
-          className={button}
-          disabled={!pageCount || page >= pageCount}
-          onClick={() => onPage(page + 1)}
-        >
-          Next
-        </button>
-        <span className="mx-1 text-slate-300">|</span>
+        {navigation && (
+          <>
+            <button
+              type="button"
+              className={button}
+              disabled={page <= 1}
+              onClick={() => onPage(page - 1)}
+            >
+              Previous
+            </button>
+            <span>
+              Page {page} of {pageCount || "…"}
+            </span>
+            <button
+              type="button"
+              className={button}
+              disabled={!pageCount || page >= pageCount}
+              onClick={() => onPage(page + 1)}
+            >
+              Next
+            </button>
+            <span className="mx-1 text-slate-300">|</span>
+          </>
+        )}
         <button
           type="button"
           className={button}
@@ -209,7 +238,7 @@ export default function PageViewer({
         <button type="button" className={button} onClick={() => setZoom(1)}>
           Fit width
         </button>
-        {linesUrl && (
+        {linesUrl && !outlines && (
           <label className="flex items-center gap-1.5 ml-auto">
             <input
               type="checkbox"
@@ -262,9 +291,11 @@ export default function PageViewer({
                 className={`absolute rounded-sm border-2 ${
                   line.id === shown?.id
                     ? "border-sky-600 bg-sky-300/20 ring-4 ring-sky-500/40"
-                    : line.excluded
-                      ? tone.excluded
-                      : tone[line.status]
+                    : toneOf.has(line.id)
+                      ? tone[toneOf.get(line.id)!]
+                      : line.excluded
+                        ? tone.excluded
+                        : tone[line.status]
                 }`}
               />
             ))}

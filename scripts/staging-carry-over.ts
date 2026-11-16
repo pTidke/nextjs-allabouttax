@@ -155,9 +155,7 @@ async function inspect() {
             ? compareWithEngine(
                 c,
                 document,
-                new Set(
-                  [...required.attention, ...required.sample].map((l) => l.id),
-                ),
+                new Set(required.all.map((l) => l.id)),
               )
             : null,
       };

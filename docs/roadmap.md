@@ -65,6 +65,7 @@ Decided 15 November 2026: the owner and the chartered accountant both check extr
 - [x] **R2d.** Check every line, not only those the engine asks about; checks made after acceptance require accepting the text again before publishing.
 - [x] **R2c.** Scanned PDFs through OCR end to end, and uploads of up to 32 MB in parts. The review screen loads lines page by page, so long scans are no longer cut off at 500 lines.
 - [x] **R3.** (Applied 15 November 2026; `/staging` retired 16 November. Left: run `carry-over` `apply` again once the engine has read Circular 3/2026.) Carry over the staging work: Notification 1/2026's accepted extraction and Circular 3/2026's saved review, with their history, from the staging database into the live review records. Needs R2's line-level storage, and an operator run with the staging database credentials. Then retire `/staging`.
+- [x] **R5.** (16 November 2026, AD-48) A simpler review: three steps one at a time, every line checked page by page with close-ups only where needed, details filled in from the document and read back as a sentence, autosave, one *Publish*; passages follow late line changes by themselves; signatures and "Copy to" lists left out of the chatbot's text.
 - [ ] **R4.** Withdraw a published decision and roll back a release (D3); show reviewer history per document.
 
 ## M4. Unattended extraction on the free tier

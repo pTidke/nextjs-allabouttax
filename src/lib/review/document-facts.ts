@@ -1,9 +1,10 @@
 import type { EngineDocument, EngineLine } from "./extraction-runs";
 import { incomeYears, taxYearLabel } from "../tax/years";
 
-// Facts about a document read by rules from its first pages: what kind of
-// document it is, its number, Gazette number, who issued it and when, and the
-// income years it names. They are proposals, each with the line it came from;
+// Facts about a document read by rules: what kind of document it is, its
+// number, Gazette number, who issued it and when (from the first pages), when it
+// comes into force, the one taxpayer it is about if any, and the income years it
+// names. They are proposals, each with the line it came from;
 // the tax reviewer confirms or edits them before approving (AD-46).
 
 export type FactField =
@@ -12,6 +13,8 @@ export type FactField =
   | "gazetteNumber"
   | "issuingAuthority"
   | "issuedOn"
+  | "effectiveFrom"
+  | "entityName"
   | "period"
   | "periodMode"
   | "applicabilityNote";
@@ -51,6 +54,19 @@ const WORD_DATE =
   /\b(\d{1,2})(?:st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december),?\s+(\d{4})\b/i;
 const NUMERIC_DATE =
   /\bdated?\s*[:-]?\s*(\d{1,2})[./-](\d{1,2})[./-](\d{4})\b/i;
+// "shall come into force on the 1st day of April, 2026", "with effect from ...".
+const IN_FORCE =
+  /\b(?:come\s+into\s+force|with\s+effect\s+from|w\.\s?e\.\s?f\.?|effective\s+from)\b/i;
+const ON_PUBLICATION =
+  /\b(?:come\s+into\s+force|take\s+effect)\b[^.]{0,40}\b(?:date\s+of\s+(?:its\s+)?publication|publication\s+in\s+the\s+official\s+gazette)/i;
+const DAY_OF =
+  /\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:day\s+of\s+)?(january|february|march|april|may|june|july|august|september|october|november|december),?\s+(\d{4})\b/i;
+// An order about one taxpayer: "in the case of M/s ABC Limited", "approves
+// the XYZ Foundation (PAN: ...)".
+const ENTITY = [
+  /\bin\s+the\s+case\s+of\s+(?:M\/s\.?\s*)?([A-Z][A-Za-z0-9&.' -]{2,120}?)(?=\s*(?:\(|,|;|\.\s|\.$|$|\bfor\b|\bas\b))/,
+  /\b(?:approves|notifies|specifies|in\s+respect\s+of|in\s+favour\s+of)\s+(?:the\s+)?(?:M\/s\.?\s*)?([A-Z][A-Za-z0-9&.' -]{2,120}?)\s*\(\s*PAN\b/,
+];
 
 const iso = (year: number, month: number, day: number) => {
   const date = new Date(Date.UTC(year, month - 1, day));
@@ -164,13 +180,46 @@ export function documentFacts(
       source: source(issued.line),
     });
 
+  const everyLine = document.pages
+    .flatMap((page) => page.lines.map(reviewed))
+    .filter((line) => !line.excluded && line.text.trim());
+
+  // When it comes into force: a date on the line that says so, or the issue
+  // date when it comes into force on publication.
+  for (const line of everyLine) {
+    let value: string | null = null;
+    if (IN_FORCE.test(line.text)) {
+      const m = line.text.match(DAY_OF);
+      if (m)
+        value = iso(
+          Number(m[3]),
+          MONTHS.indexOf(m[2].toLowerCase()) + 1,
+          Number(m[1]),
+        );
+    }
+    if (!value && ON_PUBLICATION.test(line.text) && issued)
+      value = issued.value;
+    if (value) {
+      facts.push({ field: "effectiveFrom", value, source: source(line) });
+      break;
+    }
+  }
+
+  // Who it is about, when it names one taxpayer.
+  for (const line of everyLine) {
+    const name = ENTITY.map((pattern) => line.text.match(pattern)?.[1])
+      .find(Boolean)
+      ?.trim();
+    if (name && name.split(/\s+/).length >= 2) {
+      facts.push({ field: "entityName", value: name, source: source(line) });
+      break;
+    }
+  }
+
   // Years named anywhere in the document, with the first line naming one.
   const years = new Set<string>();
   let yearLine: EngineLine | null = null;
-  for (const line of document.pages.flatMap((page) =>
-    page.lines.map(reviewed),
-  )) {
-    if (line.excluded) continue;
+  for (const line of everyLine) {
     const found = incomeYears(line.text);
     if (found.length && !yearLine) yearLine = line;
     found.forEach((y) => years.add(y));

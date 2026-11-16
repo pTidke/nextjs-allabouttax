@@ -1,6 +1,6 @@
 # All About Tax — project status
 
-Updated 2026-11-15. Read this first when resuming work. Use the linked runbooks for implementation details and update this file when a deployment, review outcome, or next step changes.
+Updated 2026-11-16. Read this first when resuming work. Use the linked runbooks for implementation details and update this file when a deployment, review outcome, or next step changes.
 
 For how the platform is built and why, see [brain.md](brain.md). For what should change, see [improvement areas](docs/improvement-areas.md). For the work in order, see the [roadmap](docs/roadmap.md).
 
@@ -25,6 +25,7 @@ For how the platform is built and why, see [brain.md](brain.md). For what should
 - **A whole page at once.** The line review can confirm a page's lines together; lines that a rule blocked, whose readings disagree, or that one OCR reader read with a number in them or with low confidence still go one by one, and the server enforces it.
 - **Staging retired (16 November 2026).** The `/staging` pages, API routes and hosted repair queue are removed. The `carry-over` workflow still reads the staging database: run `apply` once more after the engine has read Circular 3/2026. A manual `review-status` workflow prints, for each pending document under review, how many lines are decided and whether the text is accepted and current.
 - **Check every line.** The line review can go through every line, not only those the engine asks about. Checks made after the text was accepted require accepting it again before tax approval.
+- **Simpler review (16 November 2026, AD-48).** The owner found the review screen confusing. A document is now three steps, one at a time: *Check the words* (page by page; lines that need a look come up as close-ups, the rest of a page is confirmed with one button, the next page comes up by itself), *Check the details* (filled in from the document, read back as one sentence, saved automatically, one *Publish* button) and *Published*. Every line is checked. A line changed after acceptance rebuilds the chatbot's passages by itself, so *Accept the text again* is gone. Signatures and "Copy to" lists are left out of the chatbot's text and need no check; any other stray line (a garbled header, a watermark) can be left out by hand. The queue uses the same step names and offers *Next for you*. Needs migration `202611160001_line_left_out` (a fourth line decision, `LEFT_OUT`); until it is applied, only *Leave it out* fails. Notification 1/2026 stays accepted; Notification 122/2026 is the first document to try the new screen on.
 - **Next.** Roadmap R2 and R3, then the rest of M1 (an answer evaluation set and a stored trace per answer), and M2: the verified reference pages that the engine's decision thresholds need.
 
 ## Current flow

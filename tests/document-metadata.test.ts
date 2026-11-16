@@ -122,6 +122,44 @@ test("a single named year is proposed as the period, and 'No. 122 of 2026' as a 
   assert.equal(facts.period, "TY 2026-27");
 });
 
+test("the one taxpayer an order is about, and when it comes into force, are proposed", () => {
+  const facts = (texts: string[]) =>
+    Object.fromEntries(
+      documentFacts({
+        pages: [
+          {
+            number: 1,
+            width: 595,
+            height: 842,
+            lines: texts.map((text, i) => line(`x${i}`, text)),
+          },
+        ],
+      } as unknown as EngineDocument).map((f) => [f.field, f.value]),
+    );
+  const approval = facts([
+    "New Delhi, the 28th September, 2026",
+    "S.O. 5325(E).- the Central Government hereby approves the Research Foundation (PAN: AABTS1181R) for Scientific Research",
+    "This notification shall come into force on the date of its publication in the Official Gazette.",
+  ]);
+  assert.equal(approval.entityName, "Research Foundation");
+  assert.equal(
+    approval.effectiveFrom,
+    "2026-09-28",
+    "on publication: the issue date",
+  );
+  const order = facts([
+    "Order under section 119 in the case of M/s Sunrise Exports Private Limited, Mumbai",
+    "These rules shall come into force on the 1st day of April, 2026.",
+  ]);
+  assert.equal(order.entityName, "Sunrise Exports Private Limited");
+  assert.equal(order.effectiveFrom, "2026-04-01");
+  // A general rule names nobody.
+  assert.equal(
+    facts(["The Board hereby specifies the following conditions."]).entityName,
+    undefined,
+  );
+});
+
 test("facts are read from the reviewed text, corrections included", () => {
   const garbled = {
     pages: [
