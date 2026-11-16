@@ -12,8 +12,67 @@ import type { EngineDocument, EngineLine } from "./extraction-runs";
 // out. Rules only, and deliberately narrow: a block is a signature only when it
 // is short and comes after the body has started, and a "Copy to" list runs
 // until the next heading (an annexure after it is kept).
+//
+// Page furniture goes the same way: the Gazette's running header on each page
+// ("THE GAZETTE OF INDIA : EXTRAORDINARY [PART II—SEC. 3(ii)]"), page numbers,
+// and any short line, not a sentence, repeated at the top or foot of three or
+// more pages. Left in, a
+// running header would land in the middle of a sentence that runs onto the
+// next page.
 
-export type ClosingReason = "signature" | "copy list";
+export type ClosingReason = "signature" | "copy list" | "page header";
+
+const FURNITURE = [
+  /^(?:\d{1,4}\s+)?(?:THE\s+)?GAZETTE\s+OF\s+INDIA\b/i,
+  /^\[?\s*PART\s+[IVX]+\s*[—–-]+\s*SEC/i,
+  /\[\s*PART\s+[IVX]+\s*[—–-]+\s*SEC[^\]]*\]\s*\d{0,4}$/i,
+  /^[-–—\s]*\d{1,4}[-–—\s]*$/,
+  /^page\s+\d+(?:\s+of\s+\d+)?$/i,
+];
+// Lines at the top or foot of a page that may be furniture.
+const EDGE = 3;
+const furnitureKey = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[0-9]+/g, "#")
+    .replace(/\s+/g, " ")
+    .trim();
+
+function pageFurniture(document: EngineDocument) {
+  const found = new Set<string>();
+  const edges = document.pages.map((page) => {
+    const lines = page.lines.filter(
+      (line) => !line.excluded && line.text.trim() && !line.table_id,
+    );
+    return [...lines.slice(0, EDGE), ...lines.slice(-EDGE)];
+  });
+  const seen = new Map<string, Set<number>>();
+  edges.forEach((lines, page) => {
+    for (const line of lines) {
+      const text = line.text.trim();
+      if (text.length <= 120 && FURNITURE.some((p) => p.test(text)))
+        found.add(line.id);
+      const key = furnitureKey(text);
+      if (key.length >= 4)
+        seen.set(key, (seen.get(key) ?? new Set()).add(page));
+    }
+  });
+  // A repeated line counts only when it is short and does not read as a
+  // sentence: a running title, not a paragraph that happens to recur.
+  if (document.pages.length >= 3)
+    edges.forEach((lines) => {
+      for (const line of lines) {
+        const text = line.text.trim();
+        if (
+          text.length <= 80 &&
+          !/[.;:,]["'”’)\]]*$/.test(text) &&
+          (seen.get(furnitureKey(text))?.size ?? 0) >= 3
+        )
+          found.add(line.id);
+      }
+    });
+  return found;
+}
 
 const COPY_START =
   /^\s*(?:copy|copies)\b(?:\s+(?:of\s+the\s+above|of\s+this(?:\s+\w+)?|is|are))?(?:\s+(?:forwarded|sent))?\s*(?:to|for)\b(?!\s+(?:the\s+)?extent)|^\s*copy\s*:/i;
@@ -34,12 +93,12 @@ type Unit = {
   table: boolean;
 };
 
-function units(document: EngineDocument): Unit[] {
+function units(document: EngineDocument, skip: Set<string>): Unit[] {
   const out: Unit[] = [];
   for (const page of document.pages) {
     let key = "";
     for (const line of page.lines) {
-      if (line.excluded || !line.text.trim()) continue;
+      if (line.excluded || !line.text.trim() || skip.has(line.id)) continue;
       const k = `${page.number}:${line.table_id ? `t:${line.table_id}` : `p:${line.paragraph}`}`;
       if (k !== key || !out.length) {
         out.push({
@@ -69,7 +128,9 @@ const signatureLike = (unit: Unit) =>
 
 export function closingLines(document: EngineDocument) {
   const found = new Map<string, ClosingReason>();
-  const all = units(document);
+  const furniture = pageFurniture(document);
+  for (const id of furniture) found.set(id, "page header");
+  const all = units(document, furniture);
   const mark = (unit: Unit, reason: ClosingReason) => {
     for (const line of unit.lines) found.set(line.id, reason);
   };
@@ -115,4 +176,5 @@ export function closingLines(document: EngineDocument) {
 export const closingLabel: Record<ClosingReason, string> = {
   signature: "Signature",
   "copy list": "“Copy to” list",
+  "page header": "Page header or number",
 };

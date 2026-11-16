@@ -151,6 +151,14 @@ model TaxChunk {
   page        Int?
   headings    String[]   @default([])
   incomeYears String[]   @default([])
+  // The chunk's metadata section (migration 202611160002, lib/review/chunks):
+  // the last page it reaches, its kind (text, proviso, explanation, table,
+  // heading), the provisions it names ("section 10(23FE)") and a context line
+  // ("Annexure A › para 2") searched together with the text.
+  pageEnd     Int?
+  kind        String?
+  provisions  String[]   @default([])
+  context     String?
   version     TaxVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@index([versionId])

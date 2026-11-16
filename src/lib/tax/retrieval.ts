@@ -10,6 +10,8 @@ export type Evidence = {
   url: string;
   anchor: string;
   text: string;
+  // Where the passage sits: heading path and paragraph ("Annexure A › para 2").
+  context: string | null;
   checkedAt: Date;
   effectiveFrom: Date;
   effectiveTo: Date | null;
@@ -67,7 +69,8 @@ export async function retrieveEvidence(
   const context = searchTerms(earlier.join(" "), current);
   if (!release?.versionIds.length || (!current && !context))
     return { releaseId: release?.id ?? null, evidence: [] as Evidence[] };
-  const text = Prisma.sql`to_tsvector('english', c.text)`;
+  // The context line is searched with the text (index TaxChunk_context_search_idx).
+  const text = Prisma.sql`to_tsvector('english', coalesce(c."context", '') || ' ' || c.text)`;
   const now = Prisma.sql`to_tsquery('english', ${current})`;
   const before = Prisma.sql`to_tsquery('english', ${context})`;
   const match =
@@ -92,7 +95,7 @@ export async function retrieveEvidence(
     : Prisma.sql`COALESCE(v.period, 'Across tax years')`;
   const freshSince = new Date(Date.now() - MAX_FRESHNESS_MS);
   const evidence = await prisma.$queryRaw<Evidence[]>(Prisma.sql`
-    SELECT c.id, v.id AS "versionId", d.title, d.url, c.anchor, c.text,
+    SELECT c.id, v.id AS "versionId", d.title, d.url, c.anchor, c.text, c."context",
       d."verifiedAt" AS "checkedAt", v."effectiveFrom", v."effectiveTo", v."documentType", v."legalStatus", ${shownPeriod} AS period,
       v."periodMode", v."applicabilityNote", v."entityName", v."investmentFrom", v."investmentThrough"
     FROM "TaxChunk" c JOIN "TaxVersion" v ON v.id = c."versionId"

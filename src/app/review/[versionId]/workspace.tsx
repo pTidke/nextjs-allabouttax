@@ -44,6 +44,10 @@ type Version = Omit<PendingReview, "document" | "draft" | "suggestion"> & {
     page: number | null;
     headings: string[];
     incomeYears: string[];
+    pageEnd: number | null;
+    kind: string | null;
+    provisions: string[];
+    context: string | null;
   }[];
   draft: PendingReview["draft"];
   suggestion: PendingReview["suggestion"];
@@ -66,6 +70,13 @@ export type EngineOverview =
       runId: string;
       queue: QueueEntry[];
       leftOut: LeftOut[];
+      // The reviewed document, block by block, for reading whole.
+      blocks: {
+        kind: "heading" | "text" | "table";
+        text: string;
+        page: number;
+        pageEnd: number;
+      }[];
       attentionTotal: number;
       sampleSize: number;
       facts: DocumentFact[];
@@ -563,27 +574,109 @@ function NoEngine({
   );
 }
 
+const kindName: Record<string, string> = {
+  text: "Text",
+  proviso: "Proviso",
+  explanation: "Explanation",
+  table: "Table",
+  heading: "Heading",
+};
+
+// The chatbot's chunks as cards: where each comes from and what it is about,
+// then its text.
 function Passages({ chunks }: { chunks: Version["chunks"] }) {
   return (
     <ol className="max-h-[70vh] space-y-2 overflow-y-auto pr-1">
       {chunks.map((chunk) => (
-        <li key={chunk.id} className="space-y-1 rounded-lg border p-3 text-sm">
-          <p className="text-xs text-slate-500">
-            {chunk.anchor}
-            {!!chunk.headings.length && ` · ${chunk.headings.join(" › ")}`}
-            {chunk.incomeYears.map((year) => (
-              <span
-                key={year}
-                className="ml-1 rounded bg-sky-50 px-1.5 py-0.5 text-sky-800"
-              >
-                {year}
+        <li key={chunk.id} className="space-y-2 rounded-lg border p-3 text-sm">
+          <div className="space-y-1 rounded-md bg-slate-50 p-2 text-xs text-slate-600">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-medium text-slate-800">{chunk.anchor}</span>
+              {chunk.page !== null && (
+                <span>
+                  {chunk.pageEnd && chunk.pageEnd !== chunk.page
+                    ? `pages ${chunk.page}–${chunk.pageEnd}`
+                    : `page ${chunk.page}`}
+                </span>
+              )}
+              {chunk.kind && (
+                <span className="rounded bg-white px-1.5 py-0.5 ring-1 ring-slate-200">
+                  {kindName[chunk.kind] ?? chunk.kind}
+                </span>
+              )}
+              <span>
+                {chunk.text.length.toLocaleString("en-IN")} characters
               </span>
-            ))}
-          </p>
+            </p>
+            {(chunk.context || !!chunk.headings.length) && (
+              <p>
+                <span className="text-slate-400">Where: </span>
+                {chunk.context || chunk.headings.join(" › ")}
+              </p>
+            )}
+            {(!!chunk.incomeYears.length || !!chunk.provisions.length) && (
+              <p className="flex flex-wrap items-center gap-1">
+                {chunk.incomeYears.map((year) => (
+                  <span
+                    key={year}
+                    className="rounded bg-sky-50 px-1.5 py-0.5 text-sky-800"
+                  >
+                    Tax year {year}
+                  </span>
+                ))}
+                {chunk.provisions.map((provision) => (
+                  <span
+                    key={provision}
+                    className="rounded bg-violet-50 px-1.5 py-0.5 text-violet-800"
+                  >
+                    {provision}
+                  </span>
+                ))}
+              </p>
+            )}
+          </div>
           <p className="whitespace-pre-wrap">{chunk.text}</p>
         </li>
       ))}
     </ol>
+  );
+}
+
+// The checked document read straight through, with page breaks marked.
+function WholeDocument({
+  blocks,
+  fallback,
+}: {
+  blocks: Extract<EngineOverview, { status: "OK" }>["blocks"] | null;
+  fallback: string;
+}) {
+  if (!blocks)
+    return (
+      <pre className="max-h-[70vh] overflow-y-auto whitespace-pre-wrap rounded-lg border p-4 font-sans text-sm leading-relaxed">
+        {fallback}
+      </pre>
+    );
+  return (
+    <div className="max-h-[70vh] space-y-3 overflow-y-auto rounded-lg border p-4 leading-relaxed">
+      {blocks.map((block, i) => (
+        <div key={i}>
+          {(i === 0 || block.page !== blocks[i - 1].pageEnd) && (
+            <p className="mb-2 mt-1 border-t pt-1 text-xs text-slate-400">
+              Page {block.page}
+            </p>
+          )}
+          {block.kind === "heading" ? (
+            <p className="font-semibold">{block.text}</p>
+          ) : block.kind === "table" ? (
+            <pre className="overflow-x-auto whitespace-pre font-mono text-xs">
+              {block.text}
+            </pre>
+          ) : (
+            <p>{block.text}</p>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -624,7 +717,7 @@ function BehindTheScenes({
                 ? `; ${s.pages_scanned} scanned pages read by OCR`
                 : ""}
               {engine.leftOut.length
-                ? `; ${engine.leftOut.length} signature and “Copy to” lines left out of the chatbot’s text`
+                ? `; ${engine.leftOut.length} signature, “Copy to” and page-header lines left out of the chatbot’s text`
                 : ""}
               . {engine.attentionTotal} line
               {engine.attentionTotal === 1 ? "" : "s"} the rules did not trust
@@ -634,13 +727,26 @@ function BehindTheScenes({
           )}
         </div>
         <div className="space-y-2">
+          <h3 className="font-medium text-slate-800">The whole document</h3>
+          <p className="text-xs text-slate-500">
+            {engine?.status === "OK"
+              ? "The checked text as one document, with corrections. Hindi, the signature, the “Copy to” list, page headers and lines left out are not in it."
+              : "The text as read from the source."}
+          </p>
+          <WholeDocument
+            blocks={engine?.status === "OK" ? engine.blocks : null}
+            fallback={version.text}
+          />
+        </div>
+        <div className="space-y-2">
           <h3 className="font-medium text-slate-800">
-            What the chatbot gets ({version.chunks.length} passage
+            What the chatbot gets ({version.chunks.length} chunk
             {version.chunks.length === 1 ? "" : "s"})
           </h3>
           <p className="text-xs text-slate-500">
-            Rebuilt from the checked lines, with corrections, whenever the words
-            are checked or a line changes.
+            The document cut into chunks along its own paragraphs, never inside
+            a sentence, each with where it comes from and what it names. Rebuilt
+            whenever the words are checked or a line changes.
           </p>
           <Passages chunks={version.chunks} />
         </div>

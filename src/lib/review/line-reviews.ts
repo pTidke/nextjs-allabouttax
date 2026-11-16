@@ -11,9 +11,9 @@ import {
   type LineForReview,
 } from "./extraction-runs";
 import { requireReviewer } from "./roles";
-import { mostlyDevanagari, needsOneByOne } from "./line-rules";
+import { needsOneByOne } from "./line-rules";
 import { closingLines, type ClosingReason } from "./closing-lines";
-import { incomeYears } from "../tax/years";
+import { chunksFrom, reviewedDocument, type Chunk } from "./chunks";
 import { documentFacts } from "./document-facts";
 import { STAGING_REVIEWER, STAGING_REVIEWER_NAME } from "./staging-carry-over";
 
@@ -37,7 +37,6 @@ export type LineDecision = (typeof LINE_DECISIONS)[number];
 // The spot check: about one rule-accepted line in twenty, from one to five.
 export const AUDIT_SAMPLE_SIZE = 5;
 const AUDIT_SAMPLE_EVERY = 20;
-const MAX_PASSAGE_CHARS = 2000;
 
 const lines = (document: EngineDocument) =>
   document.pages.flatMap((page) => page.lines);
@@ -366,6 +365,10 @@ export async function lineReviewOverview(versionId: string) {
       id,
       reason,
     })),
+    // The reviewed document as it stands, for reading whole.
+    blocks: reviewedDocument(document, decisions).map(
+      ({ kind, text, page, pageEnd }) => ({ kind, text, page, pageEnd }),
+    ),
     sampleSize: required.sample.length,
     // Facts come from the reviewed text: corrections in, left-out lines out.
     facts: documentFacts(
@@ -419,111 +422,13 @@ export async function pageForReview(
 
 // ---- Rebuilding the chatbot's passages -------------------------------------
 
-export type Passage = {
-  anchor: string;
-  text: string;
-  page: number;
-  // The headings the passage sits under: the document's opening heading block,
-  // then the latest heading after it (a schedule, chapter, annexure...).
-  headings: string[];
-  // Income years named in the passage or its headings ("2026-27").
-  incomeYears: string[];
-};
-
-// Lines become paragraphs (joined with spaces), tables stay together (one row per
-// line), and paragraphs are packed into passages of up to 2,000 characters on one
-// page, under one heading path, without ever splitting a paragraph. Hindi
-// evidence lines, the signature and the "Copy to" list are left out. Headings are the lines the engine marked as such
-// (larger or bold short lines, or CHAPTER, SCHEDULE, ANNEXURE...); consecutive
-// heading lines form one heading.
+// The passages the chatbot uses, from the reviewed lines (lib/review/chunks).
+export type Passage = Chunk;
 export function passagesFrom(
   document: EngineDocument,
   decisions: Map<string, Decided>,
 ): Passage[] {
-  const passages: Passage[] = [];
-  const closing = closingLines(document);
-  let header: string | null = null;
-  let current: string | null = null;
-  for (const page of document.pages) {
-    const units: { text: string; heading: boolean }[] = [];
-    let unit: {
-      key: string;
-      parts: string[];
-      table: boolean;
-      heading: boolean;
-    } | null = null;
-    for (const line of page.lines) {
-      // Hindi evidence, and the signature and "Copy to" list (closing-lines).
-      if (line.excluded || closing.has(line.id)) continue;
-      const decided = decisions.get(line.id);
-      // A reviewer said it is not part of the text.
-      if (decided?.decision === "LEFT_OUT") continue;
-      const text = (
-        decided?.decision === "CORRECTED" ? decided.text! : line.text
-      ).trim();
-      // Hindi stays evidence only (AD decision of 15 November): the engine
-      // leaves out lines that are wholly Devanagari, and this also leaves out
-      // mixed ones that are mostly Devanagari, such as a Gazette header with
-      // Roman numerals ("[भाग II—खण्ड 3(ii)] भारत का राजपत्र").
-      if (!text || mostlyDevanagari(text)) continue;
-      const key = line.table_id ? `t:${line.table_id}` : `p:${line.paragraph}`;
-      if (!unit || unit.key !== key) {
-        if (unit)
-          units.push({
-            text: unit.parts.join(unit.table ? "\n" : " "),
-            heading: unit.heading,
-          });
-        unit = {
-          key,
-          parts: [],
-          table: !!line.table_id,
-          heading: line.role === "heading" && !line.table_id,
-        };
-      }
-      unit.parts.push(text);
-    }
-    if (unit)
-      units.push({
-        text: unit.parts.join(unit.table ? "\n" : " "),
-        heading: unit.heading,
-      });
-
-    let packed = "";
-    let packedPath: string[] = [];
-    const flush = () => {
-      if (packed)
-        passages.push({
-          anchor: `Page ${page.number}, passage ${passages.filter((p) => p.anchor.startsWith(`Page ${page.number},`)).length + 1}`,
-          text: packed,
-          page: page.number,
-          headings: packedPath,
-          incomeYears: incomeYears(`${packedPath.join("\n")}\n${packed}`),
-        });
-      packed = "";
-    };
-    for (let i = 0; i < units.length; i++) {
-      const { text, heading } = units[i];
-      // A run of heading lines is one heading: set it once, at the run's start.
-      if (heading && !units[i - 1]?.heading) {
-        let block = text;
-        for (let j = i + 1; j < units.length && units[j].heading; j++)
-          block = `${block} ${units[j].text}`;
-        if (header === null) header = block;
-        else current = block;
-      }
-      const path = [header, current].filter((h): h is string => !!h);
-      if (packed && path.join("\n") !== packedPath.join("\n")) flush();
-      packedPath = path;
-      for (let k = 0; k < text.length; k += MAX_PASSAGE_CHARS) {
-        const part = text.slice(k, k + MAX_PASSAGE_CHARS);
-        if (packed && packed.length + part.length + 2 > MAX_PASSAGE_CHARS)
-          flush();
-        packed = packed ? `${packed}\n\n${part}` : part;
-      }
-    }
-    flush();
-  }
-  return passages;
+  return chunksFrom(reviewedDocument(document, decisions));
 }
 
 // Called inside the text-check transaction. Returns the number of passages, or
