@@ -95,7 +95,12 @@ test("the engine reads each pending PDF once per engine version", async () => {
     limit: 10,
     budgetMs: 60_000,
   });
-  assert.deepEqual(result, { ok: 2, failed: 0, skippedForTime: 0 });
+  assert.deepEqual(result, {
+    ok: 2,
+    failed: 0,
+    skippedForTime: 0,
+    decisionsCarried: 0,
+  });
   assert.deepEqual(
     await runs.versionsToExtract(engine, 10),
     [],

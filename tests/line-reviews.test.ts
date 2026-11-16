@@ -426,3 +426,31 @@ test("a whole page can be confirmed at once, except lines that need a look on th
   const after = await lines.lineReviewOverview(fresh.versionId);
   assert.equal(after?.status === "OK" && after.progress.undecided, 2);
 });
+
+test("a newer engine's reading keeps the decisions on lines that read the same", async () => {
+  // The fresh document of the test above has p2-l1 confirmed and nothing else.
+  const before = await db.taxVersion.findFirstOrThrow({
+    where: { document: { title: "Another notification" } },
+    select: { id: true },
+  });
+  const old = await lines.lineReviewOverview(before.id);
+  assert.equal(old?.status === "OK" && old.progress.decided, 1);
+  const result = await runs.extractPending({
+    bin,
+    engine: "pdfanchor newer",
+    limit: 5,
+    budgetMs: 60_000,
+  });
+  assert.ok(result.decisionsCarried >= 1);
+  const now = await lines.lineReviewOverview(before.id);
+  assert.equal(now?.status, "OK");
+  if (now?.status !== "OK" || old?.status !== "OK") return;
+  assert.notEqual(now.runId, old.runId, "a new reading");
+  assert.equal(now.progress.decided, 1, "the confirmed line carried over");
+  assert.equal(now.queue.find((e) => e.id === "p2-l1")?.decision, "CONFIRMED");
+  // The accepted document is not read again, so its decisions stay where they were.
+  const accepted = await db.extractionRun.count({
+    where: { versionId, engine: "pdfanchor newer" },
+  });
+  assert.equal(accepted, 0);
+});

@@ -112,9 +112,18 @@ export async function versionsToExtract(engine: string, limit: number) {
     LIMIT ${limit}`);
 }
 
+// Where the engine finds EasyOCR's model files, the second reader for scanned
+// pages; without it the engine reads scans with Tesseract alone.
+type EngineOptions = {
+  bin: string;
+  engine: string;
+  timeoutMs?: number;
+  easyocrModels?: string;
+};
+
 export async function extractVersion(
   versionId: string,
-  options: { bin: string; engine: string; timeoutMs?: number },
+  options: EngineOptions,
 ) {
   const version = await prisma.taxVersion.findUniqueOrThrow({
     where: { id: versionId },
@@ -136,8 +145,12 @@ export async function extractVersion(
           "eng+hin",
           "--exclude-script",
           "Deva",
+          ...(options.easyocrModels
+            ? ["--easyocr-models", options.easyocrModels]
+            : []),
         ],
-        // A long scan is read by OCR page by page; about 2 to 5 seconds a page.
+        // A long scan is read by OCR page by page: about 2 to 5 seconds a page
+        // with Tesseract, about 20 with the second reader as well.
         { timeout: options.timeoutMs ?? 15 * 60_000, maxBuffer: 1024 * 1024 },
       );
     } catch (error) {
@@ -151,17 +164,21 @@ export async function extractVersion(
       JSON.parse(raw.toString("utf8")),
       version.originalHash,
     );
-    return prisma.extractionRun.create({
-      data: {
-        versionId,
-        engine: options.engine,
-        policyVersion: document.engine.policy_version,
-        configSha: document.engine.config_sha256,
-        status: "OK",
-        summary: document.summary as Prisma.InputJsonValue,
-        document: document as unknown as Prisma.InputJsonValue,
-      },
-      select: { id: true, status: true, summary: true },
+    return prisma.$transaction(async (tx) => {
+      const run = await tx.extractionRun.create({
+        data: {
+          versionId,
+          engine: options.engine,
+          policyVersion: document.engine.policy_version,
+          configSha: document.engine.config_sha256,
+          status: "OK",
+          summary: document.summary as Prisma.InputJsonValue,
+          document: document as unknown as Prisma.InputJsonValue,
+        },
+        select: { id: true, status: true, summary: true },
+      });
+      const carried = await carryLineDecisions(tx, versionId, run.id, document);
+      return { ...run, carried };
     });
   } catch (error) {
     // Keep the reason short and free of document text.
@@ -169,7 +186,7 @@ export async function extractVersion(
       error instanceof Error
         ? error.message.split("\n")[0].slice(0, 300)
         : "Extraction failed.";
-    return prisma.extractionRun.create({
+    const run = await prisma.extractionRun.create({
       data: {
         versionId,
         engine: options.engine,
@@ -178,9 +195,69 @@ export async function extractVersion(
       },
       select: { id: true, status: true, summary: true },
     });
+    return { ...run, carried: 0 };
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+}
+
+// A newer engine reads a pending document again, with new line ids. The
+// decisions people made on the previous reading carry over to the new one
+// wherever a line on the same page reads exactly the same, once on each side:
+// nobody has to check those lines twice. A line the new engine reads
+// differently comes back for a decision, since its text changed.
+const lineKey = (line: { page: number; text: string }) =>
+  `${line.page}|${line.text.normalize("NFC").replace(/\s+/g, " ").trim()}`;
+
+async function carryLineDecisions(
+  tx: Prisma.TransactionClient,
+  versionId: string,
+  runId: string,
+  document: EngineDocument,
+) {
+  const previous = await tx.extractionRun.findFirst({
+    where: { versionId, status: "OK", id: { not: runId } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { id: true, document: true },
+  });
+  if (!previous?.document) return 0;
+  const rows = await tx.lineReview.findMany({
+    where: { runId: previous.id },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+  });
+  if (!rows.length) return 0;
+  const latest = new Map(rows.map((row) => [row.lineId, row]));
+  const unique = (lines: EngineLine[]) => {
+    const seen = new Map<string, EngineLine | null>();
+    for (const line of lines) {
+      if (line.excluded || !line.text.trim()) continue;
+      const key = lineKey(line);
+      seen.set(key, seen.has(key) ? null : line);
+    }
+    return seen;
+  };
+  const before = unique(
+    (previous.document as unknown as EngineDocument).pages.flatMap(
+      (page) => page.lines,
+    ),
+  );
+  const after = unique(document.pages.flatMap((page) => page.lines));
+  const carried = [];
+  for (const [key, old] of before) {
+    const row = old && latest.get(old.id);
+    const now = after.get(key);
+    if (row && now)
+      carried.push({
+        versionId,
+        runId,
+        lineId: now.id,
+        decision: row.decision,
+        text: row.text,
+        reviewerId: row.reviewerId,
+      });
+  }
+  if (carried.length) await tx.lineReview.createMany({ data: carried });
+  return carried.length;
 }
 
 export async function extractPending(options: {
@@ -188,10 +265,11 @@ export async function extractPending(options: {
   engine: string;
   limit: number;
   budgetMs: number;
+  easyocrModels?: string;
   log?: (line: string) => void;
 }) {
   const started = Date.now();
-  const results = { ok: 0, failed: 0, skippedForTime: 0 };
+  const results = { ok: 0, failed: 0, skippedForTime: 0, decisionsCarried: 0 };
   const versions = await versionsToExtract(options.engine, options.limit);
   for (const [index, version] of versions.entries()) {
     if (Date.now() - started > options.budgetMs) {
@@ -200,7 +278,11 @@ export async function extractPending(options: {
     }
     const stored = await extractVersion(version.id, options);
     results[stored.status === "OK" ? "ok" : "failed"]++;
-    options.log?.(`${version.id}: ${stored.status}`);
+    const carried = stored.carried;
+    results.decisionsCarried += carried;
+    options.log?.(
+      `${version.id}: ${stored.status}${carried ? `, ${carried} line decisions carried over` : ""}`,
+    );
   }
   return results;
 }
