@@ -271,6 +271,10 @@ export async function reviewDocument(userId: string, versionId: string) {
           page: true,
           headings: true,
           incomeYears: true,
+          pageEnd: true,
+          kind: true,
+          provisions: true,
+          context: true,
         },
       },
       extractionReviews: {

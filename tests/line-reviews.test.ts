@@ -124,17 +124,25 @@ test("passages keep paragraphs whole, tables together, corrections in and Hindi 
       anchor: "Page 1, passage 1",
       text: "MINISTRY OF FINANCE\n\n(Department of Revenue)\n\nThe due date for the assessment year 2026-27 is extended to 31st October 2026.\n\nClass | Limit\nIndividual | 1,50,000",
       page: 1,
+      pageEnd: 1,
       // Consecutive heading lines are one heading, corrected text included.
       headings: ["MINISTRY OF FINANCE (Department of Revenue)"],
+      context: "MINISTRY OF FINANCE (Department of Revenue)",
+      kind: "text",
       // Assessment year 2026-27 assesses the income of 2025-26.
       incomeYears: ["2025-26"],
+      provisions: [],
     },
     {
       anchor: "Page 2, passage 1",
       text: "Annexure A\n\nApplies to tax years 2026-27 to 2027-28.",
       page: 2,
+      pageEnd: 2,
       headings: ["MINISTRY OF FINANCE (Department of Revenue)", "Annexure A"],
+      context: "MINISTRY OF FINANCE (Department of Revenue) › Annexure A",
+      kind: "text",
       incomeYears: ["2026-27", "2027-28"],
+      provisions: [],
     },
   ]);
   // Long pages split between paragraphs, never inside one.
@@ -144,7 +152,7 @@ test("passages keep paragraphs whole, tables together, corrections in and Hindi 
       {
         ...document.pages[0],
         lines: [0, 1, 2].map((n) =>
-          line(`p${n}`, "x".repeat(900), { paragraph: n }),
+          line(`p${n}`, `${"x".repeat(899)}.`, { paragraph: n }),
         ),
       },
     ],
@@ -281,9 +289,12 @@ test("accepting rebuilds the chatbot's passages from the reviewed lines", async 
     orderBy: { anchor: "asc" },
     select: { anchor: true, text: true },
   });
+  // Short pages pack into one passage across the page break; it records both.
   assert.deepEqual(chunks, [
-    { anchor: "Page 1, passage 1", text: "MINISTRY OF FINANCE NOTIFICATION" },
-    { anchor: "Page 2, passage 1", text: "Annexure A" },
+    {
+      anchor: "Page 1, passage 1",
+      text: "MINISTRY OF FINANCE NOTIFICATION\n\nAnnexure A",
+    },
   ]);
   const document = await db.taxDocument.findFirstOrThrow({
     where: { latestVersionId: versionId },
@@ -350,7 +361,11 @@ test("a line changed after acceptance rebuilds the passages at once; an unreadab
     orderBy: { anchor: "asc" },
     select: { text: true },
   });
-  assert.equal(chunks[0].text, "MINISTRY OF FINANCE NOTIFICATION No. 1");
+  assert.equal(
+    chunks[0].text,
+    // No full stop before the page break: read as running on.
+    "MINISTRY OF FINANCE NOTIFICATION No. 1 Annexure A",
+  );
 
   // Approval stores the document facts the reviewer confirmed.
   await workflow.recordTaxDecision(reviewer, {

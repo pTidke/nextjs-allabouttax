@@ -43,6 +43,7 @@ export async function generateAnswer({
         title: e.title,
         passage: e.text,
         anchor: e.anchor,
+        section: e.context,
         period: e.period,
         periodMode: e.periodMode,
         applicabilityNote: e.applicabilityNote,

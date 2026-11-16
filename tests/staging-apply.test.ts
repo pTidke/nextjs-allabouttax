@@ -253,10 +253,11 @@ test("an accepted staging extraction becomes accepted live text, with its histor
     "Staging review (carried over)",
   );
   assert.match(page.version.textChecks[0].note, /accepted on 2026-11-14/);
-  // The chatbot's passages are rebuilt from the reviewed lines, correction included.
+  // The chatbot's passages are rebuilt from the reviewed lines, correction
+  // included; two short pages pack into one passage that records both.
   assert.deepEqual(
-    page.version.chunks.map((c) => c.text),
-    ["MINISTRY OF FINANCE NOTIFICATION", "Annexure A"],
+    page.version.chunks.map((c) => [c.text, c.page, c.pageEnd]),
+    [["MINISTRY OF FINANCE NOTIFICATION\n\nAnnexure A", 1, 2]],
   );
   // The history covers the whole lineage, with notes, and the tax review.
   const history = page.carriedOver.find(

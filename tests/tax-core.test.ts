@@ -94,6 +94,7 @@ const evidence: Evidence[] = [
     title: "Official document",
     url: "https://www.incometax.gov.in/example",
     anchor: "Page 2",
+    context: null,
     text: "Evidence",
     checkedAt: new Date(),
     effectiveFrom: new Date("2025-04-01"),
@@ -162,12 +163,21 @@ test("source status labels only cited guidance even when the model omits the dis
   const legislation = validateAnswer(answer(["S1"]), mixed);
   assert.doesNotMatch(legislation.answer.answer, /Source status/);
   const guidance = validateAnswer(answer(["S2"]), mixed);
-  assert.match(guidance.answer.answer, /Source status: Official guidance \[S2\]\.$/);
+  assert.match(
+    guidance.answer.answer,
+    /Source status: Official guidance \[S2\]\.$/,
+  );
   assert.equal(guidance.citations.length, 1);
   const combined = validateAnswer(answer(["S1", "S2"]), mixed);
-  assert.match(combined.answer.answer, /Source status: Official guidance \[S2\]\.$/);
+  assert.match(
+    combined.answer.answer,
+    /Source status: Official guidance \[S2\]\.$/,
+  );
   assert.doesNotMatch(combined.answer.answer, /Official guidance \[S1\]/);
-  const unsupported = validateAnswer({ ...answer([]), supported: false }, mixed);
+  const unsupported = validateAnswer(
+    { ...answer([]), supported: false },
+    mixed,
+  );
   assert.doesNotMatch(unsupported.answer.answer, /Source status/);
 });
 
