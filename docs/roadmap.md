@@ -45,7 +45,8 @@ In the engine repository, [`pTidke/benzeneblack`](https://github.com/pTidke/benz
 
 - [x] Skeleton: contract, text layer, Tesseract, cross-check, validators, policy, Markdown, chunks, CLI, tests
 - [ ] Per-page process isolation and budgets
-- [ ] EasyOCR as a tested second reader, including Hindi
+- [x] EasyOCR as a tested second reader on English scanned pages (pdfanchor 0.0.3, 16 November 2026), in the extract workflow
+- [ ] EasyOCR's Hindi model, measured
 - [ ] Pinned OCR weights recorded in the output
 - [ ] Scan recovery strategies as retries
 - [ ] More validators: split dates, amounts, section references

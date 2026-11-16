@@ -15,11 +15,14 @@ jobs:
     if: vars.TAX_WORKER_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment: tax-worker
-    # 20 minutes of budget, plus up to 15 for a long scan started just before it ran out.
+    # 20 minutes of budget, plus up to 15 for a long scan started just before it ran
+    # out (scanned pages take about 20 seconds each with the second reader).
     timeout-minutes: 40
     env:
       # The engine release this app is tested with. Update both together.
-      PDFANCHOR_REF: 55effa78855e0cc806bdf04ca307c3513c18667d
+      PDFANCHOR_REF: 4afb7701e0defa80e1bc1917a8379361601a3920
+      # The second reader's models (EasyOCR, English), cached between runs.
+      EASYOCR_MODELS: /home/runner/easyocr-models
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -30,12 +33,21 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Install the engine and Tesseract (English and Hindi)
+      - name: Install the engine, Tesseract (English and Hindi) and EasyOCR
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q tesseract-ocr tesseract-ocr-hin
-          pip install "pdfanchor @ git+https://github.com/pTidke/benzeneblack@${PDFANCHOR_REF}"
-          pdfanchor engines
+          # CPU-only PyTorch for EasyOCR, the second reader on scanned pages.
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install "pdfanchor[easyocr] @ git+https://github.com/pTidke/benzeneblack@${PDFANCHOR_REF}"
+      - uses: actions/cache@v4
+        with:
+          path: /home/runner/easyocr-models
+          key: easyocr-models-en-v1
+      - name: Check the readers (fetches EasyOCR's models on the first run)
+        run: |
+          mkdir -p "$EASYOCR_MODELS"
+          pdfanchor engines --easyocr-models "$EASYOCR_MODELS" --easyocr-download
       - name: Extract
         run: npm run tax:extract
         env:
