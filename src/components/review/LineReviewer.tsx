@@ -936,10 +936,28 @@ function PageChecklist({
               ? ` · ${oneByOne} must be decided on ${oneByOne === 1 ? "its" : "their"} own`
               : ""}
           </p>
+          {!open.length && (
+            <p className="rounded-lg bg-slate-50 p-2 text-sm text-slate-700">
+              Nothing to select on this page:{" "}
+              {oneByOne
+                ? `${decided} of ${checkable.length} lines are decided, and the other ${oneByOne} must be decided one at a time (see below).`
+                : `all ${checkable.length} lines are already decided.`}{" "}
+              {pageNumber < pageCount && (
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => onPage(pageNumber + 1)}
+                >
+                  Next page
+                </button>
+              )}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <button
               type="button"
               className={nav}
+              disabled={!open.length}
               onClick={() => setSelected(new Set(open.map((line) => line.id)))}
             >
               Select all
@@ -947,6 +965,7 @@ function PageChecklist({
             <button
               type="button"
               className={nav}
+              disabled={!open.length}
               onClick={() => setSelected(new Set())}
             >
               Select none
