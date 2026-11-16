@@ -44,6 +44,10 @@ Apply a migration before merging code that uses it: Vercel deploys `main` straig
 
 `202611150003_extraction_runs` is additive: a new `ExtractionRun` table for the engine's results. Until it is applied, the extract workflow fails and document pages show no line boxes.
 
+**Review status.** `.github/workflows/review-status.yml` is manual, read-only, and runs only from `main` with `DATABASE_URL`. For each pending document someone has started reviewing it prints the lines that can be checked, how many are decided, the required lines still open, unreadable and corrected counts, the latest text check, and lines checked since it was accepted. Titles and counts only.
+
+**Staging retired (16 November 2026).** The `/staging` pages, `/api/staging` routes and the hosted OCR-repair queue route are removed, with their `vercel.json` entries and `.env.example` settings. The `EXTRACTION_STAGING_*` and `EXTRACTION_OCR_*` variables can be removed from the staging preview's Vercel settings. Keep the staging Neon project until `carry-over` has run once more for Circular 3/2026, then delete it.
+
 **Staging carry-over (R3).** `.github/workflows/carry-over.yml` is manual and runs only from `main`, in the `tax-worker` environment, with `DATABASE_URL` and `STAGING_DATABASE_URL` (the staging review database, `extraction_review`, with the `extraction_web_review` role). Modes:
 - `inspect` reads both databases and prints, for each staging candidate, its revisions and tax reviews as counts, the live version with the same file hash, and how the staging regions line up with the engine's lines.
 - `plan` prints what `apply` would write.
