@@ -164,67 +164,116 @@ export type QueueItem = {
   hasRun: boolean;
 };
 
-// Current pending versions with their review state, newest first, ten a page.
+export const QUEUE_CATEGORIES = [
+  "all",
+  "circulars",
+  "notifications",
+  "guidance",
+  "uploads",
+] as const;
+export type QueueCategory = (typeof QUEUE_CATEGORIES)[number];
+export const QUEUE_PAGE_SIZE = 25;
+const MAX_QUERY = 100;
+
+// Current pending versions with their review state, newest first, 25 a page.
+// filter, the step:
 //   text:    waiting for a text check (none yet, or problems reported)
 //   tax:     text accepted, waiting for tax review
 //   ocr:     no extracted text at all (scanned documents)
 //   uploads: added by hand
-export async function reviewQueue(filter: QueueFilter, page: number) {
+// category, where the document comes from: CBDT circulars, CBDT notifications,
+// guidance pages, uploads. query: words that must all appear in the title
+// ("circular 3", "10(46)").
+export async function reviewQueue(
+  filter: QueueFilter,
+  page: number,
+  options: { category?: QueueCategory; query?: string } = {},
+) {
   if (!QUEUE_FILTERS.includes(filter))
     throw new HttpError(400, "Unknown filter.");
   if (!Number.isSafeInteger(page) || page < 0 || page > 10000)
     throw new HttpError(400, "Invalid page.");
-  const where = {
+  const category = options.category ?? "all";
+  if (!QUEUE_CATEGORIES.includes(category))
+    throw new HttpError(400, "Unknown category.");
+  const words = (options.query ?? "")
+    .slice(0, MAX_QUERY)
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.replace(/[%_\\]/g, ""))
+    .filter(Boolean)
+    .slice(0, 8);
+  const step = {
     all: Prisma.sql`TRUE`,
     text: Prisma.sql`(chunks > 0 OR "hasRun") AND "textDecision" IS DISTINCT FROM 'ACCEPTED'`,
     tax: Prisma.sql`"textDecision" = 'ACCEPTED'`,
     ocr: Prisma.sql`chunks = 0 AND NOT "hasRun"`,
     uploads: Prisma.sql`"sourceKind" = 'UPLOAD'`,
   }[filter];
-  const rows = await prisma.$queryRaw<QueueItem[]>(Prisma.sql`
-    SELECT * FROM (
-      SELECT v.id AS "versionId", d.title, d.url, s.kind AS "sourceKind",
-        s.name AS "sourceName", v."fetchedAt", d."issuedAt", d."lastError",
-        (SELECT count(*)::int FROM "TaxChunk" c WHERE c."versionId" = v.id) AS chunks,
-        r.decision AS "textDecision", r.note AS "textNote",
-        EXISTS (SELECT 1 FROM "ExtractionRun" x WHERE x."versionId" = v.id AND x.status = 'OK') AS "hasRun"
-      FROM "TaxVersion" v
-      JOIN "TaxDocument" d ON d."latestVersionId" = v.id
-      JOIN "TaxSource" s ON s.id = d."sourceId"
-      LEFT JOIN LATERAL (
-        SELECT e.decision, e.note FROM "ExtractionReview" e
-        WHERE e."versionId" = v.id ORDER BY e."createdAt" DESC, e.id DESC LIMIT 1
-      ) r ON true
-      WHERE v.status = 'PENDING'
-    ) q
-    WHERE ${where}
-    ORDER BY "fetchedAt" DESC, "versionId" DESC
-    LIMIT 11 OFFSET ${page * 10}`);
-  const counts = await prisma.$queryRaw<
-    { text: number; tax: number; ocr: number; uploads: number; all: number }[]
-  >(Prisma.sql`
-    SELECT count(*)::int AS all,
-      count(*) FILTER (WHERE (chunks > 0 OR "hasRun") AND decision IS DISTINCT FROM 'ACCEPTED')::int AS text,
-      count(*) FILTER (WHERE decision = 'ACCEPTED')::int AS tax,
-      count(*) FILTER (WHERE chunks = 0 AND NOT "hasRun")::int AS ocr,
-      count(*) FILTER (WHERE kind = 'UPLOAD')::int AS uploads
-    FROM (
-      SELECT s.kind,
-        (SELECT count(*) FROM "TaxChunk" c WHERE c."versionId" = v.id) AS chunks,
-        (SELECT e.decision FROM "ExtractionReview" e WHERE e."versionId" = v.id
-          ORDER BY e."createdAt" DESC, e.id DESC LIMIT 1) AS decision,
-        EXISTS (SELECT 1 FROM "ExtractionRun" x WHERE x."versionId" = v.id AND x.status = 'OK') AS "hasRun"
-      FROM "TaxVersion" v
-      JOIN "TaxDocument" d ON d."latestVersionId" = v.id
-      JOIN "TaxSource" s ON s.id = d."sourceId"
-      WHERE v.status = 'PENDING'
-    ) q`);
+  const inCategory =
+    category === "all" ? Prisma.sql`TRUE` : Prisma.sql`category = ${category}`;
+  const matches = words.length
+    ? Prisma.join(
+        words.map((w) => Prisma.sql`lower(title) LIKE ${`%${w}%`}`),
+        " AND ",
+      )
+    : Prisma.sql`TRUE`;
+  // Every pending version with what the filters need.
+  const pending = Prisma.sql`
+    SELECT v.id AS "versionId", d.title, d.url, s.kind AS "sourceKind",
+      s.name AS "sourceName", v."fetchedAt", d."issuedAt", d."lastError",
+      CASE WHEN s.kind = 'UPLOAD' THEN 'uploads'
+        WHEN s.id = 'cbdt-circulars' THEN 'circulars'
+        WHEN s.id = 'cbdt-notifications' THEN 'notifications'
+        ELSE 'guidance' END AS category,
+      (SELECT count(*)::int FROM "TaxChunk" c WHERE c."versionId" = v.id) AS chunks,
+      r.decision AS "textDecision", r.note AS "textNote",
+      EXISTS (SELECT 1 FROM "ExtractionRun" x WHERE x."versionId" = v.id AND x.status = 'OK') AS "hasRun"
+    FROM "TaxVersion" v
+    JOIN "TaxDocument" d ON d."latestVersionId" = v.id
+    JOIN "TaxSource" s ON s.id = d."sourceId"
+    LEFT JOIN LATERAL (
+      SELECT e.decision, e.note FROM "ExtractionReview" e
+      WHERE e."versionId" = v.id ORDER BY e."createdAt" DESC, e.id DESC LIMIT 1
+    ) r ON true
+    WHERE v.status = 'PENDING'`;
+  const [rows, counts, categories] = await Promise.all([
+    prisma.$queryRaw<(QueueItem & { category: string })[]>(Prisma.sql`
+      SELECT * FROM (${pending}) q
+      WHERE ${step} AND ${inCategory} AND ${matches}
+      ORDER BY "fetchedAt" DESC, "issuedAt" DESC NULLS LAST, "versionId" DESC
+      LIMIT ${QUEUE_PAGE_SIZE + 1} OFFSET ${page * QUEUE_PAGE_SIZE}`),
+    // The step tabs count within the chosen category and search.
+    prisma.$queryRaw<
+      { text: number; tax: number; ocr: number; uploads: number; all: number }[]
+    >(Prisma.sql`
+      SELECT count(*)::int AS all,
+        count(*) FILTER (WHERE (chunks > 0 OR "hasRun") AND "textDecision" IS DISTINCT FROM 'ACCEPTED')::int AS text,
+        count(*) FILTER (WHERE "textDecision" = 'ACCEPTED')::int AS tax,
+        count(*) FILTER (WHERE chunks = 0 AND NOT "hasRun")::int AS ocr,
+        count(*) FILTER (WHERE "sourceKind" = 'UPLOAD')::int AS uploads
+      FROM (${pending}) q WHERE ${inCategory} AND ${matches}`),
+    // The category tabs count within the chosen step and search.
+    prisma.$queryRaw<{ category: QueueCategory; n: number }[]>(Prisma.sql`
+      SELECT category, count(*)::int AS n FROM (${pending}) q
+      WHERE ${step} AND ${matches} GROUP BY category`),
+  ]);
+  const byCategory = Object.fromEntries(
+    QUEUE_CATEGORIES.map((c) => [c, 0]),
+  ) as Record<QueueCategory, number>;
+  for (const { category: c, n } of categories) {
+    byCategory[c] = n;
+    byCategory.all += n;
+  }
   return {
-    items: rows.slice(0, 10),
-    hasMore: rows.length > 10,
+    items: rows.slice(0, QUEUE_PAGE_SIZE),
+    hasMore: rows.length > QUEUE_PAGE_SIZE,
     page,
     filter,
+    category,
+    query: words.join(" "),
     counts: counts[0],
+    categories: byCategory,
   };
 }
 

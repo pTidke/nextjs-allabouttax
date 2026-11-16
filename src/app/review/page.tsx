@@ -1,7 +1,9 @@
 import Link from "next/link";
 import {
+  QUEUE_CATEGORIES,
   QUEUE_FILTERS,
   reviewQueue,
+  type QueueCategory,
   type QueueFilter,
 } from "@/lib/review/workflow";
 import { pageAccess } from "./guard";
@@ -19,6 +21,14 @@ const labels: Record<QueueFilter, string> = {
   ocr: "Waiting to be read",
   uploads: "Uploaded",
   all: "Everything waiting",
+};
+
+const categoryLabels: Record<QueueCategory, string> = {
+  all: "All kinds",
+  circulars: "Circulars",
+  notifications: "Notifications",
+  guidance: "Guidance pages",
+  uploads: "Uploads",
 };
 
 function status(
@@ -42,7 +52,12 @@ function status(
 export default async function ReviewQueuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; page?: string }>;
+  searchParams: Promise<{
+    filter?: string;
+    page?: string;
+    category?: string;
+    q?: string;
+  }>;
 }) {
   const access = await pageAccess();
   const params = await searchParams;
@@ -56,19 +71,38 @@ export default async function ReviewQueuePage({
     ? (params.filter as QueueFilter)
     : null;
   const page = Math.max(0, Math.min(10000, Number(params.page) || 0));
+  const category = QUEUE_CATEGORIES.includes(params.category as QueueCategory)
+    ? (params.category as QueueCategory)
+    : "all";
+  const search = (params.q ?? "").slice(0, 100);
+  const options = { category, query: search };
   let filter = requested ?? yours[0] ?? "all";
-  let queue = await reviewQueue(filter, page);
+  let queue = await reviewQueue(filter, page, options);
   // With nothing in your first step, open the next step that has something.
   if (!requested && !queue.items.length)
     for (const f of yours.slice(1))
       if (queue.counts[f]) {
         filter = f;
-        queue = await reviewQueue(f, 0);
+        queue = await reviewQueue(f, 0, options);
         break;
       }
-  const next = yours.includes(filter) ? queue.items[0] : undefined;
-  const href = (f: QueueFilter, p = 0) =>
-    `/review?filter=${f}${p ? `&page=${p}` : ""}`;
+  const next =
+    yours.includes(filter) && category === "all" && !search
+      ? queue.items[0]
+      : undefined;
+  // Links keep the step, the kind and the search unless they change them.
+  const href = (change: {
+    filter?: QueueFilter;
+    category?: QueueCategory;
+    page?: number;
+  }) => {
+    const query = new URLSearchParams({ filter: change.filter ?? filter });
+    const c = change.category ?? category;
+    if (c !== "all") query.set("category", c);
+    if (search) query.set("q", search);
+    if (change.page) query.set("page", String(change.page));
+    return `/review?${query}`;
+  };
   return (
     <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -100,7 +134,7 @@ export default async function ReviewQueuePage({
         {order.map((f) => (
           <Link
             key={f}
-            href={href(f)}
+            href={href({ filter: f })}
             aria-current={f === filter ? "page" : undefined}
             className={`rounded-full border px-4 py-1.5 text-sm ${f === filter ? "bg-slate-900 text-white border-slate-900" : "bg-white"}`}
           >
@@ -108,6 +142,52 @@ export default async function ReviewQueuePage({
           </Link>
         ))}
       </nav>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <nav
+          className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1"
+          aria-label="Kind of document"
+        >
+          {QUEUE_CATEGORIES.filter(
+            (c) => c === "all" || c === category || queue.categories[c] > 0,
+          ).map((c) => (
+            <Link
+              key={c}
+              href={href({ category: c })}
+              aria-current={c === category ? "page" : undefined}
+              className={`rounded-md px-3 py-1 text-sm ${c === category ? "bg-white font-medium shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+            >
+              {categoryLabels[c]} ({queue.categories[c]})
+            </Link>
+          ))}
+        </nav>
+        <form action="/review" className="flex flex-1 items-center gap-2">
+          <input type="hidden" name="filter" value={filter} />
+          {category !== "all" && (
+            <input type="hidden" name="category" value={category} />
+          )}
+          <input
+            type="search"
+            name="q"
+            defaultValue={search}
+            maxLength={100}
+            placeholder="Find by title or number, e.g. 3/2026 or 10(46)"
+            aria-label="Find a document"
+            className="min-w-0 flex-1 rounded-lg border px-3 py-1.5 text-sm"
+          />
+          <button className="rounded-lg border px-3 py-1.5 text-sm">
+            Find
+          </button>
+          {search && (
+            <Link
+              href={`/review?filter=${filter}${category !== "all" ? `&category=${category}` : ""}`}
+              className="text-sm underline"
+            >
+              Clear
+            </Link>
+          )}
+        </form>
+      </div>
 
       {next && (
         <Link
@@ -124,7 +204,11 @@ export default async function ReviewQueuePage({
         </Link>
       )}
       {!queue.items.length && (
-        <p className="text-slate-500">Nothing here right now.</p>
+        <p className="text-slate-500">
+          {search || category !== "all"
+            ? "No documents match. Try another kind, step or search."
+            : "Nothing here right now."}
+        </p>
       )}
       <ul className="space-y-3">
         {queue.items.map((item) => {
@@ -160,13 +244,13 @@ export default async function ReviewQueuePage({
 
       <nav className="flex gap-4 text-sm">
         {page > 0 && (
-          <Link href={href(filter, page - 1)} className="underline">
+          <Link href={href({ page: page - 1 })} className="underline">
             Previous
           </Link>
         )}
         <span>Page {page + 1}</span>
         {queue.hasMore && (
-          <Link href={href(filter, page + 1)} className="underline">
+          <Link href={href({ page: page + 1 })} className="underline">
             Next
           </Link>
         )}
