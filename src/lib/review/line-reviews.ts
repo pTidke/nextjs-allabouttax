@@ -269,6 +269,12 @@ export async function pageForReview(
 
 // ---- Rebuilding the chatbot's passages -------------------------------------
 
+export function mostlyDevanagari(text: string) {
+  const devanagari = (text.match(/[\u0900-\u097F]/g) ?? []).length;
+  const latin = (text.match(/[A-Za-z]/g) ?? []).length;
+  return devanagari > latin;
+}
+
 export type Passage = {
   anchor: string;
   text: string;
@@ -307,7 +313,11 @@ export function passagesFrom(
       const text = (
         decided?.decision === "CORRECTED" ? decided.text! : line.text
       ).trim();
-      if (!text) continue;
+      // Hindi stays evidence only (AD decision of 15 November): the engine
+      // leaves out lines that are wholly Devanagari, and this also leaves out
+      // mixed ones that are mostly Devanagari, such as a Gazette header with
+      // Roman numerals ("[भाग II—खण्ड 3(ii)] भारत का राजपत्र").
+      if (!text || mostlyDevanagari(text)) continue;
       const key = line.table_id ? `t:${line.table_id}` : `p:${line.paragraph}`;
       if (!unit || unit.key !== key) {
         if (unit)

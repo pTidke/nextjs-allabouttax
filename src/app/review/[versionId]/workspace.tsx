@@ -511,9 +511,13 @@ function EngineSummary({
       <p
         className={`text-sm ${p.complete ? "text-emerald-800" : "text-slate-700"}`}
       >
-        {p.decided} of {p.required} lines decided
+        {p.decided} of {p.required} required lines decided
         {p.unreadable ? ` · ${p.unreadable} unreadable` : ""}
         {p.complete ? " · ready to accept below" : ""}
+      </p>
+      <p className="text-sm text-slate-600">
+        {engine.queue.filter((line) => line.decision).length} of{" "}
+        {engine.queue.length} lines checked in all, counting optional ones
       </p>
       <p className="text-xs text-slate-500">
         Read by {engine.engine} on{" "}
