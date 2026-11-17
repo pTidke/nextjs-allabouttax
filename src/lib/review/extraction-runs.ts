@@ -16,6 +16,7 @@ import { requireReviewer } from "./roles";
 
 const run = promisify(execFile);
 export const MAX_DOCUMENT_BYTES = 8 * 1024 * 1024;
+const MAX_FILE_BYTES = 64 * 1024 * 1024;
 
 export type EngineBox = { x0: number; top: number; x1: number; bottom: number };
 export type EngineFlag = { rule: string; severity: string; message: string };
@@ -98,13 +99,16 @@ export async function engineIdentity(bin: string, ref?: string) {
 }
 
 // Current PDF versions awaiting review that this engine has not read yet, and
-// whose text nobody has accepted.
+// whose text nobody has accepted. A version this engine failed on is tried
+// once more on a later run (a limit may have changed since), then left alone.
+export const MAX_ATTEMPTS = 2;
 export async function versionsToExtract(engine: string, limit: number) {
   return prisma.$queryRaw<{ id: string; originalHash: string }[]>(Prisma.sql`
     SELECT v.id, v."originalHash" FROM "TaxVersion" v
     JOIN "TaxDocument" d ON d."latestVersionId" = v.id
     WHERE v.status = 'PENDING' AND v."contentType" LIKE '%pdf%'
-      AND NOT EXISTS (SELECT 1 FROM "ExtractionRun" r WHERE r."versionId" = v.id AND r.engine = ${engine})
+      AND NOT EXISTS (SELECT 1 FROM "ExtractionRun" r WHERE r."versionId" = v.id AND r.engine = ${engine} AND r.status = 'OK')
+      AND (SELECT count(*) FROM "ExtractionRun" r WHERE r."versionId" = v.id AND r.engine = ${engine}) < ${MAX_ATTEMPTS}
       -- Once a person has accepted the text, a newer engine does not reopen it.
       AND COALESCE((SELECT e.decision FROM "ExtractionReview" e WHERE e."versionId" = v.id
         ORDER BY e."createdAt" DESC, e.id DESC LIMIT 1), '') <> 'ACCEPTED'
@@ -119,6 +123,8 @@ type EngineOptions = {
   engine: string;
   timeoutMs?: number;
   easyocrModels?: string;
+  // For tests; the stored result's limit otherwise.
+  maxDocumentBytes?: number;
 };
 
 export async function extractVersion(
@@ -158,12 +164,18 @@ export async function extractVersion(
       if ((error as { code?: number }).code !== 2) throw error;
     }
     const raw = await readFile(join(dir, "out", "document.json"));
-    if (raw.length > MAX_DOCUMENT_BYTES)
-      throw new Error("The engine's result is larger than the 8 MB limit.");
-    const document = validEngineDocument(
-      JSON.parse(raw.toString("utf8")),
-      version.originalHash,
-    );
+    // The engine writes its result indented, about twice the size it takes
+    // once stored; the limit is on what is stored. The file itself is refused
+    // only when it is far too large to read at all.
+    if (raw.length > MAX_FILE_BYTES)
+      throw new Error("The engine's result file is too large to read.");
+    const parsed: unknown = JSON.parse(raw.toString("utf8"));
+    const limit = options.maxDocumentBytes ?? MAX_DOCUMENT_BYTES;
+    if (Buffer.byteLength(JSON.stringify(parsed)) > limit)
+      throw new Error(
+        `The engine's result is larger than the ${Math.round(limit / 1024 / 1024)} MB limit.`,
+      );
+    const document = validEngineDocument(parsed, version.originalHash);
     return prisma.$transaction(async (tx) => {
       const run = await tx.extractionRun.create({
         data: {
@@ -178,6 +190,13 @@ export async function extractVersion(
         select: { id: true, status: true, summary: true },
       });
       const carried = await carryLineDecisions(tx, versionId, run.id, document);
+      // Earlier readings nobody decided anything on are of no further use, and
+      // each holds a full copy of the document's lines: dropped, so storage
+      // does not grow with every engine upgrade. Readings with decisions stay
+      // as the record of what people checked.
+      await tx.extractionRun.deleteMany({
+        where: { versionId, id: { not: run.id }, lineReviews: { none: {} } },
+      });
       return { ...run, carried };
     });
   } catch (error) {
@@ -289,11 +308,28 @@ export async function extractPending(options: {
 
 // ---- Reading runs for the review screens -----------------------------------
 
+// The reading a version is reviewed on: its newest good one. A newer reading
+// that failed does not hide an older one that worked; with no good reading at
+// all, the newest failure, so the page can say why.
+export async function currentRun(
+  client: Prisma.TransactionClient = prisma,
+  versionId: string,
+) {
+  const order = [{ createdAt: "desc" as const }, { id: "desc" as const }];
+  return (
+    (await client.extractionRun.findFirst({
+      where: { versionId, status: "OK" },
+      orderBy: order,
+    })) ??
+    (await client.extractionRun.findFirst({
+      where: { versionId },
+      orderBy: order,
+    }))
+  );
+}
+
 export async function latestRun(versionId: string) {
-  return prisma.extractionRun.findFirst({
-    where: { versionId },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-  });
+  return currentRun(prisma, versionId);
 }
 
 export type LineForReview = Pick<
@@ -388,7 +424,7 @@ export async function pageLines(
     SELECT id, status, jsonb_path_query_first(document,
       '$.pages[*] ? (@.number == $n)', jsonb_build_object('n', ${page}::int)) AS page
     FROM "ExtractionRun" WHERE "versionId" = ${versionId}
-    ORDER BY "createdAt" DESC, id DESC LIMIT 1`;
+    ORDER BY (status = 'OK') DESC, "createdAt" DESC, id DESC LIMIT 1`;
   if (latest?.status !== "OK")
     throw new HttpError(404, "No engine result for this document yet.");
   if (!latest.page)

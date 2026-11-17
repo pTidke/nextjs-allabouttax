@@ -112,7 +112,7 @@ test("the engine reads each pending PDF once per engine version", async () => {
   assert.equal(stored.status, "OK");
   assert.equal(stored.policyVersion, "0.1");
   assert.equal((stored.summary as { flagged: number }).flagged, 2);
-  // A newer engine reads everything again; older runs stay.
+  // A newer engine reads everything again.
   assert.equal(
     (await runs.versionsToExtract("pdfanchor 10.0.0", 10)).length,
     2,
@@ -147,6 +147,69 @@ test("a failed or mismatched result is stored as a failure, without document tex
   assert.match(other.error!, /different file/);
   delete process.env.FAKE_PDFANCHOR;
   assert.equal((await runs.runOverview(third))?.status, "FAILED");
+  // A failure is tried once more on a later run, then left alone.
+  const queued = async () =>
+    (await runs.versionsToExtract("e-fail", 10)).map((v) => v.id);
+  assert.ok((await queued()).includes(third), "tried again once");
+  process.env.FAKE_PDFANCHOR = "fail";
+  await runs.extractVersion(third, { bin, engine: "e-fail" });
+  delete process.env.FAKE_PDFANCHOR;
+  assert.ok(!(await queued()).includes(third), "then left alone");
+});
+
+test("the size limit is on the stored result, not the indented file", async () => {
+  const fourth = (
+    await upload.uploadDocument({
+      bytes: pdf("four"),
+      title: "Four",
+      officialUrl: "https://www.incometax.gov.in/four.pdf",
+    })
+  ).versionId;
+  const plain = await runs.extractVersion(fourth, { bin, engine: "e-plain" });
+  const stored = await db.extractionRun.findUniqueOrThrow({
+    where: { id: plain.id },
+  });
+  const size = Buffer.byteLength(JSON.stringify(stored.document));
+  process.env.FAKE_PDFANCHOR_INDENT = "40";
+  // Indented, the file is several times larger than the limit; stored, it fits.
+  const indented = await runs.extractVersion(fourth, {
+    bin,
+    engine: "e-indent",
+    maxDocumentBytes: size + 100,
+  });
+  assert.equal(indented.status, "OK");
+  const tooBig = await runs.extractVersion(fourth, {
+    bin,
+    engine: "e-small-limit",
+    maxDocumentBytes: size - 100,
+  });
+  delete process.env.FAKE_PDFANCHOR_INDENT;
+  assert.equal(tooBig.status, "FAILED");
+  const row = await db.extractionRun.findUniqueOrThrow({
+    where: { id: tooBig.id },
+  });
+  assert.match(row.error!, /larger than the \d+ MB limit/);
+  // A newer reading that failed does not hide the good one before it.
+  const overview = await runs.runOverview(fourth);
+  assert.equal(overview?.status, "OK");
+  assert.equal(
+    (await runs.pageLines(reviewer, fourth, 1)).runId,
+    indented.id,
+    "the page's lines come from the good reading too",
+  );
+  // Readings nobody decided anything on are dropped once a newer one is
+  // stored: the first good reading is gone, the latest good one and the
+  // failure after it remain.
+  assert.deepEqual(
+    (
+      await db.extractionRun.findMany({
+        where: { versionId: fourth },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, status: true },
+      })
+    ).map((r) => r.status),
+    ["OK", "FAILED"],
+  );
 });
 
 test("the review page gets the lines that need a look, and boxes page by page", async () => {

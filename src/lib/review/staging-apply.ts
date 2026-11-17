@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
-import type { EngineDocument } from "./extraction-runs";
+import { currentRun, type EngineDocument } from "./extraction-runs";
 import {
   applyReviewedLines,
   lineDecisions,
@@ -134,10 +134,7 @@ export async function carryOver(
       results.push({ ...report, outcome: "no pending live copy of this file" });
       continue;
     }
-    const run = await prisma.extractionRun.findFirst({
-      where: { versionId: version.id },
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    });
+    const run = await currentRun(prisma, version.id);
     const usable = run?.status === "OK" && run.document ? run : null;
     const runId = usable?.id ?? "";
     if (

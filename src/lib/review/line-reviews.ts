@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../db";
 import { HttpError } from "../http";
 import {
+  currentRun,
   latestRun,
   overviewOf,
   pageLines,
@@ -437,10 +438,7 @@ export async function applyReviewedLines(
   tx: Prisma.TransactionClient,
   versionId: string,
 ) {
-  const run = await tx.extractionRun.findFirst({
-    where: { versionId },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-  });
+  const run = await currentRun(tx, versionId);
   if (!run || run.status !== "OK" || !run.document) return null;
   const document = run.document as unknown as EngineDocument;
   const rows = await tx.lineReview.findMany({
