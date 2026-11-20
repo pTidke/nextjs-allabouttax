@@ -8,8 +8,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as Adapter, // <--- Connects to DB
   providers: [Google],
   callbacks: {
+    // Only a verified Google address that matches the account signs in.
     signIn({ account, profile, user }) {
-      if (process.env.EXTRACTION_STAGING_ENABLED !== "true") return true;
       return (
         account?.provider === "google" &&
         profile?.email_verified === true &&
