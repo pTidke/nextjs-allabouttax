@@ -1,16 +1,27 @@
 import "./globals.css";
-import { Inter, Playfair_Display } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-import Navbar from "@/components/navigation/Navbar";
+import Header from "@/components/site/Header";
+import Footer from "@/components/site/Footer";
 import Providers from "@/components/providers/Providers";
-import ChatWidget from "@/components/chat/ChatWidget";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const playfair = Playfair_Display({
+// Headlines in the serif, reading text in the sans, labels in the mono.
+const sans = IBM_Plex_Sans({
   subsets: ["latin"],
-  variable: "--font-serif",
+  weight: ["400", "500", "600"],
+  variable: "--font-plex-sans",
+});
+const serif = IBM_Plex_Serif({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-plex-serif",
+});
+const mono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-plex-mono",
 });
 
 import { type Metadata } from "next";
@@ -72,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${playfair.variable} font-sans antialiased text-slate-900`}
+        className={`${sans.variable} ${serif.variable} ${mono.variable} flex min-h-screen flex-col`}
       >
         <script
           type="application/ld+json"
@@ -85,7 +96,7 @@ export default function RootLayout({
                   "@id": "https://allabouttax.in/#website",
                   url: "https://allabouttax.in",
                   name: "All About Tax",
-                  description: "Indian Income-tax Researchn Tax Laws",
+                  description: "Indian income-tax research",
                   publisher: {
                     "@id": "https://allabouttax.in/#organization",
                   },
@@ -114,9 +125,9 @@ export default function RootLayout({
           }}
         />
         <Providers>
-          <Navbar />
-          {children}
-          <ChatWidget />
+          <Header />
+          <div className="flex flex-1 flex-col">{children}</div>
+          <Footer />
         </Providers>
         <Analytics />
         <SpeedInsights />

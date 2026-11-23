@@ -10,8 +10,6 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { LogIn } from "lucide-react";
 import LegalModals from "@/components/modals/LegalModals";
 
 export default function LoginModal() {
@@ -35,41 +33,34 @@ export default function LoginModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          className="font-semibold text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-full px-6"
+        <button
+          type="button"
+          className="min-h-11 cursor-pointer border border-ink bg-paper px-5 hover:bg-shade"
         >
-          Sign In
-        </Button>
+          Sign in
+        </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-white p-0 overflow-hidden border-0 shadow-2xl rounded-3xl">
-        <div className="p-8 pb-6 flex flex-col items-center">
-          <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-6 text-emerald-600">
-            <LogIn size={24} />
-          </div>
-
-          <DialogTitle className="text-center text-3xl font-serif text-slate-900 mb-2">
-            Welcome Back
+      <DialogContent className="border-2 border-ink bg-paper p-0 shadow-none sm:max-w-[440px]">
+        <div className="flex flex-col gap-3 p-8 pb-6">
+          <DialogTitle className="font-serif text-3xl font-bold">
+            Sign in
           </DialogTitle>
-          <DialogDescription className="text-center text-slate-500 text-base max-w-[280px]">
-            Sign in to access your AI tax assistant and personalized insights.
+          <DialogDescription className="text-base text-ink-soft">
+            Sign in to ask questions and keep your chats. It&apos;s free.
           </DialogDescription>
         </div>
-
-        <div className="px-8 pb-8 flex flex-col gap-4">
-          <Button
+        <div className="px-8 pb-8">
+          <button
+            type="button"
             onClick={handleLogin}
             disabled={isLoading}
-            className="w-full h-14 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 shadow-sm transition-all duration-200 text-base font-medium relative group"
+            className="flex min-h-14 w-full cursor-pointer items-center justify-center gap-3 bg-ink text-base font-medium text-paper disabled:opacity-60"
           >
             {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-                Connecting...
-              </span>
+              "Connecting…"
             ) : (
-              <span className="flex items-center justify-center gap-3">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <>
+                <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -88,40 +79,31 @@ export default function LoginModal() {
                   />
                 </svg>
                 Continue with Google
-              </span>
+              </>
             )}
-          </Button>
+          </button>
         </div>
-
-        <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
-          <p className="text-xs text-slate-400 max-w-[300px] mx-auto leading-relaxed">
-            By continuing, you agree to our{" "}
-            <LegalModals
-              type="terms"
-              trigger={
-                <button
-                  type="button"
-                  className="underline hover:text-emerald-600 transition-colors"
-                >
-                  Terms of Service
-                </button>
-              }
-            />{" "}
-            and{" "}
-            <LegalModals
-              type="privacy"
-              trigger={
-                <button
-                  type="button"
-                  className="underline hover:text-emerald-600 transition-colors"
-                >
-                  Privacy Policy
-                </button>
-              }
-            />
-            .
-          </p>
-        </div>
+        <p className="border-t border-rule bg-shade px-8 py-5 text-center text-sm text-ink-soft">
+          By continuing, you agree to our{" "}
+          <LegalModals
+            type="terms"
+            trigger={
+              <button type="button" className="cursor-pointer underline">
+                Terms of Service
+              </button>
+            }
+          />{" "}
+          and{" "}
+          <LegalModals
+            type="privacy"
+            trigger={
+              <button type="button" className="cursor-pointer underline">
+                Privacy Policy
+              </button>
+            }
+          />
+          .
+        </p>
       </DialogContent>
     </Dialog>
   );

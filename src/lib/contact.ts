@@ -69,3 +69,29 @@ export function recentContactMessages(take = 100) {
     take,
   });
 }
+
+// The tax forms waitlist: an email address only, kept as a contact message so
+// it shows in the admin inbox. Joining twice keeps one entry.
+export const WAITLIST_NAME = "Tax forms waitlist";
+export const WAITLIST_MESSAGE =
+  "Please email me when tax form filling opens.";
+
+export async function joinWaitlist(
+  input: Record<string, unknown>,
+  now = new Date(),
+) {
+  if (input.website) return { stored: false };
+  const email =
+    typeof input.email === "string" ? input.email.trim().toLowerCase() : "";
+  if (!EMAIL.test(email) || email.length > CONTACT_LIMITS.email)
+    throw new HttpError(400, "Enter a valid email address.");
+  const already = await prisma.contactMessage.findFirst({
+    where: { email, name: WAITLIST_NAME },
+    select: { id: true },
+  });
+  if (already) return { stored: false };
+  return submitContact(
+    { name: WAITLIST_NAME, email, message: WAITLIST_MESSAGE },
+    now,
+  );
+}

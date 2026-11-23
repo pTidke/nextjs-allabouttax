@@ -77,7 +77,7 @@ For comparison, embeddings for retrieval are far cheaper again (about $0.02 per 
 **A1. Period labels are compared as strings. P0, verified. Fixed.**
 Fixed by matching every label of the same income year (`equivalentPeriods`), in retrieval and coverage, with regression tests in `tests/tax-retrieval.test.ts`. The picker no longer offers Tax Year before 2026-27. The original finding:
 `retrieval.ts:66` requires `v.period = <selected string>`. A document approved for `TY 2026-27` returned 1 passage for `TY 2026-27` and 0 for `FY 2026-27` and `AY 2027-28`, although all three name April 2026 to March 2027. `periodRange()` in `registry.ts` already computes the canonical range, and `coverage.ts` has the same string comparison.
-Fix: store and match on the income-year start date (or the range), and treat the label as display only. The picker in `ChatInterface.tsx` also offers Tax Year for years before the concept exists.
+Fix: store and match on the income-year start date (or the range), and treat the label as display only. The picker in the old `ChatInterface.tsx` also offers Tax Year for years before the concept exists.
 
 **A2. Retrieval ignores conversation history. P0, verified. Fixed, lexically.**
 Fixed without an extra model call: the last three questions of the conversation are searched too, at half weight. This is a keyword-level fix; it will be replaced by a proper standalone-question rewrite when the answer graph is built (10.3). A6 is unchanged: an entity's full name must still be in the current message. The original finding:

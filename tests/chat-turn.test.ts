@@ -258,3 +258,33 @@ test("contact messages are stored, validated, trapped and rate limited", async (
     { status: 429 },
   );
 });
+
+test("the tax forms waitlist keeps one entry per address", async () => {
+  const now = new Date("2026-12-01T10:00:00Z");
+  const before = await db.contactMessage.count();
+  assert.deepEqual(
+    await contact.joinWaitlist({ email: " Ravi@Example.TEST " }, now),
+    { stored: true },
+  );
+  const saved = await db.contactMessage.findFirst({
+    where: { email: "ravi@example.test" },
+  });
+  assert.equal(saved?.name, contact.WAITLIST_NAME);
+  // Joining again, or a bot filling the hidden field, adds nothing.
+  assert.deepEqual(
+    await contact.joinWaitlist({ email: "ravi@example.test" }, now),
+    { stored: false },
+  );
+  assert.deepEqual(
+    await contact.joinWaitlist(
+      { email: "bot@example.test", website: "x" },
+      now,
+    ),
+    { stored: false },
+  );
+  assert.equal(await db.contactMessage.count(), before + 1);
+  for (const email of ["", "not-an-email", 42, `${"a".repeat(250)}@b.test`])
+    await assert.rejects(contact.joinWaitlist({ email }, now), {
+      status: 400,
+    });
+});

@@ -1,5 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useChat } from "@/components/chat/ChatContext";
 
 type Entry = {
@@ -15,6 +17,7 @@ export default function HistoryPanel() {
   const [busy, setBusy] = useState(true);
   const [toDelete, setToDelete] = useState<string | null>(null);
   const { openConversation, clearChat } = useChat();
+  const router = useRouter();
   const load = useCallback(async (before?: string, signal?: AbortSignal) => {
     const response = await fetch(
       `/api/conversations${before ? `?before=${encodeURIComponent(before)}` : ""}`,
@@ -73,75 +76,113 @@ export default function HistoryPanel() {
     }
   }
   return (
-    <main className="max-w-4xl mx-auto px-6 py-12 space-y-6">
-      <h1 className="text-3xl font-semibold">Your conversations</h1>
-      <p className="text-slate-600">
-        Open a saved conversation to continue, download its messages and
-        citations, or permanently delete it. Starting a new chat clears the chat
-        window; it does not delete saved messages.
-      </p>
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 pb-24 pt-16">
+      <header className="flex flex-wrap items-end gap-4 border-b-[3px] border-double border-ink pb-6">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <h1 className="font-serif text-4xl font-bold">Your chats</h1>
+          <p className="text-ink-soft">
+            Open a chat to carry on, download it with its sources, or delete it
+            for good.
+          </p>
+        </div>
+        <Link
+          href="/ask"
+          onClick={clearChat}
+          className="flex min-h-11 items-center bg-ink px-5 text-paper no-underline hover:bg-brand-strong"
+        >
+          + New chat
+        </Link>
+      </header>
       {error && (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="border-2 border-ink bg-paper px-5 py-4">
           {error}
         </p>
       )}
-      {busy && <p role="status">Updating conversations…</p>}
-      {!busy && !rows.length && <p>No saved conversations yet.</p>}
-      {rows.map((row) => (
-        <article key={row.id} className="border rounded-xl p-5 space-y-3">
-          <h2 className="font-semibold">
-            {row.period === "AUTO" ? "" : `${row.period} · `}
-            {new Date(row.createdAt).toLocaleDateString()}
-          </h2>
-          <p className="text-sm text-slate-500">
-            {row._count.messages} messages
-          </p>
-          <div className="flex flex-wrap gap-5 text-sm">
-            <button
-              disabled={busy}
-              onClick={() => void openConversation(row.id)}
-              className="text-emerald-700 underline"
-            >
-              Open conversation
-            </button>
-            <a
-              href={`/api/conversations/${row.id}/export`}
-              className="underline"
-            >
-              Download JSON with citations
-            </a>
-            <button
-              disabled={busy}
-              onClick={() => setToDelete(row.id)}
-              className="text-red-700 underline"
-            >
-              Delete
-            </button>
-          </div>
-          {toDelete === row.id && (
-            <div className="bg-red-50 rounded-lg p-4 space-y-3">
-              <p>
-                This permanently deletes this conversation and its messages from
-                the app database. Provider or backup retention is separate.
-              </p>
+      {busy && (
+        <p role="status" className="label-mono text-ink-soft">
+          Loading…
+        </p>
+      )}
+      {!busy && !rows.length && !error && (
+        <p className="border border-dashed border-ink bg-paper px-5 py-6 text-ink-soft">
+          No chats yet. <Link href="/ask">Ask your first question →</Link>
+        </p>
+      )}
+      <ul className="flex flex-col">
+        {rows.map((row) => (
+          <li key={row.id} className="border-b border-rule py-5">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <button
+                type="button"
                 disabled={busy}
-                onClick={() => void remove(row.id)}
-                className="rounded-lg px-4 py-2 bg-red-700 text-white mr-4"
+                onClick={() => {
+                  void openConversation(row.id);
+                  router.push("/ask");
+                }}
+                className="flex min-w-0 flex-[1_1_16rem] cursor-pointer flex-col text-left"
               >
-                Permanently delete
+                <span className="font-semibold underline">
+                  {new Date(row.createdAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                  {row.period === "AUTO" ? "" : ` · ${row.period}`}
+                </span>
+                <span className="text-[15px] text-ink-soft">
+                  {row._count.messages}{" "}
+                  {row._count.messages === 1 ? "message" : "messages"}
+                </span>
               </button>
-              <button disabled={busy} onClick={() => setToDelete(null)}>
-                Cancel
+              <a
+                href={`/api/conversations/${row.id}/export`}
+                className="text-[15px]"
+              >
+                Download
+              </a>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setToDelete(row.id)}
+                className="cursor-pointer text-[15px] text-[#b3261e] underline"
+              >
+                Delete
               </button>
             </div>
-          )}
-        </article>
-      ))}
+            {toDelete === row.id && (
+              <div className="mt-4 flex flex-col gap-3 border-2 border-ink bg-paper p-5">
+                <p>
+                  This deletes the chat and its messages from our database for
+                  good.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void remove(row.id)}
+                    className="min-h-11 cursor-pointer bg-[#b3261e] px-5 font-semibold text-paper"
+                  >
+                    Delete for good
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setToDelete(null)}
+                    className="min-h-11 cursor-pointer border border-ink px-5"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
       {next && (
         <button
+          type="button"
           disabled={busy}
-          className="underline"
+          className="min-h-11 cursor-pointer self-start border border-ink px-5"
           onClick={() => {
             setBusy(true);
             void load(next)
@@ -149,7 +190,7 @@ export default function HistoryPanel() {
               .finally(() => setBusy(false));
           }}
         >
-          Load older conversations
+          Show older chats
         </button>
       )}
     </main>
