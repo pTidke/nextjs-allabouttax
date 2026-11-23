@@ -178,7 +178,9 @@ export default function AskPanel({
                 }
               }}
               placeholder={
-                messages.length ? "Ask a follow-up…" : "Ask anything about income tax…"
+                messages.length
+                  ? "Ask a follow-up…"
+                  : "Ask anything about income tax…"
               }
               className="max-h-48 min-h-14 min-w-0 flex-1 resize-none bg-transparent px-4 py-3.5 text-[17px] outline-none [field-sizing:content]"
             />

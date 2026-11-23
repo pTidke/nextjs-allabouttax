@@ -19,15 +19,14 @@ type PageSize = {
 const tone: Record<string, string> = {
   flagged: "bg-amber-300/35 border-amber-500",
   blocked: "bg-red-300/40 border-red-600",
-  accepted:
-    "border-emerald-600/40 hover:border-emerald-600 hover:bg-emerald-200/20",
-  excluded: "border-slate-400 border-dashed hover:bg-slate-200/30",
+  accepted: "border-brand/40 hover:border-brand hover:bg-emerald-200/20",
+  excluded: "border-ink border-dashed hover:bg-shade",
   // The word check's own colours (see WordCheck).
   look: "bg-amber-300/30 border-amber-500 hover:bg-amber-300/50",
-  todo: "border-slate-400/50 hover:border-slate-600 hover:bg-slate-200/30",
-  done: "bg-emerald-300/15 border-emerald-600/50 hover:border-emerald-700",
+  todo: "border-ink/50 hover:border-ink hover:bg-shade",
+  done: "bg-emerald-300/15 border-brand/50 hover:border-brand",
   problem: "bg-red-300/30 border-red-600",
-  left: "border-slate-300 border-dashed",
+  left: "border-ink border-dashed",
 };
 export type Outline = {
   line: LineForReview;
@@ -190,7 +189,7 @@ export default function PageViewer({
       ];
   const ready = drawn?.key === drawKey;
   const button =
-    "rounded-md border px-2.5 py-1 text-sm bg-white disabled:opacity-40";
+    "min-h-9 cursor-pointer border border-ink bg-paper px-2.5 text-sm hover:bg-shade disabled:cursor-default disabled:opacity-40";
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -215,7 +214,7 @@ export default function PageViewer({
             >
               Next
             </button>
-            <span className="mx-1 text-slate-300">|</span>
+            <span className="mx-1 text-ink-soft">|</span>
           </>
         )}
         <button
@@ -262,11 +261,11 @@ export default function PageViewer({
       )}
       <div
         ref={frame}
-        className="relative max-h-[78vh] min-h-48 overflow-auto rounded-xl border bg-slate-100"
+        className="relative max-h-[78vh] min-h-48 overflow-auto border border-ink bg-shade"
       >
         {!ready && !error && !loadFailed && (
           <div className="absolute inset-x-0 top-6 z-10 flex justify-center">
-            <span className="rounded-full bg-white px-3 py-1.5 shadow">
+            <span className="border border-ink bg-paper px-3 py-1.5">
               <Spinner
                 label={doc ? "Drawing the page…" : "Loading the original…"}
               />
@@ -274,7 +273,7 @@ export default function PageViewer({
           </div>
         )}
         <div className="relative mx-auto w-fit">
-          <canvas ref={canvas} className="block bg-white shadow" />
+          <canvas ref={canvas} className="block bg-paper" />
           {ready &&
             !!factor &&
             !rotated &&
@@ -288,7 +287,7 @@ export default function PageViewer({
                 }
                 onClick={() => onSelect(line)}
                 style={box(line)}
-                className={`absolute rounded-sm border-2 ${
+                className={`absolute  border-2 ${
                   line.id === shown?.id
                     ? "border-sky-600 bg-sky-300/20 ring-4 ring-sky-500/40"
                     : toneOf.has(line.id)

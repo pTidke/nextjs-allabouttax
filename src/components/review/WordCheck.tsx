@@ -129,7 +129,7 @@ function LineCrop({
 
   if (size.rotation)
     return (
-      <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+      <p className="border border-amber-700 bg-amber-50 p-3 text-sm text-amber-900">
         This page is turned sideways, so no close-up is shown. Find the line on
         the page.
       </p>
@@ -144,13 +144,13 @@ function LineCrop({
       )}
       {!ready && !loadFailed && !failed && (
         <div className="absolute inset-0 z-10 flex items-center justify-center">
-          <span className="rounded-full bg-white px-3 py-1.5 shadow">
+          <span className="border border-ink bg-paper px-3 py-1.5">
             <Spinner label={doc ? "Drawing…" : "Loading the original…"} />
           </span>
         </div>
       )}
       <div
-        className={`relative mx-auto w-fit overflow-hidden rounded-lg border bg-white shadow-sm transition-opacity ${ready ? "" : "opacity-30"}`}
+        className={`relative mx-auto w-fit overflow-hidden border border-ink bg-paper transition-opacity ${ready ? "" : "opacity-30"}`}
       >
         <canvas
           ref={canvas}
@@ -160,7 +160,7 @@ function LineCrop({
         {ready && (
           <div
             aria-hidden
-            className="pointer-events-none absolute rounded-sm border-2 border-amber-500 bg-amber-200/20"
+            className="pointer-events-none absolute border-2 border-amber-500 bg-amber-200/20"
             style={{
               left: (line.box.x0 - crop.x0) * scale - 3,
               top: (line.box.top - crop.top) * scale - 3,
@@ -177,7 +177,7 @@ function LineCrop({
 // Words of one reading that the other reading does not have, so a difference
 // between two readings stands out.
 function Marked({ text, other }: { text: string; other: string | null }) {
-  if (!text.trim()) return <em className="text-slate-400">nothing</em>;
+  if (!text.trim()) return <em className="text-ink-soft">nothing</em>;
   if (other === null) return <>{text}</>;
   const pool = new Map<string, number>();
   for (const word of other.split(/\s+/).filter(Boolean))
@@ -192,7 +192,7 @@ function Marked({ text, other }: { text: string; other: string | null }) {
           return part;
         }
         return (
-          <mark key={i} className="rounded bg-amber-200 px-0.5">
+          <mark key={i} className="bg-amber-200 px-0.5">
             {part}
           </mark>
         );
@@ -475,9 +475,9 @@ export default function WordCheck({
     setError("");
   };
   const nav =
-    "whitespace-nowrap rounded-md border px-2.5 py-1 text-sm bg-white disabled:opacity-40";
+    "min-h-10 cursor-pointer whitespace-nowrap border border-ink bg-paper px-2.5 text-sm hover:bg-shade disabled:cursor-default disabled:opacity-40";
   const choiceButton =
-    "rounded-lg border px-3 py-2.5 text-left text-sm bg-white hover:bg-slate-50 disabled:opacity-40";
+    "min-h-11 cursor-pointer border border-ink bg-paper px-3 py-2.5 text-left text-[15px] hover:bg-shade disabled:cursor-default disabled:opacity-40";
   const elsewhere = nextOpenPage(page);
 
   return (
@@ -494,16 +494,16 @@ export default function WordCheck({
           outlines={outlines}
           navigation={false}
         />
-        <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-soft">
           <Key tone="bg-amber-300/60 border-amber-500">look closely</Key>
-          <Key tone="border-slate-400">to check</Key>
-          <Key tone="bg-emerald-300/30 border-emerald-600">checked</Key>
-          <Key tone="border-dashed border-slate-400">not needed</Key>
+          <Key tone="border-ink">to check</Key>
+          <Key tone="bg-emerald-300/30 border-brand">checked</Key>
+          <Key tone="border-dashed border-ink">not needed</Key>
           <span>Click a line on the page to change it.</span>
         </p>
       </section>
 
-      <section className="space-y-4 rounded-xl border p-4">
+      <section className="space-y-4 border border-ink bg-paper p-5">
         {/* Fixed places for the page buttons, whatever the title's length. */}
         <div className="grid grid-cols-[9.5rem_1fr_9.5rem] items-center gap-2">
           <button
@@ -514,7 +514,7 @@ export default function WordCheck({
           >
             ← Previous page
           </button>
-          <h2 className="text-center font-semibold">
+          <h2 className="text-center font-serif text-lg font-bold">
             Page {page} of {pages.length}
           </h2>
           <button
@@ -528,7 +528,7 @@ export default function WordCheck({
         </div>
         <div className="space-y-1">
           <div
-            className="h-2 overflow-hidden rounded-full bg-slate-100"
+            className="h-2 overflow-hidden bg-shade"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={total}
@@ -536,11 +536,11 @@ export default function WordCheck({
             aria-label="Lines checked"
           >
             <div
-              className="h-full bg-emerald-600 transition-all"
+              className="h-full bg-brand transition-all"
               style={{ width: `${total ? (done / total) * 100 : 100}%` }}
             />
           </div>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-ink-soft">
             {done} of {total} lines checked
             {unreadable ? ` · ${unreadable} can’t be read` : ""}
           </p>
@@ -560,7 +560,7 @@ export default function WordCheck({
         ) : !pageLines ? (
           <Spinner label="Loading the page…" />
         ) : current && canDecide ? (
-          <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/40 p-3">
+          <div className="space-y-3 border-2 border-ink bg-paper p-4">
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="font-semibold">
                 {picked
@@ -570,7 +570,7 @@ export default function WordCheck({
                   : "Look closely at this line"}
               </h3>
               {!picked && looks.length > 1 && (
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-ink-soft">
                   1 of {looks.length} on this page
                 </span>
               )}
@@ -580,13 +580,13 @@ export default function WordCheck({
             )}
             {size && <LineCrop src={src} line={current} size={size} />}
             <div className="space-y-1">
-              <p className="text-xs text-slate-500">We read</p>
+              <p className="text-xs text-ink-soft">We read</p>
               <p className="text-lg font-medium">
                 <Marked text={current.text} other={other?.text ?? null} />
               </p>
               {other && (
                 <>
-                  <p className="pt-1 text-xs text-slate-500">
+                  <p className="pt-1 text-xs text-ink-soft">
                     A second reading says
                   </p>
                   <p>
@@ -596,7 +596,7 @@ export default function WordCheck({
               )}
             </div>
             {decisionRecord(current) && !editing && (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-ink-soft">
                 Now:{" "}
                 {decisionRecord(current)!.decision === "UNREADABLE"
                   ? "can’t be read"
@@ -614,7 +614,7 @@ export default function WordCheck({
                   <button
                     type="button"
                     disabled={busy}
-                    className={`${choiceButton} border-emerald-600 font-medium text-emerald-900`}
+                    className={`${choiceButton} border-2 border-brand bg-brand-soft font-semibold text-brand-strong hover:bg-brand-soft`}
                     onClick={() => void decide("CONFIRMED")}
                   >
                     ✓ It’s right
@@ -642,7 +642,7 @@ export default function WordCheck({
                   <button
                     type="button"
                     disabled={busy}
-                    className="text-slate-700 underline disabled:opacity-40"
+                    className="text-ink underline disabled:opacity-40"
                     onClick={() => void decide("LEFT_OUT")}
                     title="A garbled header, a watermark, a stray page number: kept out of the chatbot’s text"
                   >
@@ -666,7 +666,7 @@ export default function WordCheck({
                   void decide("CORRECTED", draft);
                 }}
               >
-                <label className="block text-sm text-slate-600">
+                <label className="block text-sm text-ink-soft">
                   What the page says
                   <input
                     value={draft}
@@ -676,19 +676,19 @@ export default function WordCheck({
                     }}
                     maxLength={2000}
                     autoFocus
-                    className="mt-1 block w-full rounded-md border bg-white p-2 text-base"
+                    className="mt-1 block w-full border border-ink bg-paper p-2 text-base"
                   />
                 </label>
                 <div className="flex items-center gap-2">
                   <button
                     disabled={busy || !draft.trim()}
-                    className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-40"
+                    className="min-h-10 cursor-pointer bg-ink px-4 text-sm text-paper hover:bg-brand-strong disabled:opacity-40"
                   >
                     Save
                   </button>
                   <button
                     type="button"
-                    className="rounded-lg border bg-white px-3 py-2 text-sm"
+                    className="min-h-10 cursor-pointer border border-ink bg-paper px-4 text-sm hover:bg-shade"
                     onClick={() => setEditing(false)}
                   >
                     Cancel
@@ -709,7 +709,7 @@ export default function WordCheck({
               </button>
             ) : (
               rest.length > 0 && (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-ink-soft">
                   Then the other {rest.length} line
                   {rest.length === 1 ? "" : "s"} of this page, all at once.
                 </p>
@@ -719,7 +719,7 @@ export default function WordCheck({
         ) : (
           <div className="space-y-3">
             {!canDecide ? (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-ink-soft">
                 These are the lines as read. Checking them needs text check
                 access.
               </p>
@@ -730,13 +730,13 @@ export default function WordCheck({
                     ? "Now the rest of this page"
                     : "Check this page"}
                 </h3>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-ink-soft">
                   Compare these lines with the page. If one is wrong, click it
                   to fix it.
                 </p>
               </div>
             ) : checkable.length ? (
-              <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
+              <p className="border border-brand bg-brand-soft p-3 text-sm text-brand-strong">
                 Every line on this page is checked.{" "}
                 {elsewhere ? (
                   <button
@@ -751,7 +751,7 @@ export default function WordCheck({
                 )}
               </p>
             ) : (
-              <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+              <p className="border border-rule bg-shade p-3 text-sm text-ink-soft">
                 Nothing to check on this page.{" "}
                 {elsewhere && (
                   <button
@@ -775,7 +775,7 @@ export default function WordCheck({
                     return (
                       <li
                         key={line.id}
-                        className="flex gap-2 rounded-md px-2 py-1 text-sm text-slate-400"
+                        className="flex gap-2 px-2 py-1 text-sm text-ink-soft"
                       >
                         <span className="w-4 shrink-0" />
                         <span className="min-w-0 flex-1">
@@ -794,10 +794,10 @@ export default function WordCheck({
                         type="button"
                         disabled={!canDecide}
                         onClick={() => pick(line.id)}
-                        className={`flex w-full gap-2 rounded-md px-2 py-1 text-left text-sm hover:bg-slate-50 disabled:hover:bg-transparent ${choice ? "text-slate-500" : ""}`}
+                        className={`flex w-full gap-2  px-2 py-1 text-left text-sm hover:bg-shade disabled:hover:bg-transparent ${choice ? "text-ink-soft" : ""}`}
                       >
                         <span
-                          className={`w-4 shrink-0 ${choice === "UNREADABLE" ? "text-red-700" : "text-emerald-700"}`}
+                          className={`w-4 shrink-0 ${choice === "UNREADABLE" ? "text-red-700" : "text-brand"}`}
                           aria-label={
                             choice === "UNREADABLE"
                               ? "Can’t be read"
@@ -835,7 +835,7 @@ export default function WordCheck({
                 type="button"
                 disabled={busy}
                 onClick={() => void confirmRest()}
-                className="w-full rounded-lg bg-emerald-700 px-4 py-2.5 font-medium text-white disabled:opacity-40"
+                className="min-h-12 w-full cursor-pointer bg-ink px-4 font-semibold text-paper hover:bg-brand-strong disabled:cursor-default disabled:opacity-40"
               >
                 {busy
                   ? "Saving…"
@@ -858,7 +858,7 @@ export default function WordCheck({
 function Key({ tone, children }: { tone: string; children: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className={`inline-block h-3 w-5 rounded-sm border-2 ${tone}`} />
+      <span className={`inline-block h-3 w-5  border-2 ${tone}`} />
       {children}
     </span>
   );

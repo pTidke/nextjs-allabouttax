@@ -29,9 +29,9 @@ export default async function ReviewDocumentPage({
   }
   const { access, version, engine, carriedOver, changedSinceAcceptance } = data;
   return (
-    <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-4">
-      <Link href="/review" className="text-sm underline">
-        Back to the queue
+    <main className="mx-auto w-full max-w-7xl space-y-5 px-4 pb-20 pt-6 md:px-6">
+      <Link href="/review" className="inline-block text-[15px]">
+        ← Back to the queue
       </Link>
       <Workspace
         access={{ extraction: access.extraction, tax: access.tax }}

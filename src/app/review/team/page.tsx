@@ -13,12 +13,14 @@ export default async function TeamPage() {
   await pageAccess("admin");
   const team = await reviewTeam();
   return (
-    <main className="max-w-3xl mx-auto px-6 py-10 space-y-6">
-      <Link href="/review" className="text-sm underline">
-        Back to the queue
+    <main className="mx-auto w-full max-w-3xl space-y-6 px-6 pb-20 pt-10">
+      <Link href="/review" className="inline-block text-[15px]">
+        ← Back to the queue
       </Link>
-      <h1 className="text-3xl font-semibold">Reviewers</h1>
-      <ul className="text-sm text-slate-600 list-disc pl-5 space-y-1">
+      <h1 className="border-b-[3px] border-double border-ink pb-5 font-serif text-4xl font-bold">
+        Reviewers
+      </h1>
+      <ul className="text-sm text-ink-soft list-disc pl-5 space-y-1">
         <li>
           <strong>Text check</strong>: confirms the extracted text matches the
           original document.

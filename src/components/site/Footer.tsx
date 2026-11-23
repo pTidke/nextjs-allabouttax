@@ -9,7 +9,10 @@ export default function Footer() {
         <span className="text-rule">
           Sources: incometaxindia.gov.in · not tax advice
         </span>
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 md:ml-auto">
+        <nav
+          aria-label="Footer"
+          className="flex flex-wrap gap-x-6 gap-y-2 md:ml-auto"
+        >
           <Link href="/library" className="text-paper">
             Library
           </Link>
@@ -19,7 +22,10 @@ export default function Footer() {
           <LegalModals
             type="privacy"
             trigger={
-              <button type="button" className="cursor-pointer underline underline-offset-3">
+              <button
+                type="button"
+                className="cursor-pointer underline underline-offset-3"
+              >
                 Privacy
               </button>
             }
@@ -27,7 +33,10 @@ export default function Footer() {
           <LegalModals
             type="terms"
             trigger={
-              <button type="button" className="cursor-pointer underline underline-offset-3">
+              <button
+                type="button"
+                className="cursor-pointer underline underline-offset-3"
+              >
                 Terms
               </button>
             }

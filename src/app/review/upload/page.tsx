@@ -13,12 +13,14 @@ export default async function UploadPage() {
   const access = await pageAccess();
   if (!access.admin && !access.extraction) redirect("/review");
   return (
-    <main className="max-w-2xl mx-auto px-6 py-10 space-y-6">
-      <Link href="/review" className="text-sm underline">
-        Back to the queue
+    <main className="mx-auto w-full max-w-2xl space-y-6 px-6 pb-20 pt-10">
+      <Link href="/review" className="inline-block text-[15px]">
+        ← Back to the queue
       </Link>
-      <h1 className="text-3xl font-semibold">Upload an official PDF</h1>
-      <p className="text-slate-600">
+      <h1 className="border-b-[3px] border-double border-ink pb-5 font-serif text-4xl font-bold">
+        Upload an official PDF
+      </h1>
+      <p className="text-ink-soft">
         For documents the automatic listings do not cover. The file you upload
         is what gets checked and indexed; the official address is what the
         chatbot will cite. It joins the queue for a text check and tax review

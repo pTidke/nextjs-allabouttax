@@ -37,16 +37,16 @@ function status(
   if (!item.chunks && !item.hasRun)
     return {
       text: "Waiting to be read (within two hours)",
-      tone: "bg-slate-100 text-slate-600",
+      tone: "border-rule bg-shade text-ink-soft",
     };
   if (item.textDecision === "ACCEPTED")
     return {
       text: "Words checked · details next",
-      tone: "bg-emerald-100 text-emerald-900",
+      tone: "border-brand bg-brand-soft text-brand-strong",
     };
   if (item.textDecision === "NEEDS_CHANGES")
-    return { text: "Sent back", tone: "bg-red-100 text-red-900" };
-  return { text: "Words to check", tone: "bg-amber-100 text-amber-900" };
+    return { text: "Sent back", tone: "border-red-800 bg-red-50 text-red-900" };
+  return { text: "Words to check", tone: "border-ink bg-paper text-ink" };
 }
 
 export default async function ReviewQueuePage({
@@ -104,157 +104,192 @@ export default async function ReviewQueuePage({
     return `/review?${query}`;
   };
   return (
-    <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold">Review</h1>
-          <p className="text-slate-600 mt-1">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-20 pt-10">
+      <header className="flex flex-wrap items-end gap-4 border-b-[3px] border-double border-ink pb-6">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <p className="label-mono text-brand">Review desk</p>
+          <h1 className="font-serif text-4xl font-bold">Documents to check</h1>
+          <p className="text-ink-soft">
             Each document is checked in two steps, the words and then the
             details, before the chatbot can use it.
           </p>
         </div>
-        <nav className="flex gap-4 text-sm">
+        <nav className="flex flex-wrap gap-2 text-[15px]">
           {(access.extraction || access.admin) && (
             <Link
               href="/review/upload"
-              className="rounded-lg bg-emerald-700 text-white px-4 py-2"
+              className="flex min-h-11 items-center bg-ink px-4 text-paper no-underline hover:bg-brand-strong"
             >
               Upload a PDF
             </Link>
           )}
           {access.admin && (
-            <Link href="/review/team" className="rounded-lg border px-4 py-2">
+            <Link
+              href="/review/team"
+              className="flex min-h-11 items-center border border-ink bg-paper px-4 no-underline hover:bg-shade"
+            >
               Reviewers
             </Link>
           )}
         </nav>
       </header>
 
-      <nav className="flex flex-wrap gap-2" aria-label="Filter the queue">
-        {order.map((f) => (
-          <Link
-            key={f}
-            href={href({ filter: f })}
-            aria-current={f === filter ? "page" : undefined}
-            className={`rounded-full border px-4 py-1.5 text-sm ${f === filter ? "bg-slate-900 text-white border-slate-900" : "bg-white"}`}
-          >
-            {labels[f]} ({queue.counts[f]})
-          </Link>
-        ))}
-      </nav>
-
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <nav
-          className="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1"
-          aria-label="Kind of document"
-        >
-          {QUEUE_CATEGORIES.filter(
-            (c) => c === "all" || c === category || queue.categories[c] > 0,
-          ).map((c) => (
-            <Link
-              key={c}
-              href={href({ category: c })}
-              aria-current={c === category ? "page" : undefined}
-              className={`rounded-md px-3 py-1 text-sm ${c === category ? "bg-white font-medium shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              {categoryLabels[c]} ({queue.categories[c]})
-            </Link>
-          ))}
-        </nav>
-        <form action="/review" className="flex flex-1 items-center gap-2">
-          <input type="hidden" name="filter" value={filter} />
-          {category !== "all" && (
-            <input type="hidden" name="category" value={category} />
-          )}
-          <input
-            type="search"
-            name="q"
-            defaultValue={search}
-            maxLength={100}
-            placeholder="Find by title or number, e.g. 3/2026 or 10(46)"
-            aria-label="Find a document"
-            className="min-w-0 flex-1 rounded-lg border px-3 py-1.5 text-sm"
-          />
-          <button className="rounded-lg border px-3 py-1.5 text-sm">
-            Find
-          </button>
-          {search && (
-            <Link
-              href={`/review?filter=${filter}${category !== "all" ? `&category=${category}` : ""}`}
-              className="text-sm underline"
-            >
-              Clear
-            </Link>
-          )}
-        </form>
-      </div>
-
       {next && (
         <Link
           href={`/review/${next.versionId}`}
-          className="flex items-center justify-between gap-4 rounded-xl bg-slate-900 p-4 text-white hover:bg-slate-800"
+          className="flex flex-wrap items-center gap-x-4 gap-y-1 border-2 border-ink bg-ink px-5 py-4 text-paper no-underline hover:bg-brand-strong"
         >
-          <span>
-            <span className="block text-sm text-slate-300">
-              Next for you · {labels[filter].replace(/^\d\. /, "")}
-            </span>
-            <span className="font-medium">{next.title}</span>
+          <span className="bg-brand-soft px-2 py-0.5 font-mono text-xs font-semibold text-ink">
+            NEXT FOR YOU
           </span>
-          <span className="shrink-0 font-medium">Start →</span>
+          <span className="min-w-0 flex-[1_1_18rem]">
+            <span className="text-rule">
+              {labels[filter].replace(/^\d\. /, "")} ·{" "}
+            </span>
+            <strong className="font-semibold">{next.title}</strong>
+          </span>
+          <span className="font-semibold">Start →</span>
         </Link>
       )}
-      {!queue.items.length && (
-        <p className="text-slate-500">
-          {search || category !== "all"
-            ? "No documents match. Try another kind, step or search."
-            : "Nothing here right now."}
-        </p>
-      )}
-      <ul className="space-y-3">
-        {queue.items.map((item) => {
-          const state = status(item);
-          return (
-            <li key={item.versionId}>
-              <Link
-                href={`/review/${item.versionId}`}
-                className="block border rounded-xl p-4 hover:bg-slate-50 space-y-2"
+
+      <section className="border border-ink bg-paper">
+        <nav
+          aria-label="Step"
+          className="grid grid-cols-2 gap-px border-b border-ink bg-rule md:grid-cols-4"
+        >
+          {order.map((f) => (
+            <Link
+              key={f}
+              href={href({ filter: f })}
+              aria-current={f === filter ? "page" : undefined}
+              className={`flex min-h-14 flex-col justify-center px-4 py-2 no-underline ${f === filter ? "bg-ink text-paper" : "bg-paper hover:bg-shade"}`}
+            >
+              <span className="font-semibold">
+                {labels[f].replace(/^\d\. /, "")}
+              </span>
+              <span
+                className={`font-mono text-xs ${f === filter ? "text-rule" : "text-ink-soft"}`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <span className="font-medium">{item.title}</span>
+                {f === "text" ? "STEP 1 · " : f === "tax" ? "STEP 2 · " : ""}
+                {queue.counts[f]} waiting
+              </span>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-rule bg-shade px-4 py-3 text-[15px]">
+          <nav aria-label="Kind of document" className="flex flex-wrap">
+            {QUEUE_CATEGORIES.filter(
+              (c) => c === "all" || c === category || queue.categories[c] > 0,
+            ).map((c, i) => (
+              <Link
+                key={c}
+                href={href({ category: c })}
+                aria-current={c === category ? "page" : undefined}
+                className={`flex min-h-10 items-center border border-ink px-3 no-underline ${i ? "-ml-px" : ""} ${c === category ? "bg-ink text-paper" : "bg-paper hover:bg-shade"}`}
+              >
+                {categoryLabels[c]} ({queue.categories[c]})
+              </Link>
+            ))}
+          </nav>
+          <form
+            action="/review"
+            className="flex min-w-0 flex-[1_1_18rem] items-center gap-2"
+          >
+            <input type="hidden" name="filter" value={filter} />
+            {category !== "all" && (
+              <input type="hidden" name="category" value={category} />
+            )}
+            <input
+              type="search"
+              name="q"
+              defaultValue={search}
+              maxLength={100}
+              placeholder="Find by title or number, e.g. 3/2026 or 10(46)"
+              aria-label="Find a document"
+              className="min-h-10 min-w-0 flex-1 border border-ink bg-paper px-3"
+            />
+            <button className="min-h-10 cursor-pointer border border-ink bg-paper px-4 hover:bg-shade">
+              Find
+            </button>
+            {search && (
+              <Link
+                href={`/review?filter=${filter}${category !== "all" ? `&category=${category}` : ""}`}
+              >
+                Clear
+              </Link>
+            )}
+          </form>
+        </div>
+
+        {!queue.items.length && (
+          <p className="px-5 py-8 text-ink-soft">
+            {search || category !== "all"
+              ? "No documents match. Try another kind, step or search."
+              : "Nothing here right now."}
+          </p>
+        )}
+        <ul>
+          {queue.items.map((item) => {
+            const state = status(item);
+            return (
+              <li
+                key={item.versionId}
+                className="border-b border-rule last:border-b-0"
+              >
+                <Link
+                  href={`/review/${item.versionId}`}
+                  className="flex flex-wrap items-start gap-x-4 gap-y-2 px-5 py-4 no-underline hover:bg-shade"
+                >
+                  <span className="flex min-w-0 flex-[1_1_22rem] flex-col gap-1">
+                    <span className="font-semibold">{item.title}</span>
+                    <span className="text-sm text-ink-soft">
+                      {item.sourceKind === "UPLOAD"
+                        ? "Uploaded"
+                        : item.sourceName}
+                      {item.issuedAt &&
+                        ` · issued ${item.issuedAt.toISOString().slice(0, 10)}`}
+                      {` · added ${item.fetchedAt.toISOString().slice(0, 10)}`}
+                    </span>
+                    {item.textDecision === "NEEDS_CHANGES" && item.textNote && (
+                      <span className="text-sm text-red-800">
+                        {item.textNote}
+                      </span>
+                    )}
+                  </span>
                   <span
-                    className={`text-xs rounded-full px-3 py-1 ${state.tone}`}
+                    className={`border px-2.5 py-0.5 font-mono text-xs ${state.tone}`}
                   >
                     {state.text}
                   </span>
-                </div>
-                <p className="text-xs text-slate-500">
-                  {item.sourceKind === "UPLOAD" ? "Uploaded" : item.sourceName}
-                  {item.issuedAt &&
-                    ` · issued ${item.issuedAt.toISOString().slice(0, 10)}`}
-                  {` · added ${item.fetchedAt.toISOString().slice(0, 10)}`}
-                </p>
-                {item.textDecision === "NEEDS_CHANGES" && item.textNote && (
-                  <p className="text-xs text-red-800">{item.textNote}</p>
-                )}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
 
-      <nav className="flex gap-4 text-sm">
-        {page > 0 && (
-          <Link href={href({ page: page - 1 })} className="underline">
-            Previous
-          </Link>
-        )}
-        <span>Page {page + 1}</span>
-        {queue.hasMore && (
-          <Link href={href({ page: page + 1 })} className="underline">
-            Next
-          </Link>
-        )}
-      </nav>
+        <nav className="flex items-center gap-3 border-t border-ink px-4 py-3 text-[15px]">
+          <span className="text-ink-soft">Page {page + 1}</span>
+          <span className="ml-auto flex">
+            {page > 0 && (
+              <Link
+                href={href({ page: page - 1 })}
+                className="flex min-h-10 items-center border border-ink bg-paper px-3 no-underline hover:bg-shade"
+              >
+                ← Previous
+              </Link>
+            )}
+            {queue.hasMore && (
+              <Link
+                href={href({ page: page + 1 })}
+                className="-ml-px flex min-h-10 items-center border border-ink bg-paper px-3 no-underline hover:bg-shade"
+              >
+                Next →
+              </Link>
+            )}
+          </span>
+        </nav>
+      </section>
     </main>
   );
 }

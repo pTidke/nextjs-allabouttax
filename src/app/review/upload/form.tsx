@@ -17,7 +17,7 @@ export default function UploadForm() {
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [progress, setProgress] = useState("");
-  const field = "block w-full border rounded-lg p-2 mt-1";
+  const field = "mt-1 block min-h-10 w-full border border-ink bg-paper p-2";
   return (
     <form
       className="space-y-4"
@@ -114,7 +114,7 @@ export default function UploadForm() {
           placeholder="https://www.incometaxindia.gov.in/..."
           className={field}
         />
-        <span className="text-xs font-normal text-slate-500">
+        <span className="text-xs font-normal text-ink-soft">
           An https link on a .gov.in or .nic.in site, where the public can read
           the same document.
         </span>
@@ -126,7 +126,7 @@ export default function UploadForm() {
       {error && (
         <p
           role="alert"
-          className="rounded-lg bg-red-50 p-3 text-sm text-red-800"
+          className="border border-red-800 bg-red-50 p-3 text-sm text-red-800"
         >
           {error}
         </p>
@@ -134,7 +134,7 @@ export default function UploadForm() {
       {result && (
         <p
           role="status"
-          className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900"
+          className="border border-brand bg-brand-soft p-3 text-sm text-brand-strong"
         >
           Uploaded.{" "}
           {result.needsOcr
@@ -147,7 +147,7 @@ export default function UploadForm() {
       )}
       <button
         disabled={busy}
-        className="rounded-lg bg-emerald-700 text-white px-5 py-2 disabled:opacity-40"
+        className="min-h-12 cursor-pointer bg-ink px-6 font-semibold text-paper hover:bg-brand-strong disabled:opacity-40"
       >
         {busy ? progress || "Uploading…" : "Upload"}
       </button>

@@ -55,7 +55,9 @@ export default async function LibraryPage({
         {!!coverage.unavailableDocuments && (
           <p className="border-l-4 border-ink bg-paper px-4 py-3">
             {coverage.unavailableDocuments} more checked{" "}
-            {coverage.unavailableDocuments === 1 ? "document is" : "documents are"}{" "}
+            {coverage.unavailableDocuments === 1
+              ? "document is"
+              : "documents are"}{" "}
             paused while their source is checked again.
           </p>
         )}
