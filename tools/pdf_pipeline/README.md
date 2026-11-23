@@ -546,7 +546,7 @@ tools/pdf_pipeline/.venv/bin/tax-pdf trial-scan-tables \
   --out work/pdf-lab/demo-v2/benchmarks/FRESH_TABLE_TRANSFER
 ```
 
-[The staging handoff design](../../docs/pdf-staging-handoff.md) defines the next implementation slice: a pure, versioned import validator with complete-clean and incomplete-table fixtures, then authenticated extraction revisions, separate tax review and a dry-run release manifest. It identifies the current ingestion/schema boundary and keeps lab imports away from existing `TaxChunk` writes. Production authentication integration, storage selection, acceptance and retrieval are designed but not implemented here. No production credentials, paid model/OCR service or index changes were needed for this trial.
+The staging handoff design (`docs/pdf-staging-handoff.md`, deleted with the staging code on 23 November 2026) defined the next implementation slice: a pure, versioned import validator with complete-clean and incomplete-table fixtures, then authenticated extraction revisions, separate tax review and a dry-run release manifest. It identifies the current ingestion/schema boundary and keeps lab imports away from existing `TaxChunk` writes. Production authentication integration, storage selection, acceptance and retrieval are designed but not implemented here. No production credentials, paid model/OCR service or index changes were needed for this trial.
 
 ## Isolated staging import boundary
 

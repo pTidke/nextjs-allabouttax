@@ -34,7 +34,7 @@ The first is under way as a local extraction lab, a hosted staging review screen
 | PDF handling (live) | Text-layer extraction only. No OCR in the live path. Scanned or >8 MB PDFs are rejected. |
 | PDF extraction lab | Python lab, run by hand on a developer machine: native text with source geometry, Tesseract (English, Hindi) and EasyOCR (English) comparisons, scan recovery, table proposals. Nothing is selected or accepted automatically. |
 | Engine (separate repository) | `pdfanchor` in [`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack): a working skeleton of the open-source engine. PDF in; `document.json`, Markdown and RAG chunks out, with a rule-based accepted / flagged / blocked verdict per line. Not yet at parity with the lab. |
-| Staging review | **Retired on 16 November 2026 (R3).** Its pages, API routes and hosted repair queue are removed; its work was carried into the live review records by a `carry-over` workflow, last run on 20 November 2026, after which the workflow and the staging database were deleted. The library code (`src/lib/extraction-staging/`, including the Azure OCR repair worker) stays as a switched-off backup. |
+| Staging review | **Retired on 16 November 2026 (R3).** Its pages, API routes and hosted repair queue are removed; its work was carried into the live review records by a `carry-over` workflow, last run on 20 November 2026, after which the workflow and the staging database were deleted. Its code (`src/lib/extraction-staging/`, the operator scripts, the Azure OCR repair worker and the SQL) was deleted on 23 November 2026. |
 | Retrieval | PostgreSQL full-text search. No embeddings, no reranking. |
 | Orchestration | Plain TypeScript functions in one route handler. No LangChain or LangGraph. |
 | Review | Fully manual, one document at a time, by an `ADMIN` user. Nothing is auto-approved. |
@@ -124,8 +124,6 @@ tests/                        unit and PGlite integration tests
 docs/                         runbooks, improvement areas, roadmap
 status.md                     running status log; read first when resuming work
 tools/pdf_pipeline/           the Python extraction lab (CLI `tax-pdf`), its benchmarks and schemas
-tools/extraction-staging/     SQL for the isolated staging database
-src/lib/extraction-staging/   staging store, contract, repair worker
 ```
 
 ## 6. Data model
@@ -236,7 +234,7 @@ The response is returned whole; nothing is streamed.
 
 ### 7.6 Extraction lab and staging review
 
-*Retired on 16 November 2026: the `/staging` pages, `/api/staging` routes and the hosted repair queue were removed after the carry-over (R3). This section is kept as history; the library code it describes remains, disconnected, as a backup.*
+*Retired on 16 November 2026: the `/staging` pages, `/api/staging` routes and the hosted repair queue were removed after the carry-over (R3). This section is kept as history. The staging application code (`src/lib/extraction-staging/`, its scripts and SQL) and the staging database were deleted on 23 November 2026; the lab in `tools/pdf_pipeline/` remains.*
 
 This is a separate system, developed on the `codex/pdf-processing-lab` branch and merged on 15 November 2026. It does not read or write the live library, and the live ingestion in 7.1 is unchanged by it. Staging routes return 404 unless `EXTRACTION_STAGING_ENABLED` is set.
 
