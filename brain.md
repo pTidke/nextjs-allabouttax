@@ -3,7 +3,7 @@
 Single source of truth for what this platform is, how it is built, and why it is built that way.
 Read this before changing architecture. Update it in the same change whenever a decision here stops being true.
 
-- The project has three parts: the **live product** (chatbot, ingestion, admin review), the **extraction lab and staging review** (merged from `codex/pdf-processing-lab` on 15 November 2026; staging is switched off by default), and, in its own repository, the **`pdfanchor` engine** ([`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack)), the start of the open-source extraction library. Sections 1–7.5 describe the live product, 7.6 the lab and staging, 7.7 the engine.
+- The project has three parts: the **live product** (chatbot, ingestion, admin review), the **extraction lab and staging review** (merged from `codex/pdf-processing-lab` on 15 November 2026; staging is switched off by default), and, in its own repository, the **`pdfanchor` engine** ([`pTidke/pdfanchor`](https://github.com/pTidke/pdfanchor)), the start of the open-source extraction library. Sections 1–7.5 describe the live product, 7.6 the lab and staging, 7.7 the engine.
 - Verified on 15 November 2026 by reading the source and running the tests: 34/34 on the live code before the merge; 328/328 Python tests in the lab; 30/30 in `pdfanchor`. After the merge the Node suite shows 62 passed and 3 cancelled on Node 22.23, all in `tests/extraction-storage.test.ts`; CI uses Node 24.
 - Production and staging figures (user counts, corpus counts, deployment state) are quoted from `docs/` and `status.md`; they were not re-read from the live databases.
 - `status.md` is the day-to-day status log, and `AGENTS.md` says to read it first. This file is the architectural reference. [`docs/improvement-areas.md`](docs/improvement-areas.md) explains what should change and why; [`docs/roadmap.md`](docs/roadmap.md) lists the work in order.
@@ -33,7 +33,7 @@ The first is under way as a local extraction lab, a hosted staging review screen
 | Sources | CBDT circulars, CBDT notifications (current calendar year only), one e-filing FAQ page. |
 | PDF handling (live) | Text-layer extraction only. No OCR in the live path. Scanned or >8 MB PDFs are rejected. |
 | PDF extraction lab | Python lab, run by hand on a developer machine: native text with source geometry, Tesseract (English, Hindi) and EasyOCR (English) comparisons, scan recovery, table proposals. Nothing is selected or accepted automatically. |
-| Engine (separate repository) | `pdfanchor` in [`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack): a working skeleton of the open-source engine. PDF in; `document.json`, Markdown and RAG chunks out, with a rule-based accepted / flagged / blocked verdict per line. Not yet at parity with the lab. |
+| Engine (separate repository) | `pdfanchor` in [`pTidke/pdfanchor`](https://github.com/pTidke/pdfanchor): a working skeleton of the open-source engine. PDF in; `document.json`, Markdown and RAG chunks out, with a rule-based accepted / flagged / blocked verdict per line. Not yet at parity with the lab. |
 | Staging review | **Retired on 16 November 2026 (R3).** Its pages, API routes and hosted repair queue are removed; its work was carried into the live review records by a `carry-over` workflow, last run on 20 November 2026, after which the workflow and the staging database were deleted. Its code (`src/lib/extraction-staging/`, the operator scripts, the Azure OCR repair worker and the SQL) was deleted on 23 November 2026. |
 | Retrieval | PostgreSQL full-text search. No embeddings, no reranking. |
 | Orchestration | Plain TypeScript functions in one route handler. No LangChain or LangGraph. |
@@ -281,9 +281,9 @@ This is a separate system, developed on the `codex/pdf-processing-lab` branch an
 
 Recorded state (`status.md`, 14 November 2026): Notification 1/2026 has an accepted extraction awaiting its first tax review; Circular 3/2026 has a saved recheck draft and is blocked by its partial table scope.
 
-### 7.7 The `pdfanchor` engine (repository `pTidke/benzeneblack`)
+### 7.7 The `pdfanchor` engine (repository `pTidke/pdfanchor`)
 
-The planned open-source library: given any PDF, produce output a language model can read and a vector index can ingest. Character recognition is one stage inside it. It is a self-contained Python package in its own repository, https://github.com/pTidke/benzeneblack, with no dependency on this one. This application will use it as an installed dependency (`pip install "pdfanchor @ git+https://github.com/pTidke/benzeneblack"`) and treat it as a black box that produces `document.json`. It is licensed under Apache 2.0 and has not been released to PyPI yet.
+The planned open-source library: given any PDF, produce output a language model can read and a vector index can ingest. Character recognition is one stage inside it. It is a self-contained Python package in its own repository, https://github.com/pTidke/pdfanchor, with no dependency on this one. This application will use it as an installed dependency (`pip install "pdfanchor @ git+https://github.com/pTidke/pdfanchor"`) and treat it as a black box that produces `document.json`. It is licensed under Apache 2.0 and has not been released to PyPI yet.
 
 ```
 PDF ─▶ preflight ─▶ text layer + geometry ─▶ OCR (scan, or cross-check)
@@ -431,7 +431,7 @@ Unused leftovers: `src/sanity/client.ts` and the `@sanity/client` dependency; th
 | Hosting | Pilot stays on free tiers: Vercel, Neon, GitHub Actions. The repository is public. |
 | Audience and scope | Everyone and all tax material, as the destination. |
 | Reviewers | The owner for extraction; a chartered accountant for tax applicability, one to two hours a day. |
-| Extraction engine | Open-sourced as a separate library named `pdfanchor`, in [`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack). |
+| Extraction engine | Open-sourced as a separate library named `pdfanchor`, in [`pTidke/pdfanchor`](https://github.com/pTidke/pdfanchor). |
 | Languages | Python for extraction, TypeScript for everything online. |
 | Forms product | Parked. |
 

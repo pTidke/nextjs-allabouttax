@@ -8,7 +8,7 @@ import { prisma } from "../db";
 import { HttpError } from "../http";
 import { requireReviewer } from "./roles";
 
-// The extraction engine (pdfanchor, github.com/pTidke/benzeneblack) reads each
+// The extraction engine (pdfanchor, github.com/pTidke/pdfanchor) reads each
 // pending PDF and returns every line with its place on the page, the text the
 // reader found, any other reading of the same place, and a rule-based status:
 // accepted, flagged or blocked. Runs are stored as they come back and never
