@@ -39,7 +39,7 @@ jobs:
           sudo apt-get install -y -q tesseract-ocr tesseract-ocr-hin
           # CPU-only PyTorch for EasyOCR, the second reader on scanned pages.
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install "pdfanchor[easyocr] @ git+https://github.com/pTidke/benzeneblack@${PDFANCHOR_REF}"
+          pip install "pdfanchor[easyocr] @ git+https://github.com/pTidke/pdfanchor@${PDFANCHOR_REF}"
       - uses: actions/cache@v4
         with:
           path: /home/runner/easyocr-models

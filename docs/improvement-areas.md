@@ -36,7 +36,7 @@ The Python lab itself calls no language model. Tesseract, EasyOCR and Docling al
 | **Free tier; the repository is public.** | Extraction runs in GitHub Actions, where minutes are unmetered for public repositories. No always-on worker, no paid OCR service. |
 | **Everyone and everything.** | A destination. Order the corpus by value (C8). |
 | **One chartered accountant, one to two hours a day, for tax review.** | Roughly 7 to 14 reviewer hours a week. Every automation choice should be judged by the minutes it saves per document. |
-| **The engine becomes an open-source library.** | It is `pdfanchor`, in its own repository ([`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack)), generic and standalone; tax-specific rules stay in the application (10.1). |
+| **The engine becomes an open-source library.** | It is `pdfanchor`, in its own repository ([`pTidke/pdfanchor`](https://github.com/pTidke/pdfanchor)), generic and standalone; tax-specific rules stay in the application (10.1). |
 | **Python for extraction, TypeScript online.** | See 10.4. |
 | **Forms product parked.** | Section 10.5 is a short note only. |
 
@@ -437,7 +437,7 @@ Steps 1 and 2 can run in parallel; they need different people. Step 8 can start 
 
 ## 12. Still open
 
-1. **Licence for the engine.** The name `pdfanchor` is settled and the code is in `pTidke/benzeneblack`. A licence must be chosen before it can be reused or published to PyPI; the engines it builds on are permissively licensed, so a permissive licence is possible.
+1. **Licence for the engine.** The name `pdfanchor` is settled and the code is in `pTidke/pdfanchor`. A licence must be chosen before it can be reused or published to PyPI; the engines it builds on are permissively licensed, so a permissive licence is possible.
 2. **How this application pins the engine.** By commit from the repository for now; by released version once it is on PyPI.
 3. **Redistribution of test documents.** Whether official PDFs may be shipped as a public test set with the library, or whether it should carry synthetic fixtures only.
 4. **Model-proposed metadata.** Parked as a possible later assist (section 2); revisit once the accountant has reviewed a few dozen documents and the time per document is known.

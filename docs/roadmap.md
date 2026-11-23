@@ -41,7 +41,7 @@ Done when: "accepted" has a measured error rate per class.
 
 ## M3. The engine, to parity with the lab
 
-In the engine repository, [`pTidke/benzeneblack`](https://github.com/pTidke/benzeneblack). Work through its `docs/porting-from-the-lab.md`:
+In the engine repository, [`pTidke/pdfanchor`](https://github.com/pTidke/pdfanchor). Work through its `docs/porting-from-the-lab.md`:
 
 - [x] Skeleton: contract, text layer, Tesseract, cross-check, validators, policy, Markdown, chunks, CLI, tests
 - [ ] Per-page process isolation and budgets
