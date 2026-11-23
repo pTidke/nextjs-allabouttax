@@ -25,11 +25,11 @@ type ChatState = {
   messages: ChatMessage[];
   input: string;
   setInput: React.Dispatch<React.SetStateAction<string>>;
-  isOpen: boolean;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   suggestions: string[];
   user: Session["user"] | undefined;
   handleSubmit: (event?: React.FormEvent) => Promise<void>;
+  // Asks this question now, whatever is in the input.
+  ask: (message: string) => Promise<void>;
   clearChat: () => void;
   openConversation: (id: string) => Promise<void>;
   error: string | null;
@@ -47,7 +47,6 @@ function ChatStateProvider({
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number | null>(null);
@@ -78,7 +77,6 @@ function ChatStateProvider({
     const current = generation.current;
     const abort = new AbortController();
     controller.current = abort;
-    setIsOpen(true);
     setStatus("in_progress");
     try {
       const response = await fetch(
@@ -108,13 +106,17 @@ function ChatStateProvider({
   }
   async function handleSubmit(event?: React.FormEvent) {
     event?.preventDefault();
-    if (controller.current || !input.trim()) return;
+    await ask(input);
+  }
+  async function ask(text: string) {
+    const message = text.trim();
+    if (controller.current || !message) return;
     if (!user) {
+      setInput(message);
       setError("Please sign in to ask a question.");
       return;
     }
     const current = generation.current;
-    const message = input.trim();
     const pendingId = crypto.randomUUID();
     const abort = new AbortController();
     controller.current = abort;
@@ -171,11 +173,10 @@ function ChatStateProvider({
         messages,
         input,
         setInput,
-        isOpen,
-        setIsOpen,
         suggestions,
         user,
         handleSubmit,
+        ask,
         clearChat,
         openConversation,
         error,
