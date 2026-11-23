@@ -259,14 +259,14 @@ export default function DetailsCheck({
   }, [fields, selected, version.id]);
 
   const blockers = missing(fields, selected, named);
-  const label = "block min-w-0 text-sm font-medium text-slate-700";
+  const label = "block min-w-0 text-sm font-medium text-ink";
   const input =
-    "mt-1 block w-full rounded-lg border border-slate-300 p-2 text-sm";
+    "mt-1 block min-h-10 w-full border border-ink bg-paper p-2 text-[15px]";
   const hint = (field: string) => {
     const s = source.get(field as DocumentFact["field"]);
     return s ? (
       <span
-        className="mt-1 block truncate text-xs text-slate-500"
+        className="mt-1 block truncate text-xs text-ink-soft"
         title={s.text}
       >
         Read from page {s.page}: “{s.text}”
@@ -274,7 +274,7 @@ export default function DetailsCheck({
     ) : null;
   };
   const choice = (active: boolean) =>
-    `rounded-lg border px-3 py-1.5 text-sm ${active ? "border-emerald-700 bg-emerald-50 font-medium text-emerald-900" : "bg-white hover:bg-slate-50"}`;
+    `min-h-10 cursor-pointer border px-3 text-[15px] ${active ? "border-2 border-brand bg-brand-soft font-semibold text-brand-strong" : "border-ink bg-paper hover:bg-shade"}`;
   const years = taxYears();
 
   return (
@@ -294,14 +294,14 @@ export default function DetailsCheck({
         });
       }}
     >
-      <div className="rounded-xl bg-slate-50 p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <div className="border-l-4 border-brand bg-shade p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-ink-soft">
           What the chatbot will be told
         </p>
         <p className="mt-1 text-base leading-relaxed">
           {sentence({ ...fields, entityName: named ? fields.entityName : "" })}
         </p>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-ink-soft">
           Filled in from the document. Correct anything that is wrong below.
         </p>
       </div>
@@ -401,7 +401,7 @@ export default function DetailsCheck({
             onChange={(e) => set("effectiveFrom", e.target.value)}
           />
           {hint("effectiveFrom") ?? (
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-ink-soft">
               Usually the issue date, unless it says otherwise.
             </span>
           )}
@@ -428,7 +428,7 @@ export default function DetailsCheck({
             {fields.periodMode === "SINGLE_PERIOD" && (
               <select
                 aria-label="Tax year"
-                className="rounded-lg border border-slate-300 p-1.5 text-sm"
+                className="border border-ink p-1.5 text-sm"
                 value={fields.period}
                 onChange={(e) => set("period", e.target.value)}
               >
@@ -476,7 +476,7 @@ export default function DetailsCheck({
         </div>
         {named && (
           <label className="block text-sm">
-            <span className="text-slate-600">Their full name</span>
+            <span className="text-ink-soft">Their full name</span>
             <input
               className={input}
               maxLength={300}
@@ -484,7 +484,7 @@ export default function DetailsCheck({
               onChange={(e) => set("entityName", e.target.value)}
               placeholder="As written in the document"
             />
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-ink-soft">
               The chatbot then uses this document only when a question names
               them.
             </span>
@@ -508,8 +508,8 @@ export default function DetailsCheck({
         </label>
       )}
 
-      <details className="rounded-lg border p-3">
-        <summary className="cursor-pointer text-sm font-medium text-slate-700">
+      <details className="border border-ink bg-paper p-3">
+        <summary className="cursor-pointer text-sm font-medium text-ink">
           More details (rarely needed)
         </summary>
         <div className="mt-3 grid gap-4 sm:grid-cols-3">
@@ -521,7 +521,7 @@ export default function DetailsCheck({
               value={fields.effectiveTo}
               onChange={(e) => set("effectiveTo", e.target.value)}
             />
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-ink-soft">
               Only if the rule itself ends. Not a filing or investment deadline.
             </span>
           </label>
@@ -542,7 +542,7 @@ export default function DetailsCheck({
               value={fields.investmentThrough}
               onChange={(e) => set("investmentThrough", e.target.value)}
             />
-            <span className="mt-1 block text-xs text-slate-500">
+            <span className="mt-1 block text-xs text-ink-soft">
               Including this day.
             </span>
           </label>
@@ -571,7 +571,7 @@ export default function DetailsCheck({
             <p className={label}>
               Parts to publish ({selected.length} of {version.sections.length})
             </p>
-            <div className="max-h-64 divide-y overflow-y-auto rounded-lg border">
+            <div className="max-h-64 divide-y divide-rule overflow-y-auto border border-ink">
               {version.sections.map((section) => (
                 <label
                   key={section.id}
@@ -596,7 +596,7 @@ export default function DetailsCheck({
         )}
       </details>
 
-      <div className="space-y-2 border-t pt-4">
+      <div className="space-y-2 border-t border-ink pt-4">
         {blockers.length > 0 && (
           <p className="text-sm text-amber-900">
             Before publishing, add {blockers.join(", ")}.
@@ -605,18 +605,18 @@ export default function DetailsCheck({
         <div className="flex flex-wrap items-center gap-4">
           <button
             disabled={busy || blockers.length > 0}
-            className="rounded-lg bg-emerald-700 px-6 py-2.5 font-medium text-white disabled:opacity-40"
+            className="min-h-12 cursor-pointer bg-brand px-7 font-semibold text-paper hover:bg-brand-strong disabled:cursor-default disabled:opacity-40"
           >
             {busy ? "Publishing…" : "Publish"}
           </button>
           <button
             type="button"
-            className="text-sm text-slate-600 underline"
+            className="text-sm text-ink-soft underline"
             onClick={() => setRejecting((r) => !r)}
           >
             Don’t publish this document
           </button>
-          <span className="ml-auto text-xs text-slate-500" aria-live="polite">
+          <span className="ml-auto text-xs text-ink-soft" aria-live="polite">
             {saveState === "saving"
               ? "Saving…"
               : saveState === "saved"
@@ -629,11 +629,11 @@ export default function DetailsCheck({
           </span>
         </div>
         {rejecting && (
-          <div className="space-y-2 rounded-lg border border-red-200 bg-red-50/50 p-3">
+          <div className="space-y-2 border border-red-800 bg-red-50 p-3">
             <label className="block text-sm">
               Why not? It is kept for the record.
               <textarea
-                className={`${input} min-h-16 bg-white`}
+                className={`${input} min-h-16 bg-paper`}
                 maxLength={4000}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
@@ -643,7 +643,7 @@ export default function DetailsCheck({
             <button
               type="button"
               disabled={busy || !reason.trim()}
-              className="rounded-lg bg-red-700 px-4 py-2 text-sm text-white disabled:opacity-40"
+              className="min-h-10 cursor-pointer bg-red-700 px-4 text-sm text-paper disabled:opacity-40"
               onClick={() =>
                 void act({
                   action: "reject",

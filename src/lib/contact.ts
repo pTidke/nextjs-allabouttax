@@ -73,8 +73,7 @@ export function recentContactMessages(take = 100) {
 // The tax forms waitlist: an email address only, kept as a contact message so
 // it shows in the admin inbox. Joining twice keeps one entry.
 export const WAITLIST_NAME = "Tax forms waitlist";
-export const WAITLIST_MESSAGE =
-  "Please email me when tax form filling opens.";
+export const WAITLIST_MESSAGE = "Please email me when tax form filling opens.";
 
 export async function joinWaitlist(
   input: Record<string, unknown>,

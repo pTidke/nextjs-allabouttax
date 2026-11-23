@@ -55,8 +55,8 @@ export default function ContactPage() {
           Need help or have feedback?
         </h1>
         <p className="text-lg text-ink-soft">
-          Tell us about a problem with the site, or how we could make it
-          better. We usually reply within 24 hours.
+          Tell us about a problem with the site, or how we could make it better.
+          We usually reply within 24 hours.
         </p>
         <div className="border-2 border-ink bg-paper p-6">
           <p className="label-mono mb-2 text-brand">Please note</p>

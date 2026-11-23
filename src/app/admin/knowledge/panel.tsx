@@ -106,16 +106,16 @@ export default function KnowledgeAdmin() {
     }
   }
   const button =
-    "rounded-lg bg-slate-900 text-white px-4 py-2 text-sm disabled:opacity-40";
-  const field = "border border-slate-300 rounded-lg p-2 text-sm";
+    "min-h-10 cursor-pointer bg-ink px-4 text-sm text-paper hover:bg-brand-strong disabled:opacity-40";
+  const field = "min-h-10 border border-ink bg-paper p-2 text-sm";
   return (
-    <main className="max-w-6xl mx-auto px-6 pt-28 pb-16 space-y-8">
+    <main className="mx-auto w-full max-w-6xl space-y-8 px-6 pb-20 pt-10">
       <div>
-        <p className="text-xs uppercase tracking-widest text-emerald-700">
-          Administration
-        </p>
-        <h1 className="text-3xl font-semibold mt-2">Official tax knowledge</h1>
-        <p className="text-slate-500 mt-3">
+        <p className="label-mono text-brand">Administration</p>
+        <h1 className="mt-2 font-serif text-4xl font-bold">
+          Official tax knowledge
+        </h1>
+        <p className="text-ink-soft mt-3">
           Fetch, inspect, and publish a reviewed source version. Only approved,
           fresh material is available to chat.
         </p>
@@ -123,7 +123,7 @@ export default function KnowledgeAdmin() {
       {message && (
         <p
           role="status"
-          className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm"
+          className="border border-amber-700 bg-amber-50 p-4 text-sm"
         >
           {message}
         </p>
@@ -155,18 +155,18 @@ export default function KnowledgeAdmin() {
         >
           {reloading ? "Updating status…" : "Reload status"}
         </button>
-        <span role="status" className="self-center text-sm text-slate-500">
+        <span role="status" className="self-center text-sm text-ink-soft">
           {loadedAt
             ? `Status loaded at ${loadedAt}`
             : "Reload status checks progress without requesting downloads."}
         </span>
       </div>
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-ink-soft">
         Current release: {state?.release?.id ?? "None published"} ·{" "}
         {state?.release?.versionIds.length ?? 0} approved documents. Refreshes
         require the background worker; registering a source does not approve it.
       </p>
-      <section className="border rounded-xl p-4 text-sm space-y-2">
+      <section className="space-y-2 border border-ink bg-paper p-4 text-sm">
         <p>
           Worker:{" "}
           {state?.worker
@@ -213,19 +213,19 @@ export default function KnowledgeAdmin() {
         </button>
       </form>
       <section>
-        <h2 className="text-xl font-semibold mb-4">Source health</h2>
+        <h2 className="mb-4 font-serif text-2xl font-bold">Source health</h2>
         <div className="grid md:grid-cols-2 gap-4">
           {state?.sources.map((s) => (
-            <div key={s.id} className="border rounded-xl p-4">
+            <div key={s.id} className="border border-ink bg-paper p-4">
               <a
                 href={s.url}
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium text-emerald-700 underline"
+                className="font-medium text-brand underline"
               >
                 {s.name}
               </a>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-ink-soft mt-2">
                 {s.kind} · Last successful check:{" "}
                 {s.checkedAt ? new Date(s.checkedAt).toLocaleString() : "Never"}
               </p>
@@ -248,17 +248,17 @@ export default function KnowledgeAdmin() {
       </section>
       {!!state?.failedDocuments.length && (
         <section>
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="mb-4 font-serif text-2xl font-bold">
             Documents needing attention
           </h2>
-          <p className="text-sm text-slate-500 mb-3">
+          <p className="text-sm text-ink-soft mb-3">
             These documents are unavailable to chat. Scanned PDFs may need OCR
             before review.
           </p>
           {state.failedDocuments.map((document) => (
             <div
               key={document.id}
-              className="border rounded-lg p-3 mb-2 text-sm"
+              className="mb-2 border border-rule bg-paper p-3 text-sm"
             >
               <a
                 href={document.url}
@@ -273,19 +273,21 @@ export default function KnowledgeAdmin() {
           ))}
         </section>
       )}
-      <section className="border rounded-xl p-5 space-y-2">
-        <h2 className="text-xl font-semibold">Document review</h2>
-        <p className="text-sm text-slate-600">
+      <section className="space-y-2 border-2 border-ink bg-paper p-5">
+        <h2 className="font-serif text-2xl font-bold">Document review</h2>
+        <p className="text-sm text-ink-soft">
           Checking extracted text and tax review now happen in the Review
           workspace, together with uploaded documents.
         </p>
-        <Link href="/review" className="underline text-emerald-700">
+        <Link href="/review" className="underline text-brand">
           Open the Review workspace
         </Link>
       </section>
       <section>
-        <h2 className="text-xl font-semibold mb-4">Recent refresh jobs</h2>
-        <p className="text-sm text-slate-500 mb-3">
+        <h2 className="mb-4 font-serif text-2xl font-bold">
+          Recent refresh jobs
+        </h2>
+        <p className="text-sm text-ink-soft mb-3">
           Waiting means the download has not started. Retry scheduled means a
           fetch failed and will be retried when the worker runs. These jobs do
           not approve documents. During local setup, run{" "}
@@ -297,7 +299,7 @@ export default function KnowledgeAdmin() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="border-b">
+              <tr className="border-b border-ink">
                 <th className="p-2">Source</th>
                 <th>Status</th>
                 <th>Attempts</th>
@@ -306,7 +308,7 @@ export default function KnowledgeAdmin() {
             </thead>
             <tbody>
               {state?.jobs.map((j) => (
-                <tr key={j.id} className="border-b">
+                <tr key={j.id} className="border-b border-rule">
                   <td className="p-2">{j.documentTitle || j.sourceId}</td>
                   <td>
                     {j.status === "QUEUED"
@@ -316,7 +318,7 @@ export default function KnowledgeAdmin() {
                       : j.status}
                   </td>
                   <td>{j.attempts}</td>
-                  <td className={j.error ? "text-red-700" : "text-slate-600"}>
+                  <td className={j.error ? "text-red-700" : "text-ink-soft"}>
                     {j.error || j.result}
                   </td>
                 </tr>

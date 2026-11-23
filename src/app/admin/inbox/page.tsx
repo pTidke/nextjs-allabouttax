@@ -32,10 +32,12 @@ export default async function InboxPage() {
     recentContactMessages(),
   ]);
   return (
-    <main className="max-w-4xl mx-auto px-6 py-12 space-y-12">
+    <main className="mx-auto w-full max-w-4xl space-y-12 px-6 pb-20 pt-10">
       <header className="space-y-2">
-        <h1 className="text-3xl font-semibold">Inbox</h1>
-        <p className="text-slate-600">
+        <h1 className="border-b-[3px] border-double border-ink pb-5 font-serif text-4xl font-bold">
+          Inbox
+        </h1>
+        <p className="text-ink-soft">
           The latest 100 of each. Use unanswered questions to decide which
           official sources to review next.{" "}
           <Link href="/admin/knowledge" className="underline">
@@ -45,16 +47,19 @@ export default async function InboxPage() {
       </header>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Unanswered questions</h2>
-        <p className="text-sm text-slate-500">
+        <h2 className="font-serif text-2xl font-bold">Unanswered questions</h2>
+        <p className="text-sm text-ink-soft">
           Shown without names or email addresses. A question disappears from
           here when its author deletes the conversation.
         </p>
         {!gaps.length && <p>No unanswered questions yet.</p>}
         {gaps.map((gap) => (
-          <article key={gap.id} className="border rounded-xl p-4 space-y-1">
+          <article
+            key={gap.id}
+            className="border border-ink bg-paper p-4 space-y-1"
+          >
             <p className="whitespace-pre-wrap">{gap.question}</p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-ink-soft">
               {gap.period === "AUTO" ? "No year named" : gap.period} ·{" "}
               {reasons[gap.reason] ?? gap.reason} · {when(gap.createdAt)}
             </p>
@@ -63,10 +68,13 @@ export default async function InboxPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Contact messages</h2>
+        <h2 className="font-serif text-2xl font-bold">Contact messages</h2>
         {!messages.length && <p>No messages yet.</p>}
         {messages.map((message) => (
-          <article key={message.id} className="border rounded-xl p-4 space-y-2">
+          <article
+            key={message.id}
+            className="border border-ink bg-paper p-4 space-y-2"
+          >
             <p className="text-sm">
               <strong>{message.name}</strong> ·{" "}
               <a
@@ -75,8 +83,7 @@ export default async function InboxPage() {
               >
                 {message.email}
               </a>{" "}
-              ·{" "}
-              <span className="text-slate-500">{when(message.createdAt)}</span>
+              · <span className="text-ink-soft">{when(message.createdAt)}</span>
             </p>
             <p className="whitespace-pre-wrap">{message.message}</p>
           </article>

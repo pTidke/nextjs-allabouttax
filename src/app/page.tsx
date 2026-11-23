@@ -107,10 +107,7 @@ export default async function HomePage() {
         </p>
       </section>
 
-      <section
-        aria-labelledby="trust"
-        className="border-y border-ink bg-paper"
-      >
+      <section aria-labelledby="trust" className="border-y border-ink bg-paper">
         <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-20">
           <h2
             id="trust"
@@ -177,7 +174,10 @@ export default async function HomePage() {
               [stats.guidance, "official guidance pages"],
               [stats.ready, "checked and ready to answer from"],
             ].map(([n, label]) => (
-              <div key={label} className="flex flex-col-reverse justify-end gap-1">
+              <div
+                key={label}
+                className="flex flex-col-reverse justify-end gap-1"
+              >
                 <dt className="text-ink-soft">{label}</dt>
                 <dd className="font-serif text-5xl font-bold leading-none md:text-6xl">
                   {n}

@@ -46,7 +46,10 @@ export default function WaitlistForm({
       onSubmit={submit}
       className={`flex w-full gap-3 ${stack ? "flex-col" : "flex-wrap"}`}
     >
-      <label htmlFor={`waitlist-${layout}`} className={stack ? "font-medium" : "sr-only"}>
+      <label
+        htmlFor={`waitlist-${layout}`}
+        className={stack ? "font-medium" : "sr-only"}
+      >
         Get one email when it opens
       </label>
       {/* Hidden from people; a bot that fills it is ignored. */}
